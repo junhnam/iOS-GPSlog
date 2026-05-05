@@ -3,6 +3,10 @@
 .AppleDouble
 .LSOverride
 
+# Claude Code 個人設定 / 引き継ぎメモ（ローカル限定）
+settings.json
+.claude-handover.md
+
 # Xcode - User specific
 xcuserdata/
 *.xcuserstate
