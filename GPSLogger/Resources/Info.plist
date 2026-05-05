@@ -20,6 +20,14 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>移動経路を地図上に記録するため、位置情報を利用します。アプリを閉じていても記録するため、常に許可を選んでください。正確な位置情報を有効にすると経路の精度が向上します。</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>移動経路を地図上に記録するため、位置情報を利用します。</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

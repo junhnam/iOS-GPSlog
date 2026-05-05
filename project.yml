@@ -56,8 +56,14 @@ targets:
           UIColorName: ""
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-        # 位置情報の権限説明と UIBackgroundModes は S1-003 で追記する
-        # GMSApiKey は S1-002 で追記する
+        # 位置情報の権限説明（S1-003）
+        # When-In-Use: アプリ使用中のみ（最初のダイアログで提示される簡易版）
+        NSLocationWhenInUseUsageDescription: "移動経路を地図上に記録するため、位置情報を利用します。"
+        # Always: バックグラウンドでも継続記録するために必要
+        NSLocationAlwaysAndWhenInUseUsageDescription: "移動経路を地図上に記録するため、位置情報を利用します。アプリを閉じていても記録するため、常に許可を選んでください。正確な位置情報を有効にすると経路の精度が向上します。"
+        # バックグラウンド実行モード（S1-003）
+        UIBackgroundModes:
+          - location
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.junhnam.gpslogger
