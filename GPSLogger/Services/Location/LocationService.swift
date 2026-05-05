@@ -45,6 +45,10 @@ final class LocationService: NSObject, ObservableObject {
     /// 日付がまたいだら appendRoutePoint 前に切り替える。
     private var currentTrip: TripRecord?
 
+    /// 滞留検出器（S2-006）。10 分以上同じ場所に居たら PinRecord を作成する。
+    /// テスト互換のため外部から差し替え可能（DI）にしておく。
+    private let stayDetector: StayDetector
+
     private static let logger = Logger(subsystem: "com.junhnam.gpslogger",
                                        category: "LocationService")
 
@@ -53,9 +57,11 @@ final class LocationService: NSObject, ObservableObject {
     private static let dbWriteThresholdMeters: Double = 5.0
 
     init(manager: CLLocationManager = CLLocationManager(),
-         repository: TripRepository? = nil) {
+         repository: TripRepository? = nil,
+         stayDetector: StayDetector = StayDetector()) {
         self.manager = manager
         self.repository = repository
+        self.stayDetector = stayDetector
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         configureManager()
@@ -116,7 +122,12 @@ final class LocationService: NSObject, ObservableObject {
         let previous = currentLocation
         currentLocation = last
 
+        // S2-006: 滞留検出。half-circle: 半径外で滞留終了 -> PinRecord 作成。
+        let stayEvent = stayDetector.ingest(location: last)
+
         // チケット S1-007 のメモに従い、直前点との距離が 5m 未満なら経路に積まない（描画間引き）。
+        // S2-006 追加ルール: 滞留中の点は経路には積むが、DB 書き込みは間引く。
+        // ただし polyline 描画用 route には足しておく（地図上で同じ場所に点が密集して見えるが性能問題はない）。
         if let prev = route.last {
             if last.distance(from: prev) >= 5 {
                 route.append(last)
@@ -127,7 +138,21 @@ final class LocationService: NSObject, ObservableObject {
 
         // S2-005: DB 永続化処理。repository 未注入時は何もしない（後方互換）。
         if let repository {
-            persistLocation(last, previousLocation: previous, repository: repository)
+            // 滞留中で .skipped が返った場合は RoutePoint の DB 書き込みを丸ごとスキップ
+            // （受け入れ条件: 滞留中の RoutePoint は間引かれる）。
+            if stayEvent != .skipped {
+                persistLocation(last, previousLocation: previous, repository: repository)
+            }
+
+            // 滞留終了時: PinRecord を永続化。
+            if case .stayEnded(let pin) = stayEvent,
+               let trip = currentTrip {
+                do {
+                    try repository.appendPin(pin, to: trip)
+                } catch {
+                    Self.logger.warning("PinRecord 永続化失敗: \(error.localizedDescription)")
+                }
+            }
         }
     }
 

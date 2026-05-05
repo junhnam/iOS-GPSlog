@@ -8,7 +8,6 @@
 
 ## Todo
 
-- [ ] S2-006: 滞留検出（10分・30m半径）と PinRecord 作成 → dev-2
 - [ ] S2-008: 履歴タブ実装（日付一覧 + 詳細） → dev-2
 
 ## In Progress
@@ -22,6 +21,7 @@
 - [r] S2-003: TripRepository（取得・作成・更新・距離加算） → dev-1
 - [r] S2-004: 総移動距離計算ロジック（CLLocation.distance ベース） → dev-2
 - [r] S2-005: LocationService と DB の連携（永続化 + 距離加算） → dev-2
+- [r] S2-006: 滞留検出（10分・30m半径）と PinRecord 作成 → dev-2
 
 ## Backlog（途中起票）
 
