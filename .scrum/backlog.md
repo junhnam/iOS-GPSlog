@@ -1,6 +1,6 @@
 # Product Backlog: iOS GPSロガーアプリ
 
-最終更新: 2026-05-05
+最終更新: 2026-05-05（Sprint 2 プランニング完了時点）
 
 ## バックログ構成方針
 - CLAUDE.md の全要件を 6 スプリントに分割
@@ -13,34 +13,38 @@
 
 ## 優先度: Must（MVP に必須）
 
-### Sprint 1: プロジェクト基盤 + 地図表示 + 位置情報取得
+### Sprint 1: プロジェクト基盤 + 地図表示 + 位置情報取得（完了）
 
 | ID | タイトル | 見積 | 担当 | ステータス | スプリント |
 |---|---|---|---|---|---|
-| S1-001 | Xcode プロジェクト雛形作成 (SwiftUI / iOS 26+) | M | dev-1 | sprint | 1 |
-| S1-002 | Swift Package Manager 設定 + Google Maps SDK 導入 | M | dev-1 | sprint | 1 |
-| S1-003 | Info.plist に位置情報・バックグラウンド権限を設定 | S | dev-1 | sprint | 1 |
-| S1-004 | アプリエントリポイント + ナビゲーション骨格 | S | dev-1 | sprint | 1 |
-| S1-005 | LocationManager サービス実装 (Core Location ラッパー) | M | dev-2 | sprint | 1 |
-| S1-006 | Google Maps ビュー（現在地表示） | M | dev-2 | sprint | 1 |
-| S1-007 | 移動経路ライン描画（Polyline） | M | dev-2 | sprint | 1 |
-| S1-008 | メイン画面 UI モック作成（Figma 風 SwiftUI プロトタイプ） | M | designer | sprint | 1 |
-| S1-009 | README にビルド・実行手順を追記 | S | dev-1 | sprint | 1 |
+| S1-001 | Xcode プロジェクト雛形作成 (SwiftUI / iOS 26+) | M | dev-1 | done | 1 |
+| S1-002 | Swift Package Manager 設定 + Google Maps SDK 導入 | M | dev-1 | done | 1 |
+| S1-003 | Info.plist に位置情報・バックグラウンド権限を設定 | S | dev-1 | done | 1 |
+| S1-004 | アプリエントリポイント + ナビゲーション骨格 | S | dev-1 | done | 1 |
+| S1-005 | LocationManager サービス実装 (Core Location ラッパー) | M | dev-2 | done | 1 |
+| S1-006 | Google Maps ビュー（現在地表示） | M | dev-2 | done | 1 |
+| S1-007 | 移動経路ライン描画（Polyline） | M | dev-2 | done | 1 |
+| S1-008 | メイン画面 UI モック作成（Figma 風 SwiftUI プロトタイプ） | M | designer | done | 1 |
+| S1-009 | README にビルド・実行手順を追記 | S | dev-1 | done | 1 |
 
-### Sprint 2: ローカル DB + 滞留検出 + ピン記録
+### Sprint 2: ローカル DB + 総移動距離 + 滞留検出 + 復元 + 履歴タブ
+
+スプリントゴール: アプリを閉じても経路・ピン・総移動距離が復元できる状態を作る
 
 | ID | タイトル | 見積 | 担当 | ステータス | スプリント |
 |---|---|---|---|---|---|
-| S2-001 | SwiftData モデル定義（DailyLog / RoutePoint / Pin） | M | - | backlog | 2 |
-| S2-002 | DBリポジトリ層（CRUD） | M | - | backlog | 2 |
-| S2-003 | 走行中の RoutePoint 保存処理（経路の永続化） | M | - | backlog | 2 |
-| S2-004 | 滞留検出アルゴリズム（10分以上同一エリア判定） | M | - | backlog | 2 |
-| S2-005 | MKLocalSearch によるお店情報取得 | M | - | backlog | 2 |
-| S2-006 | ピン記録 + 地図上ピン表示 | M | - | backlog | 2 |
-| S2-007 | 日付単位の履歴一覧画面 | M | - | backlog | 2 |
-| S2-008 | 履歴詳細画面 UI（地図+ピン+滞在情報） | M | - | backlog | 2 |
+| S2-001 | SwiftData モデル定義（TripRecord / RoutePoint / PinRecord、totalDistanceMeters 含む） | M | dev-1 | sprint | 2 |
+| S2-002 | ModelContainer セットアップとアプリ統合 | M | dev-1 | sprint | 2 |
+| S2-003 | TripRepository（取得・作成・更新・距離加算） | M | dev-1 | sprint | 2 |
+| S2-004 | 総移動距離計算ロジック（CLLocation.distance ベース、km 表示） | S | dev-2 | sprint | 2 |
+| S2-005 | LocationService と DB の連携（RoutePoint 永続化 + 距離加算） | M | dev-2 | sprint | 2 |
+| S2-006 | 滞留検出（10分・30m半径）と PinRecord 作成 | M | dev-2 | sprint | 2 |
+| S2-007 | アプリ起動時の最新 TripRecord 復元（経路・ピン・総移動距離） | M | dev-1 | sprint | 2 |
+| S2-008 | 履歴タブ実装（日付一覧 + 詳細で経路・ピン・距離・滞留時間） | M | dev-2 | sprint | 2 |
 
-### Sprint 3: 設定画面 + 自宅登録 + 記録モード切替
+注: Sprint 2 では「お店情報の自動取得（旧 MKLocalSearch チケット）」は **Sprint 3 へ移動**。理由は (1) 自宅判定とセットの方が UX 上自然、(2) Sprint 2 のキャパシティを復元・履歴に集中させるため。
+
+### Sprint 3: 設定画面 + 自宅登録 + 記録モード切替 + お店情報取得
 
 | ID | タイトル | 見積 | 担当 | ステータス | スプリント |
 |---|---|---|---|---|---|
@@ -51,6 +55,7 @@
 | S3-005 | トリガー記録時の開始 / 停止フローティングボタン | M | - | backlog | 3 |
 | S3-006 | Significant Location Changes による自宅退出検知 | M | - | backlog | 3 |
 | S3-007 | 設定画面 UI デザイン | M | - | backlog | 3 |
+| S3-008 | MKLocalSearch によるお店情報取得（PinRecord.placeName/placeURL 連携） | M | - | backlog | 3 |
 
 ### Sprint 4: iOSカレンダー同期 + CSV エクスポート（ローカル）
 
@@ -116,10 +121,10 @@
 
 | スプリント | 主テーマ | チケット数 | 主目標 |
 |---|---|---|---|
-| 1 | プロジェクト基盤＋地図 | 9 | シミュレータで地図に経路表示 |
-| 2 | DB＋滞留検出＋ピン | 8 | 滞留時にピンが記録される |
-| 3 | 設定／自宅／記録モード | 7 | バッテリー懸念のベース対策 |
+| 1 | プロジェクト基盤＋地図 | 9 | シミュレータで地図に経路表示（達成済） |
+| 2 | DB＋総移動距離＋滞留＋復元＋履歴 | 8 | 閉じても復元できる状態を作る |
+| 3 | 設定／自宅／記録モード／お店情報 | 8 | バッテリー懸念のベース対策＋ピン情報拡充 |
 | 4 | カレンダー同期＋CSV出力 | 6 | データの外部化 |
 | 5 | クラウド同期 | 6 | Drive/Dropbox 連携 |
 | 6 | 運用＋リリース準備 | 7 | App Store 申請可能状態 |
-| 合計 | | **43** | |
+| 合計 | | **44** | |
