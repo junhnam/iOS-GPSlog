@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */; };
 		232E665630652985E70CE788 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3193D4B8A02F13BF3F5D299C /* Assets.xcassets */; };
 		2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */; };
 		310A9FC684206018CD088AFC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB3F65917DC8E542E0510F6E /* RootView.swift */; };
@@ -34,6 +35,7 @@
 		2E955F6ED4C6E26D78094677 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		3193D4B8A02F13BF3F5D299C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3D368B348251683C3272A93A /* GPSLoggerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GPSLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASprint1AdditionalTests.swift; sourceTree = "<group>"; };
 		A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTests.swift; sourceTree = "<group>"; };
 		AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMapsConfiguration.swift; sourceTree = "<group>"; };
 		BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerTests.swift; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 			children = (
 				BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */,
 				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
+				51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */,
 			);
 			path = GPSLoggerTests;
 			sourceTree = "<group>";
@@ -282,6 +285,7 @@
 			files = (
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,
 				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
+				1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -64,3 +64,6 @@ GPSLogger/Resources/GoogleMaps-Info.plist
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# QA ワークスペース（テスト設計・結果・チケット等の中間成果物）
+.qa-workspace/
