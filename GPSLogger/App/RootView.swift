@@ -5,7 +5,7 @@ import SwiftUI
 /// 「地図 / 履歴 / 設定」の 3 タブ構成のナビゲーション骨格を提供する。
 /// 各タブの中身は順次差し替えていく:
 ///   - 地図タブ: Sprint 1 で Dev-2 が `MapView`（Google Maps 経路表示）を実装済み
-///   - 履歴タブ: Sprint 2 以降で本実装に差し替える
+///   - 履歴タブ: Sprint 2（S2-008）で `HistoryListView` に差し替え済み
 ///   - 設定タブ: Sprint 3 以降で本実装に差し替える
 struct RootView: View {
     /// `TabView` の選択状態。デフォルトは「地図」タブ（受け入れ条件: 起動時に地図タブが選択）。
@@ -23,9 +23,7 @@ struct RootView: View {
                 .accessibilityLabel("地図タブ")
 
             NavigationStack {
-                HistoryPlaceholderView()
-                    .navigationTitle("履歴")
-                    .navigationBarTitleDisplayMode(.inline)
+                HistoryListView()
             }
             .tabItem {
                 Label("履歴", systemImage: "clock")
@@ -55,28 +53,6 @@ struct RootView: View {
 }
 
 // MARK: - Tab Placeholders
-
-/// 履歴タブのプレースホルダ。Sprint 2 以降で本実装する。
-struct HistoryPlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "clock")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 56, height: 56)
-                .foregroundStyle(.secondary)
-            Text("履歴画面（Sprint 2 以降実装予定）")
-                .font(.headline)
-            Text("日付ごとの移動履歴・滞在ピンをここで一覧します。")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("履歴画面のプレースホルダ。Sprint 2 以降で実装予定。")
-    }
-}
 
 /// 設定タブのプレースホルダ。Sprint 3 以降で本実装する。
 struct SettingsPlaceholderView: View {
