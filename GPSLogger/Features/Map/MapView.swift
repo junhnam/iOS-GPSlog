@@ -11,6 +11,9 @@ import CoreLocation
 /// Sprint 2 拡張（S2-005）:
 ///   - `PersistenceController.shared` から `TripRepository` を生成し、
 ///     `LocationService` に注入することで座標を当日の TripRecord に永続化する
+/// Sprint 2 拡張（S2-007）:
+///   - `MapViewModel` を介して当日の TripRecord を起動時に読み込み、
+///     経路 / ピン / 総移動距離を地図に復元表示する
 struct MapView: View {
     @StateObject private var locationService: LocationService = {
         // PersistenceController.shared.container.mainContext から TripRepository を生成。
@@ -20,26 +23,68 @@ struct MapView: View {
         return LocationService(repository: repository)
     }()
 
+    /// 起動時の TripRecord 復元と HUD 値の保持を担う ViewModel（S2-007）。
+    @StateObject private var viewModel = MapViewModel()
+
     var body: some View {
-        GoogleMapContainer(locationService: locationService)
-            .ignoresSafeArea()
-            .onAppear {
-                // 初回起動時に権限ダイアログを表示し、更新を開始する。
-                // Always 権限はバックグラウンド記録のために要求する（Sprint 2 以降で本番動作）。
-                locationService.requestWhenInUseAuthorization()
-                locationService.requestAlwaysAuthorization()
-                locationService.startUpdatingLocation()
-            }
-            .onDisappear {
-                locationService.stopUpdatingLocation()
-            }
+        ZStack(alignment: .top) {
+            GoogleMapContainer(locationService: locationService,
+                               restoredRoute: viewModel.route,
+                               restoredPins: viewModel.pins)
+                .ignoresSafeArea()
+
+            // HUD: 総移動距離（km）を画面上部に表示（S2-007）。
+            // 0km のときも表示する（受け入れ条件「総移動距離: X.XX km」）。
+            DistanceHUDLabel(kilometers: viewModel.totalDistanceKm)
+                .padding(.top, 8)
+                .padding(.horizontal, 16)
+                .accessibilityIdentifier("distance_hud")
+        }
+        .onAppear {
+            // 復元はカメラ初期化等よりも先に走らせる（onAppear で十分高速）。
+            viewModel.restoreTodayTrip()
+
+            // 初回起動時に権限ダイアログを表示し、更新を開始する。
+            // Always 権限はバックグラウンド記録のために要求する（Sprint 2 以降で本番動作）。
+            locationService.requestWhenInUseAuthorization()
+            locationService.requestAlwaysAuthorization()
+            locationService.startUpdatingLocation()
+        }
+        .onDisappear {
+            locationService.stopUpdatingLocation()
+        }
+    }
+}
+
+/// 総移動距離 HUD（S2-007）。
+/// 半透明背景 + 太字で「総移動距離: X.XX km」と表示する最低限の表示。
+/// Designer による HUD 改善は Sprint 3 以降の予定。
+private struct DistanceHUDLabel: View {
+    let kilometers: Double
+
+    var body: some View {
+        Text(String(format: "総移動距離: %.2f km", kilometers))
+            .font(.callout.bold())
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.black.opacity(0.55), in: Capsule())
+            .accessibilityLabel("総移動距離 \(String(format: "%.2f", kilometers)) キロメートル")
     }
 }
 
 /// `GMSMapView` を SwiftUI に統合する `UIViewRepresentable`。
 /// 現在地表示（S1-006）と Polyline 経路描画（S1-007）の責務を持つ。
+/// S2-007 で復元データ（route / pins）を初期投入する受け口を追加。
 private struct GoogleMapContainer: UIViewRepresentable {
     @ObservedObject var locationService: LocationService
+
+    /// 起動時に SwiftData から復元された当日経路（S2-007）。
+    /// Coordinator は最初に updateUIView が呼ばれた時に一括投入する。
+    let restoredRoute: [CLLocationCoordinate2D]
+
+    /// 起動時に SwiftData から復元された当日ピン（S2-007）。
+    let restoredPins: [RestoredPin]
 
     /// 経路ラインの色（チケット S1-007: 青系 #1E88E5）
     private static let routeStrokeColor = UIColor(red: 0x1E / 255.0,
@@ -77,6 +122,11 @@ private struct GoogleMapContainer: UIViewRepresentable {
     }
 
     func updateUIView(_ mapView: GMSMapView, context: Context) {
+        // 起動時に復元データ（経路・ピン）を一括投入する（S2-007）。
+        // 内部フラグで多重投入を防止しているため、毎回呼び出しても安全。
+        context.coordinator.applyRestoredRouteIfNeeded(restoredRoute)
+        context.coordinator.applyRestoredPinsIfNeeded(restoredPins, on: mapView)
+
         // 現在地が更新されたらカメラを動かす（初回のみ自動追従）。
         if let current = locationService.currentLocation,
            !context.coordinator.didCenterOnFirstFix {
@@ -87,6 +137,9 @@ private struct GoogleMapContainer: UIViewRepresentable {
         }
 
         // 経路の差分を polyline に append。
+        // 復元済みの点に対しては「続きから」伸びるよう、Coordinator が
+        // restoredRoute.count を起点にして LocationService.route の append 分を
+        // path に追加する。
         context.coordinator.applyRoute(locationService.route)
     }
 
@@ -99,6 +152,11 @@ private struct GoogleMapContainer: UIViewRepresentable {
         private let path = GMSMutablePath()
         private var polyline: GMSPolyline?
         private var appliedCount: Int = 0
+
+        // S2-007: 復元データの多重投入を防止するためのフラグ・キャッシュ。
+        private var didApplyRestoredRoute: Bool = false
+        /// 既に地図に置いたピンの重複判定キー（座標 + stayedFrom の組）。
+        private var placedPinKeys: Set<String> = []
 
         func attach(to mapView: GMSMapView,
                     strokeColor: UIColor,
@@ -114,14 +172,49 @@ private struct GoogleMapContainer: UIViewRepresentable {
             self.polyline = polyline
         }
 
+        /// 起動時に復元された経路を polyline の初期 path に一括投入する（S2-007）。
+        /// 二度目以降の updateUIView では何もしないようフラグでガードする。
+        func applyRestoredRouteIfNeeded(_ coordinates: [CLLocationCoordinate2D]) {
+            guard !didApplyRestoredRoute else { return }
+            didApplyRestoredRoute = true
+            guard !coordinates.isEmpty else { return }
+            for c in coordinates {
+                path.add(c)
+            }
+            // 復元分は appliedCount に含めない。これにより以降に来る
+            // LocationService.route が「続きから」appliedCount==0 起点で append される。
+            polyline?.path = path
+        }
+
+        /// 起動時に復元されたピンを地図上に GMSMarker として配置する（S2-007）。
+        /// 重複（同座標 + 同 stayedFrom）は再生成しない。
+        func applyRestoredPinsIfNeeded(_ pins: [RestoredPin], on mapView: GMSMapView) {
+            guard !pins.isEmpty else { return }
+            for pin in pins {
+                let key = "\(pin.latitude)_\(pin.longitude)_\(pin.stayedFrom.timeIntervalSince1970)"
+                guard !placedPinKeys.contains(key) else { continue }
+                placedPinKeys.insert(key)
+
+                let marker = GMSMarker(position: pin.coordinate)
+                // タイトルは「滞留 約 N 分」（受け入れ条件）。お店情報は Sprint 3。
+                marker.title = pin.stayedMinutesText
+                if let placeName = pin.placeName {
+                    marker.snippet = placeName
+                }
+                marker.map = mapView
+            }
+        }
+
         /// `LocationService.route` を polyline に反映する。
         /// 既に追加済みの点は触らず、未反映分のみ append することで再描画コストを抑える。
         /// route が空に戻った場合（Sprint 2 で route リセット機能が入る想定）はクリアする。
         func applyRoute(_ route: [CLLocation]) {
             if route.count < appliedCount {
                 // 何らかの理由で route が縮んだ場合は path をクリアして再構築。
+                // 復元済み点も一緒に消える点は仕様として許容（S2-007 受け入れ条件は通常運用での連続性のみ）。
                 path.removeAllCoordinates()
                 appliedCount = 0
+                didApplyRestoredRoute = false
             }
 
             guard route.count > appliedCount else { return }
