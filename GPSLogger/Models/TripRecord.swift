@@ -34,26 +34,28 @@ final class TripRecord {
 
     /// この日の経路点。time 順に並べる前提（並べ替えは取得側で実施）。
     /// TripRecord 削除時に RoutePoint も削除する（cascade）。
+    /// 初期値 [] は SwiftData が内部で空配列を管理するための慣例。
+    /// init で代入すると iOS 26 SwiftData で fetch 時に precondition 違反するため、
+    /// プロパティ宣言側で空配列を持たせる方が安全。
     @Relationship(deleteRule: .cascade, inverse: \RoutePoint.trip)
-    var routePoints: [RoutePoint]
+    var routePoints: [RoutePoint] = []
 
     /// この日の滞留ピン。stayedFrom 順に並べる前提。
     /// TripRecord 削除時に PinRecord も削除する（cascade）。
+    /// 初期値 [] の理由は routePoints と同じ。
     @Relationship(deleteRule: .cascade, inverse: \PinRecord.trip)
-    var pins: [PinRecord]
+    var pins: [PinRecord] = []
 
     init(date: Date,
          startedAt: Date,
          endedAt: Date? = nil,
-         totalDistanceMeters: Double = 0,
-         routePoints: [RoutePoint] = [],
-         pins: [PinRecord] = []) {
+         totalDistanceMeters: Double = 0) {
         self.date = date
         self.startedAt = startedAt
         self.endedAt = endedAt
         self.totalDistanceMeters = totalDistanceMeters
-        self.routePoints = routePoints
-        self.pins = pins
+        // routePoints / pins はプロパティ宣言の default `= []` を使う。
+        // SwiftData が内部初期化するため、ここでは触らない。
     }
 
     /// 表示用に小数点第 2 位で丸めた km 値。
