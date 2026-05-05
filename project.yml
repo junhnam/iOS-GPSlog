@@ -1,0 +1,102 @@
+# XcodeGen 設定ファイル
+# 使い方:
+#   $ brew install xcodegen
+#   $ xcodegen generate
+# これで GPSLogger.xcodeproj が再生成される。
+
+name: GPSLogger
+options:
+  bundleIdPrefix: com.junhnam
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+  groupSortPosition: top
+  defaultConfig: Debug
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+# Swift Package 依存（S1-002 で追加）
+# packages:
+#   GoogleMaps:
+#     url: https://github.com/googlemaps/ios-maps-sdk
+#     from: "9.0.0"
+
+targets:
+  GPSLogger:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: GPSLogger
+        excludes:
+          - "Resources/Info.plist"
+          - "Resources/GoogleMaps-Info.plist"
+          - "Resources/GoogleMaps-Info.plist.example"
+          - "Design/**"
+    resources:
+      - path: GPSLogger/Resources/GoogleMaps-Info.plist.example
+        optional: true
+    info:
+      path: GPSLogger/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: GPSログ
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        # 位置情報の権限説明と UIBackgroundModes は S1-003 で追記する
+        # GMSApiKey は S1-002 で追記する
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.junhnam.gpslogger
+        PRODUCT_NAME: GPSLogger
+        TARGETED_DEVICE_FAMILY: "1"  # iPhone のみ
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+        GENERATE_INFOPLIST_FILE: NO
+    # dependencies は S1-002 で GoogleMaps を追加する
+
+  GPSLoggerTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: GPSLoggerTests
+    dependencies:
+      - target: GPSLogger
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.junhnam.gpslogger.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  GPSLogger:
+    build:
+      targets:
+        GPSLogger: all
+        GPSLoggerTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - GPSLoggerTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

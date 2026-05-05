@@ -1,0 +1,66 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode - User specific
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+*.xcscmblueprint
+*.xccheckout
+
+# Xcode - Build products
+build/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods（本プロジェクトでは未使用だが念のため）
+Pods/
+
+# Carthage（同上）
+Carthage/Build/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.pins
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# 機密情報（Google Maps API キーなど）
+GoogleMaps-Info.plist
+GPSLogger/Resources/GoogleMaps-Info.plist
+*.p12
+*.cer
+*.mobileprovision
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# 生成された Xcode プロジェクト
+# （xcodegen で project.yml から生成するため、コミット対象。
+#  もしチームで生成方針を変える場合は以下のコメントを外す）
+# *.xcodeproj/
+
+# macOS Finder
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
