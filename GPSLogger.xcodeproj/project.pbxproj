@@ -10,7 +10,11 @@
 		232E665630652985E70CE788 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3193D4B8A02F13BF3F5D299C /* Assets.xcassets */; };
 		2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */; };
 		310A9FC684206018CD088AFC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB3F65917DC8E542E0510F6E /* RootView.swift */; };
+		7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */; };
+		815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E955F6ED4C6E26D78094677 /* LocationService.swift */; };
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
+		AE27F46968F6EC770DE7756B /* GoogleMaps-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */; };
+		B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0771CC5514403FBA9445A68C /* MapView.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
 		EE2A19120BD717FF5C324D56 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 1E9DA276A4AFB7648716131D /* GoogleMaps */; };
 /* End PBXBuildFile section */
@@ -26,11 +30,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0771CC5514403FBA9445A68C /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		2E955F6ED4C6E26D78094677 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		3193D4B8A02F13BF3F5D299C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3D368B348251683C3272A93A /* GPSLoggerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GPSLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTests.swift; sourceTree = "<group>"; };
 		AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMapsConfiguration.swift; sourceTree = "<group>"; };
 		BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerTests.swift; sourceTree = "<group>"; };
 		C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerApp.swift; sourceTree = "<group>"; };
+		DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleMaps-Info.plist"; sourceTree = "<group>"; };
 		EB3F65917DC8E542E0510F6E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -67,6 +75,7 @@
 		21473425FB53612465868811 /* Location */ = {
 			isa = PBXGroup;
 			children = (
+				2E955F6ED4C6E26D78094677 /* LocationService.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -93,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				3193D4B8A02F13BF3F5D299C /* Assets.xcassets */,
+				DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -100,6 +110,7 @@
 		51502A21B123ED95E0C33D6B /* Map */ = {
 			isa = PBXGroup;
 			children = (
+				0771CC5514403FBA9445A68C /* MapView.swift */,
 			);
 			path = Map;
 			sourceTree = "<group>";
@@ -120,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */,
+				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
 			);
 			path = GPSLoggerTests;
 			sourceTree = "<group>";
@@ -245,6 +257,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				232E665630652985E70CE788 /* Assets.xcassets in Resources */,
+				AE27F46968F6EC770DE7756B /* GoogleMaps-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,6 +270,8 @@
 			files = (
 				8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */,
 				2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */,
+				815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */,
+				B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */,
 				310A9FC684206018CD088AFC /* RootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -266,6 +281,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,
+				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
