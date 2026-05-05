@@ -17,6 +17,8 @@
 		7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */; };
 		815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E955F6ED4C6E26D78094677 /* LocationService.swift */; };
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
+		8E691B87FFCD22FA8FEB8636 /* TripRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */; };
+		96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */; };
 		9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */; };
 		AE27F46968F6EC770DE7756B /* GoogleMaps-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */; };
 		AF70A7A59D5720314956BCDB /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CEB4C730011080C237426F /* TripRecord.swift */; };
@@ -44,6 +46,7 @@
 		38CEB4C730011080C237426F /* TripRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecord.swift; sourceTree = "<group>"; };
 		3D368B348251683C3272A93A /* GPSLoggerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GPSLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASprint1AdditionalTests.swift; sourceTree = "<group>"; };
+		6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepository.swift; sourceTree = "<group>"; };
 		89566F273738C6565096CEC1 /* RoutePoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePoint.swift; sourceTree = "<group>"; };
 		A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTests.swift; sourceTree = "<group>"; };
 		A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDistanceCalculatorTests.swift; sourceTree = "<group>"; };
@@ -57,6 +60,7 @@
 		EB3F65917DC8E542E0510F6E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerTests.swift; sourceTree = "<group>"; };
+		FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepositoryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +158,7 @@
 				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
 				51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */,
 				A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */,
+				FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */,
 			);
 			path = GPSLoggerTests;
 			sourceTree = "<group>";
@@ -187,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */,
+				6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */,
 			);
 			path = Persistence;
 			sourceTree = "<group>";
@@ -318,6 +324,7 @@
 				D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */,
 				02F3021A9E754B31B1045491 /* TripDistanceCalculator.swift in Sources */,
 				AF70A7A59D5720314956BCDB /* TripRecord.swift in Sources */,
+				8E691B87FFCD22FA8FEB8636 /* TripRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -330,6 +337,7 @@
 				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
 				1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */,
 				B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */,
+				96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
