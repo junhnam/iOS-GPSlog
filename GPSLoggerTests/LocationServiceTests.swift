@@ -9,6 +9,17 @@ import SwiftData
 @MainActor
 final class LocationServiceTests: XCTestCase {
 
+    /// テスト中に作成した ModelContainer の強参照。
+    /// SwiftData の ModelContext は ModelContainer が ARC で解放されると無効化され、
+    /// fetch 時に内部 precondition で SIGTRAP するため、テストインスタンスのライフタイム中は
+    /// container を必ず保持しておく必要がある。
+    private var retainedContainers: [ModelContainer] = []
+
+    override func tearDownWithError() throws {
+        retainedContainers.removeAll()
+        try super.tearDownWithError()
+    }
+
     // MARK: - Sprint 1 互換テスト（route / currentLocation）
 
     func test_initialState_isEmpty() {
@@ -60,14 +71,18 @@ final class LocationServiceTests: XCTestCase {
     // MARK: - Sprint 2 / S2-005: DB 永続化テスト
 
     /// インメモリ TripRepository を作るヘルパー。
-    private func makeInMemoryRepository() throws -> (TripRepository, ModelContainer) {
+    /// container はテストインスタンスのプロパティ `retainedContainers` に強参照として
+    /// 保存し、ARC によって context が無効化されないようにする。
+    /// 呼び出し側で `_ = container` のように受けると ARC のタイミング次第で
+    /// SwiftData が precondition で SIGTRAP するため、container は返さない設計にした。
+    private func makeInMemoryRepository() throws -> TripRepository {
         let container = try PersistenceController.makeInMemoryContainer()
-        let repo = TripRepository(modelContext: container.mainContext)
-        return (repo, container)
+        retainedContainers.append(container)
+        return TripRepository(modelContext: container.mainContext)
     }
 
     func test_ingest_persistsRoutePointsToRepository() throws {
-        let (repo, _) = try makeInMemoryRepository()
+        let repo = try makeInMemoryRepository()
         let sut = LocationService(repository: repo)
 
         // 緯度を 0.001 度ずつ増やす。各区間 ≒ 111m。
@@ -89,7 +104,7 @@ final class LocationServiceTests: XCTestCase {
     }
 
     func test_ingest_skipsDBWriteForSubFiveMeterMovements() throws {
-        let (repo, _) = try makeInMemoryRepository()
+        let repo = try makeInMemoryRepository()
         let sut = LocationService(repository: repo)
 
         let p1 = CLLocation(latitude: 35.681236, longitude: 139.767125)
