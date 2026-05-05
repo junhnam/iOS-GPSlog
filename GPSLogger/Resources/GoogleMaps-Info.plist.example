@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Google Maps SDK for iOS の API キーを格納するファイルのテンプレートです。
+
+  使い方:
+    1. このファイルを同じディレクトリに `GoogleMaps-Info.plist` という名前でコピー
+       cp GoogleMaps-Info.plist.example GoogleMaps-Info.plist
+    2. <string></string> の中に Google Cloud Console で発行した API キーを書く
+    3. xcodegen generate を再実行（または Xcode を再起動）
+
+  GoogleMaps-Info.plist 自体は .gitignore で除外済みなのでコミットされません。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>GMSApiKey</key>
+    <string>YOUR_GOOGLE_MAPS_API_KEY_HERE</string>
+</dict>
+</plist>

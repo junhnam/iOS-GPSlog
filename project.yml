@@ -25,11 +25,12 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 
-# Swift Package 依存（S1-002 で追加）
-# packages:
-#   GoogleMaps:
-#     url: https://github.com/googlemaps/ios-maps-sdk
-#     from: "9.0.0"
+# Swift Package 依存（S1-002）
+packages:
+  GoogleMaps:
+    url: https://github.com/googlemaps/ios-maps-sdk
+    # Sprint 1 時点での最新安定版に追随。後続スプリントでバージョン固定の検討予定。
+    from: "9.0.0"
 
 targets:
   GPSLogger:
@@ -40,12 +41,11 @@ targets:
       - path: GPSLogger
         excludes:
           - "Resources/Info.plist"
-          - "Resources/GoogleMaps-Info.plist"
           - "Resources/GoogleMaps-Info.plist.example"
           - "Design/**"
-    resources:
-      - path: GPSLogger/Resources/GoogleMaps-Info.plist.example
-        optional: true
+    # GoogleMaps-Info.plist は .gitignore で除外されており、jun さん側で配置すると
+    # XcodeGen が自動的にバンドルに含めます（File System Synchronized Groups）。
+    # 未配置でもビルドは通り、起動時に警告ログが出るのみ。
     info:
       path: GPSLogger/Resources/Info.plist
       properties:
@@ -67,7 +67,9 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         ENABLE_PREVIEWS: YES
         GENERATE_INFOPLIST_FILE: NO
-    # dependencies は S1-002 で GoogleMaps を追加する
+    dependencies:
+      - package: GoogleMaps
+        product: GoogleMaps
 
   GPSLoggerTests:
     type: bundle.unit-test

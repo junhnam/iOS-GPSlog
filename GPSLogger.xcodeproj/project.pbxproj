@@ -8,9 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		232E665630652985E70CE788 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3193D4B8A02F13BF3F5D299C /* Assets.xcassets */; };
+		2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */; };
 		310A9FC684206018CD088AFC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB3F65917DC8E542E0510F6E /* RootView.swift */; };
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
+		EE2A19120BD717FF5C324D56 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 1E9DA276A4AFB7648716131D /* GoogleMaps */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -26,11 +28,23 @@
 /* Begin PBXFileReference section */
 		3193D4B8A02F13BF3F5D299C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3D368B348251683C3272A93A /* GPSLoggerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GPSLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMapsConfiguration.swift; sourceTree = "<group>"; };
 		BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerTests.swift; sourceTree = "<group>"; };
 		C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerApp.swift; sourceTree = "<group>"; };
 		EB3F65917DC8E542E0510F6E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		13F5504620F50AC587E1AC42 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE2A19120BD717FF5C324D56 /* GoogleMaps in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		0CE16D1972DDC2BDC7EB9AC2 /* Features */ = {
@@ -113,6 +127,7 @@
 		7B4FC5A730FDC1E65B23C570 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */,
 				C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */,
 				EB3F65917DC8E542E0510F6E /* RootView.swift */,
 			);
@@ -168,6 +183,7 @@
 			buildPhases = (
 				86771C7BD64334171DC15A98 /* Sources */,
 				200B918EDEFC341DB725B769 /* Resources */,
+				13F5504620F50AC587E1AC42 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -175,6 +191,7 @@
 			);
 			name = GPSLogger;
 			packageProductDependencies = (
+				1E9DA276A4AFB7648716131D /* GoogleMaps */,
 			);
 			productName = GPSLogger;
 			productReference = EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */;
@@ -208,6 +225,9 @@
 			);
 			mainGroup = 492BD62D39B5A251D6526CD7;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				04127DB930AE98FA7B38C9B3 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4835667A66B5B03422D37A76 /* Products */;
 			projectDirPath = "";
@@ -236,6 +256,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */,
+				2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */,
 				310A9FC684206018CD088AFC /* RootView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -499,6 +520,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		04127DB930AE98FA7B38C9B3 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1E9DA276A4AFB7648716131D /* GoogleMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 04127DB930AE98FA7B38C9B3 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
+			productName = GoogleMaps;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C10CC8B85260A2E1573D14E2 /* Project object */;
 }
