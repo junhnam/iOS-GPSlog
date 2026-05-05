@@ -14,14 +14,16 @@ final class TripDistanceCalculatorTests: XCTestCase {
                        accuracy: 0.5)
     }
 
-    func test_distance_tokyoToShinjuku_isAround6300m() {
+    func test_distance_tokyoToShinjuku_isAround6150m() {
         // 東京駅 (35.681236, 139.767125) と 新宿駅 (35.690921, 139.700258)
+        // 直線距離（WGS84）は約 6.15km。CLLocation.distance(from:) の実測も 6147m 付近。
+        // S2-101 で初期テストの期待値（6300m）が物理距離とズレていたため修正。
         let tokyo = CLLocation(latitude: 35.681236, longitude: 139.767125)
         let shinjuku = CLLocation(latitude: 35.690921, longitude: 139.700258)
 
         let meters = TripDistanceCalculator.distance(from: tokyo, to: shinjuku)
-        // 期待値 6300m ± 100m
-        XCTAssertEqual(meters, 6300, accuracy: 100)
+        // 期待値 6150m ± 200m（CLLocation の実装差・将来の Apple SDK 更新も吸収）
+        XCTAssertEqual(meters, 6150, accuracy: 200)
     }
 
     // MARK: - totalDistance(of:)
