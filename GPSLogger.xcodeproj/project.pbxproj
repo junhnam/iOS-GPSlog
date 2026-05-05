@@ -7,17 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02F3021A9E754B31B1045491 /* TripDistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */; };
 		1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */; };
 		232E665630652985E70CE788 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3193D4B8A02F13BF3F5D299C /* Assets.xcassets */; };
 		2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */; };
 		310A9FC684206018CD088AFC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB3F65917DC8E542E0510F6E /* RootView.swift */; };
+		49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */; };
 		784CDF377C467CBB581037FF /* PinRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C636BD1ED2E9F23F1A4EA689 /* PinRecord.swift */; };
 		7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */; };
 		815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E955F6ED4C6E26D78094677 /* LocationService.swift */; };
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
+		9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */; };
 		AE27F46968F6EC770DE7756B /* GoogleMaps-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */; };
 		AF70A7A59D5720314956BCDB /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CEB4C730011080C237426F /* TripRecord.swift */; };
 		B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0771CC5514403FBA9445A68C /* MapView.swift */; };
+		B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
 		D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89566F273738C6565096CEC1 /* RoutePoint.swift */; };
 		EE2A19120BD717FF5C324D56 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 1E9DA276A4AFB7648716131D /* GoogleMaps */; };
@@ -42,13 +46,17 @@
 		51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASprint1AdditionalTests.swift; sourceTree = "<group>"; };
 		89566F273738C6565096CEC1 /* RoutePoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePoint.swift; sourceTree = "<group>"; };
 		A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTests.swift; sourceTree = "<group>"; };
+		A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDistanceCalculatorTests.swift; sourceTree = "<group>"; };
 		AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMapsConfiguration.swift; sourceTree = "<group>"; };
 		BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerTests.swift; sourceTree = "<group>"; };
 		C636BD1ED2E9F23F1A4EA689 /* PinRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinRecord.swift; sourceTree = "<group>"; };
+		C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDistanceCalculator.swift; sourceTree = "<group>"; };
 		C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerApp.swift; sourceTree = "<group>"; };
+		D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleMaps-Info.plist"; sourceTree = "<group>"; };
 		EB3F65917DC8E542E0510F6E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,9 +151,19 @@
 			children = (
 				BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */,
 				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
+				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
 				51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */,
+				A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */,
 			);
 			path = GPSLoggerTests;
+			sourceTree = "<group>";
+		};
+		784ACB41A35091F335CE0C5E /* Trip */ = {
+			isa = PBXGroup;
+			children = (
+				C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */,
+			);
+			path = Trip;
 			sourceTree = "<group>";
 		};
 		7B4FC5A730FDC1E65B23C570 /* App */ = {
@@ -165,6 +183,14 @@
 			path = History;
 			sourceTree = "<group>";
 		};
+		F056D3FE128F2568530B2C43 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
 		F55760E63201C6B3EEF4B2A1 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
@@ -176,6 +202,8 @@
 			isa = PBXGroup;
 			children = (
 				21473425FB53612465868811 /* Location */,
+				F056D3FE128F2568530B2C43 /* Persistence */,
+				784ACB41A35091F335CE0C5E /* Trip */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -284,9 +312,11 @@
 				2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */,
 				815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */,
 				B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */,
+				9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */,
 				784CDF377C467CBB581037FF /* PinRecord.swift in Sources */,
 				310A9FC684206018CD088AFC /* RootView.swift in Sources */,
 				D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */,
+				02F3021A9E754B31B1045491 /* TripDistanceCalculator.swift in Sources */,
 				AF70A7A59D5720314956BCDB /* TripRecord.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -297,7 +327,9 @@
 			files = (
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,
 				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
+				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
 				1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */,
+				B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import GoogleMaps
 
 @main
@@ -11,6 +12,9 @@ struct GPSLoggerApp: App {
         WindowGroup {
             RootView()
         }
+        // SwiftData の ModelContainer をアプリ全体に注入する（S2-002）。
+        // 各 View からは `@Environment(\.modelContext)` で ModelContext を取得できる。
+        .modelContainer(PersistenceController.shared.container)
     }
 
     /// Google Maps SDK にAPIキーを渡す。
