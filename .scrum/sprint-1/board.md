@@ -19,7 +19,7 @@ iOS シミュレータ上で、現在地を地図に表示し、移動経路を�
 - [x] S1-001: Xcode プロジェクト雛形作成 (SwiftUI / iOS 26+) → dev-1 (commit 3922c81)
 - [x] S1-002: Swift Package Manager 設定 + Google Maps SDK 導入 → dev-1 (commit 3948feb)
 - [x] S1-003: Info.plist に位置情報・バックグラウンド権限を設定 → dev-1 (commit 5992d54)
-- [x] S1-008: メイン画面 UI モック作成（SwiftUI プロトタイプ） → designer (commit COMMIT_HASH_PLACEHOLDER)
+- [x] S1-008: メイン画面 UI モック作成（SwiftUI プロトタイプ） → designer (commit 52240de)
 
 ---
 
