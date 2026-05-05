@@ -1,11 +1,19 @@
 import Foundation
 import CoreLocation
 import Combine
+import os
 
 /// アプリ全体で共有される位置情報サービス。
 ///
 /// Core Location を SwiftUI から扱いやすいよう `ObservableObject` でラップする。
 /// 現在地表示（S1-006）と経路描画（S1-007）から購読される。
+///
+/// Sprint 2 拡張（S2-005）:
+///   - `TripRepository` を DI で受け取り、新規座標を当日の TripRecord に永続化する
+///   - 直前点との距離を `TripDistanceCalculator` で算出し、5m 以上のときだけ DB に書き込む
+///   - 距離は `TripRepository.updateTotalDistance` で TripRecord に加算
+///   - 日付またぎ時は新しい TripRecord に切り替える
+///   - `repository` 未注入時はメモリのみで従来通り動作（後方互換）
 ///
 /// バッテリー消費対策（CLAUDE.md の懸念に対応する Sprint 1 時点の措置）:
 ///   - `distanceFilter = 10`（10m 以内の動きは無視）
@@ -18,7 +26,7 @@ final class LocationService: NSObject, ObservableObject {
     @Published private(set) var currentLocation: CLLocation?
 
     /// 経路描画用の位置情報配列。S1-007 から購読される。
-    /// アプリ再起動時にリセットされる（DB 永続化は Sprint 2）。
+    /// アプリ再起動時にリセットされる（DB 永続化は Sprint 2 で別途 RestoreService が担当）。
     @Published private(set) var route: [CLLocation] = []
 
     /// OS の権限状態。UI 側で「設定アプリへ誘導」等の判断に使う。
@@ -29,8 +37,25 @@ final class LocationService: NSObject, ObservableObject {
 
     private let manager: CLLocationManager
 
-    init(manager: CLLocationManager = CLLocationManager()) {
+    /// DB 永続化用リポジトリ（DI 可能、デフォルト nil）。
+    /// nil の場合はメモリのみで動作（テスト・後方互換）。
+    private let repository: TripRepository?
+
+    /// 現在書き込み対象になっている TripRecord（当日のレコード）。
+    /// 日付がまたいだら appendRoutePoint 前に切り替える。
+    private var currentTrip: TripRecord?
+
+    private static let logger = Logger(subsystem: "com.junhnam.gpslogger",
+                                       category: "LocationService")
+
+    /// DB 書き込み判定のしきい値（m）。直前点との距離がこれ以上のときだけ永続化する。
+    /// 受け入れ条件: 「5m 以上なら appendRoutePoint で永続化」。
+    private static let dbWriteThresholdMeters: Double = 5.0
+
+    init(manager: CLLocationManager = CLLocationManager(),
+         repository: TripRepository? = nil) {
         self.manager = manager
+        self.repository = repository
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         configureManager()
@@ -88,14 +113,68 @@ final class LocationService: NSObject, ObservableObject {
 
     fileprivate func handleNewLocations(_ locations: [CLLocation]) {
         guard let last = locations.last else { return }
+        let previous = currentLocation
         currentLocation = last
+
         // チケット S1-007 のメモに従い、直前点との距離が 5m 未満なら経路に積まない（描画間引き）。
-        if let previous = route.last {
-            if last.distance(from: previous) >= 5 {
+        if let prev = route.last {
+            if last.distance(from: prev) >= 5 {
                 route.append(last)
             }
         } else {
             route.append(last)
+        }
+
+        // S2-005: DB 永続化処理。repository 未注入時は何もしない（後方互換）。
+        if let repository {
+            persistLocation(last, previousLocation: previous, repository: repository)
+        }
+    }
+
+    /// 新規座標を当日の TripRecord に永続化する。
+    /// - 直前点との距離が 5m 未満ならスキップ（揺らぎ排除）
+    /// - 5m 以上なら appendRoutePoint で点を追加し、距離を totalDistance に加算
+    /// - 日付がまたがった場合は新しい TripRecord に切り替える
+    private func persistLocation(_ location: CLLocation,
+                                 previousLocation: CLLocation?,
+                                 repository: TripRepository) {
+        do {
+            // 日付またぎ判定: 直前点と現在点の startOfDay が違えば新しい trip に切り替える。
+            // 直前点が無い（記録開始直後）も todayTrip() で取得・新規作成。
+            let cal = Calendar.current
+            let needsTripSwitch: Bool = {
+                if let cur = currentTrip {
+                    return cal.startOfDay(for: cur.date) != cal.startOfDay(for: location.timestamp)
+                }
+                return true
+            }()
+            if needsTripSwitch {
+                // 直前の trip があれば endedAt を打ってから切り替える。
+                if let cur = currentTrip {
+                    try repository.updateEnd(of: cur, at: cur.endedAt ?? Date())
+                }
+                currentTrip = try repository.todayTrip()
+            }
+            guard let trip = currentTrip else { return }
+
+            // 直前点との距離を計算。5m 未満ならスキップ（受け入れ条件）。
+            // ただし「最初の1点（previousLocation == nil）」は必ず記録する。
+            if let prev = previousLocation {
+                let segment = TripDistanceCalculator.distance(from: prev, to: location)
+                guard segment >= Self.dbWriteThresholdMeters else { return }
+
+                try repository.appendRoutePoint(location, to: trip)
+                try repository.updateTotalDistance(of: trip, addingMeters: segment)
+                try repository.updateEnd(of: trip, at: location.timestamp)
+            } else {
+                // 初回点: distance なしで append のみ
+                try repository.appendRoutePoint(location, to: trip)
+                try repository.updateEnd(of: trip, at: location.timestamp)
+            }
+        } catch {
+            // DB 書き込み失敗はクラッシュさせず、ログのみ出して UI は動かし続ける。
+            // Sprint 6 でユーザー向けエラー通知に拡張予定。
+            Self.logger.warning("DB 書き込み失敗: \(error.localizedDescription)")
         }
     }
 

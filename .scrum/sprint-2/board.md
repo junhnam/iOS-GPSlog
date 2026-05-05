@@ -14,7 +14,6 @@
 ## In Progress
 
 - [~] S2-007: アプリ起動時の最新 TripRecord 復元 → dev-1
-- [~] S2-005: LocationService と DB の連携（永続化 + 距離加算） → dev-2
 
 ## Review
 
@@ -22,6 +21,7 @@
 - [r] S2-002: ModelContainer セットアップとアプリ統合 → dev-1
 - [r] S2-003: TripRepository（取得・作成・更新・距離加算） → dev-1
 - [r] S2-004: 総移動距離計算ロジック（CLLocation.distance ベース） → dev-2
+- [r] S2-005: LocationService と DB の連携（永続化 + 距離加算） → dev-2
 
 ## Backlog（途中起票）
 

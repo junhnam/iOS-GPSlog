@@ -8,9 +8,17 @@ import CoreLocation
 /// Sprint 1 のスコープ:
 ///   - 現在地に追従するカメラ（初回のみ自動追従）
 ///   - 経路は `LocationService.route` の全点を polyline で描画
-///   - 経路の永続化（DB 保存）は Sprint 2 で対応
+/// Sprint 2 拡張（S2-005）:
+///   - `PersistenceController.shared` から `TripRepository` を生成し、
+///     `LocationService` に注入することで座標を当日の TripRecord に永続化する
 struct MapView: View {
-    @StateObject private var locationService = LocationService()
+    @StateObject private var locationService: LocationService = {
+        // PersistenceController.shared.container.mainContext から TripRepository を生成。
+        // mainContext は @MainActor 上でのみ安全。MapView は @MainActor 前提で問題ない。
+        let context = PersistenceController.shared.container.mainContext
+        let repository = TripRepository(modelContext: context)
+        return LocationService(repository: repository)
+    }()
 
     var body: some View {
         GoogleMapContainer(locationService: locationService)

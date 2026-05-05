@@ -1,5 +1,6 @@
 import XCTest
 import CoreLocation
+import SwiftData
 @testable import GPSLogger
 
 /// LocationService のロジック検証用テスト。
@@ -7,6 +8,8 @@ import CoreLocation
 /// `_ingestForTesting` で擬似座標を流し、route / currentLocation の挙動だけを確認する。
 @MainActor
 final class LocationServiceTests: XCTestCase {
+
+    // MARK: - Sprint 1 互換テスト（route / currentLocation）
 
     func test_initialState_isEmpty() {
         let sut = LocationService()
@@ -52,5 +55,62 @@ final class LocationServiceTests: XCTestCase {
         sut._ingestForTesting([p2])
 
         XCTAssertEqual(sut.route.count, 2)
+    }
+
+    // MARK: - Sprint 2 / S2-005: DB 永続化テスト
+
+    /// インメモリ TripRepository を作るヘルパー。
+    private func makeInMemoryRepository() throws -> (TripRepository, ModelContainer) {
+        let container = try PersistenceController.makeInMemoryContainer()
+        let repo = TripRepository(modelContext: container.mainContext)
+        return (repo, container)
+    }
+
+    func test_ingest_persistsRoutePointsToRepository() throws {
+        let (repo, _) = try makeInMemoryRepository()
+        let sut = LocationService(repository: repo)
+
+        // 緯度を 0.001 度ずつ増やす。各区間 ≒ 111m。
+        let p1 = CLLocation(latitude: 35.681236, longitude: 139.767125)
+        let p2 = CLLocation(latitude: 35.682236, longitude: 139.767125)
+        let p3 = CLLocation(latitude: 35.683236, longitude: 139.767125)
+
+        sut._ingestForTesting([p1])
+        sut._ingestForTesting([p2])
+        sut._ingestForTesting([p3])
+
+        let trip = try repo.todayTrip(creatingIfMissing: false)
+        let unwrapped = try XCTUnwrap(trip)
+        XCTAssertEqual(unwrapped.routePoints.count, 3)
+
+        // 距離は p1→p2 + p2→p3 の合計。p1 自体は初回点なので加算されない。
+        let expected = p1.distance(from: p2) + p2.distance(from: p3)
+        XCTAssertEqual(unwrapped.totalDistanceMeters, expected, accuracy: 0.5)
+    }
+
+    func test_ingest_skipsDBWriteForSubFiveMeterMovements() throws {
+        let (repo, _) = try makeInMemoryRepository()
+        let sut = LocationService(repository: repo)
+
+        let p1 = CLLocation(latitude: 35.681236, longitude: 139.767125)
+        // 緯度方向に 0.00001 度 ≒ 約 1m。5m 未満なので DB 書き込み対象外。
+        let p2 = CLLocation(latitude: 35.681246, longitude: 139.767125)
+
+        sut._ingestForTesting([p1])
+        sut._ingestForTesting([p2])
+
+        let trip = try repo.todayTrip(creatingIfMissing: false)
+        let unwrapped = try XCTUnwrap(trip)
+        // 初回点 p1 のみ記録され、p2 はスキップされる。
+        XCTAssertEqual(unwrapped.routePoints.count, 1)
+        XCTAssertEqual(unwrapped.totalDistanceMeters, 0, accuracy: 0.001)
+    }
+
+    func test_ingest_withoutRepository_doesNotCrash() {
+        // repository 未注入時はメモリのみで従来通り動作（後方互換）。
+        let sut = LocationService(repository: nil)
+        let p = CLLocation(latitude: 35.681236, longitude: 139.767125)
+        sut._ingestForTesting([p])
+        XCTAssertEqual(sut.route.count, 1)
     }
 }
