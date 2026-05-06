@@ -197,9 +197,11 @@ final class LocationService: NSObject, ObservableObject {
     private func triggerCloudUploadIfNeeded() {
         guard let coordinator = cloudUploadCoordinator else { return }
         guard let trip = currentTrip else { return }
-        Task { [weak self] in
+        // SwiftData の @Model（TripRecord）は MainActor 隔離のため、
+        // Task の継承された isolation（@MainActor）を維持する。
+        Task { @MainActor [weak self] in
             _ = await coordinator.uploadIfEnabled(for: trip)
-            _ = self // weak 警告抑止
+            _ = self
         }
     }
 
