@@ -244,6 +244,13 @@ private struct GoogleMapContainer: UIViewRepresentable {
 
     /// 地図の状態を保持する Coordinator。
     /// `GMSMutablePath` を内部で持ち、新しい点だけ append することで描画を効率化する。
+    ///
+    /// S5-008: Swift 6 strict concurrency 対応で `@MainActor` 隔離化。
+    /// SwiftUI は `UIViewRepresentable.Coordinator` を MainActor 上でしか触らないため、
+    /// クラス全体を MainActor に閉じることで GMSMapView/GMSMutablePath/GMSPolyline 等の
+    /// 非 Sendable プロパティアクセスが安全になる。GMSMapViewDelegate メソッドも UIKit
+    /// 由来のため MainActor 上で呼ばれる前提と矛盾しない。
+    @MainActor
     final class Coordinator: NSObject, GMSMapViewDelegate {
         var didCenterOnFirstFix: Bool = false
 
