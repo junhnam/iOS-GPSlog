@@ -160,4 +160,64 @@ final class TripRepository {
             throw TripRepositoryError.saveFailed(underlying: error)
         }
     }
+
+    // MARK: - Delete (S6-003)
+
+    /// 指定日付に対応する TripRecord を削除する。
+    ///
+    /// TripRecord が保持する routePoints / pins は `@Relationship(deleteRule: .cascade)` により
+    /// TripRecord 削除と同時に自動削除される（手動削除不要）。
+    /// 指定日付のレコードが存在しない場合は no-op（エラーにしない）。
+    ///
+    /// 実装メモ: `#Predicate` の Date 比較は不安定なため全件 fetch + メモリフィルタを使う
+    /// （ios26-swiftdata.md 3 節参照）。
+    func deleteTrip(on date: Date) throws {
+        let day = Calendar.current.startOfDay(for: date)
+        let descriptor = FetchDescriptor<TripRecord>()
+        do {
+            let results = try modelContext.fetch(descriptor)
+            guard let target = results.first(where: { $0.date == day }) else {
+                return  // 対象なし -> no-op
+            }
+            modelContext.delete(target)
+            try modelContext.save()
+        } catch let e as TripRepositoryError {
+            throw e
+        } catch {
+            throw TripRepositoryError.saveFailed(underlying: error)
+        }
+    }
+
+    /// 全 TripRecord を削除する。
+    ///
+    /// 各 TripRecord の cascade 削除により RoutePoint / PinRecord も同時に削除される。
+    func deleteAllTrips() throws {
+        let descriptor = FetchDescriptor<TripRecord>()
+        do {
+            let all = try modelContext.fetch(descriptor)
+            for record in all {
+                modelContext.delete(record)
+            }
+            try modelContext.save()
+        } catch let e as TripRepositoryError {
+            throw e
+        } catch {
+            throw TripRepositoryError.saveFailed(underlying: error)
+        }
+    }
+
+    /// DB に存在する TripRecord の日付一覧を返す（昇順）。
+    ///
+    /// 呼び出し側で必要に応じて降順に sort し直して利用する。
+    func availableDates() throws -> [Date] {
+        let descriptor = FetchDescriptor<TripRecord>(
+            sortBy: [SortDescriptor(\.date, order: .forward)]
+        )
+        do {
+            let all = try modelContext.fetch(descriptor)
+            return all.map { $0.date }
+        } catch {
+            throw TripRepositoryError.fetchFailed(underlying: error)
+        }
+    }
 }

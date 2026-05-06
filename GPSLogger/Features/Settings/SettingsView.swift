@@ -46,6 +46,10 @@ struct SettingsView: View {
     /// 永続化されている TripRecord の件数（S4-007: disabled 制御用）。
     let tripCount: @MainActor () -> Int
 
+    /// DB クリア画面で使用する TripRepository（S6-003）。
+    /// 設定画面から DBClearView に渡すために保持する。
+    let tripRepository: TripRepository
+
     /// 自宅登録シートの開閉状態。
     @State private var showingHomeRegistration: Bool = false
 
@@ -283,6 +287,19 @@ struct SettingsView: View {
                 .accessibilityIdentifier("db_auto_cleanup_threshold_stepper")
             }
 
+            // S6-003: DB クリア（指定日付のデータ削除）
+            NavigationLink {
+                DBClearView(repository: tripRepository)
+            } label: {
+                HStack {
+                    Text("DB クリア")
+                    Spacer()
+                    Image(systemName: "trash")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .accessibilityIdentifier("db_clear_link")
+
             // S4-007: エクスポート
             NavigationLink {
                 ExportView(exportTodayTrip: exportTodayTrip,
@@ -315,6 +332,9 @@ struct SettingsView: View {
 
 #Preview {
     let settings = AppSettings()
+    // Preview 用インメモリコンテナ。失敗時は空の repository を渡せないため fatalError で落とす。
+    let container = try! PersistenceController.makeInMemoryContainer()
+    let repository = TripRepository(modelContext: container.mainContext)
     return NavigationStack {
         SettingsView(
             settings: settings,
@@ -325,7 +345,10 @@ struct SettingsView: View {
             cloudAuthenticatedLabel: { _ in nil },
             exportTodayTrip: { nil },
             exportAllTrips: { nil },
-            tripCount: { 0 }
+            tripCount: { 0 },
+            tripRepository: repository
         )
     }
+    // container を保持して Preview 中の解放を防ぐ
+    _ = container
 }

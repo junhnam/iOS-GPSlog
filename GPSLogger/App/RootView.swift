@@ -83,7 +83,9 @@ struct RootView: View {
                     },
                     exportTodayTrip: { try await Self.exportTodayTrip() },
                     exportAllTrips: { try await Self.exportAllTrips() },
-                    tripCount: { Self.persistedTripCount() }
+                    tripCount: { Self.persistedTripCount() },
+                    // S6-003: DB クリア画面で使用する TripRepository を注入。
+                    tripRepository: dependencies.repository
                 )
             }
             .tabItem {

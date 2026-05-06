@@ -153,4 +153,122 @@ final class TripRepositoryTests: XCTestCase {
         // 降順: index 0 が最新
         XCTAssertEqual(recent[0].date, today)
     }
+
+    // MARK: - deleteTrip (S6-003)
+
+    /// 指定日付の TripRecord 1 件を削除し、関連する RoutePoint / PinRecord が
+    /// カスケード削除されることを検証する（S6-003）。
+    func test_deleteTrip_singleDate_removesRecordAndCascade_S6_003() throws {
+        // 2 日分のレコードを投入し、1 件だけ削除して残り 1 件であることを確認する。
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let yesterday = cal.date(byAdding: .day, value: -1, to: today)!
+
+        let tripToday = TripRecord(date: today, startedAt: today)
+        let tripYesterday = TripRecord(date: yesterday, startedAt: yesterday)
+        context.insert(tripToday)
+        context.insert(tripYesterday)
+        try context.save()
+
+        // RoutePoint と PinRecord を yesterday の TripRecord に紐付ける
+        let point = RoutePoint(latitude: 35.681236, longitude: 139.767125,
+                               timestamp: yesterday, trip: tripYesterday)
+        let pin = PinRecord(latitude: 35.681236, longitude: 139.767125,
+                            stayedFrom: yesterday, stayedDurationSeconds: 720)
+        context.insert(point)
+        try repo.appendPin(pin, to: tripYesterday)
+        try context.save()
+
+        // 削除前: RoutePoint / PinRecord が存在する
+        let pointsBefore = try context.fetch(FetchDescriptor<RoutePoint>())
+        let pinsBefore = try context.fetch(FetchDescriptor<PinRecord>())
+        XCTAssertFalse(pointsBefore.isEmpty, "削除前は RoutePoint が存在する")
+        XCTAssertFalse(pinsBefore.isEmpty, "削除前は PinRecord が存在する")
+
+        // yesterday を削除
+        try repo.deleteTrip(on: yesterday)
+
+        // TripRecord が 1 件（today のみ）になっている
+        let remaining = try context.fetch(FetchDescriptor<TripRecord>())
+        XCTAssertEqual(remaining.count, 1, "yesterday の TripRecord が削除されている")
+        XCTAssertEqual(remaining.first?.date, today, "today の TripRecord は残っている")
+
+        // cascade 削除により RoutePoint / PinRecord も消えている
+        let pointsAfter = try context.fetch(FetchDescriptor<RoutePoint>())
+        let pinsAfter = try context.fetch(FetchDescriptor<PinRecord>())
+        XCTAssertTrue(pointsAfter.isEmpty, "cascade で RoutePoint が削除されている（S6-003）")
+        XCTAssertTrue(pinsAfter.isEmpty, "cascade で PinRecord が削除されている（S6-003）")
+    }
+
+    /// 全 TripRecord を削除した後、DB が空になることを検証する（S6-003）。
+    func test_deleteAllTrips_removesAllRecords_S6_003() throws {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+
+        // 3 日分のレコードを投入
+        for offset in 0...2 {
+            let d = cal.date(byAdding: .day, value: -offset, to: today)!
+            let t = TripRecord(date: d, startedAt: d)
+            context.insert(t)
+        }
+        try context.save()
+
+        // 削除前の件数確認
+        let beforeCount = try context.fetchCount(FetchDescriptor<TripRecord>())
+        XCTAssertEqual(beforeCount, 3, "削除前は 3 件ある")
+
+        // 全削除
+        try repo.deleteAllTrips()
+
+        // 全件なくなっている
+        let afterCount = try context.fetchCount(FetchDescriptor<TripRecord>())
+        XCTAssertEqual(afterCount, 0, "全削除後は 0 件（S6-003）")
+    }
+
+    /// 存在しない日付を削除しても no-op になることを検証する（S6-003）。
+    func test_deleteTrip_nonexistentDate_isNoOp_S6_003() throws {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+
+        // 1 件だけ投入
+        let t = TripRecord(date: today, startedAt: today)
+        context.insert(t)
+        try context.save()
+
+        // 存在しない日付（明日）を削除 → エラーが飛ばず no-op
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: today)!
+        XCTAssertNoThrow(try repo.deleteTrip(on: tomorrow),
+                         "存在しない日付の削除は no-op でエラーが飛ばない（S6-003）")
+
+        // 既存レコードは消えていない
+        let remaining = try context.fetch(FetchDescriptor<TripRecord>())
+        XCTAssertEqual(remaining.count, 1, "today のレコードは影響を受けていない（S6-003）")
+    }
+
+    /// availableDates が DB に存在する全日付を昇順で返すことを検証する（S6-003）。
+    func test_availableDates_returnsAllDates_S6_003() throws {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+
+        // 5 日分をランダム順で投入
+        let offsets = [0, -4, -2, -1, -3]
+        var inserted: [Date] = []
+        for offset in offsets {
+            let d = cal.date(byAdding: .day, value: offset, to: today)!
+            let t = TripRecord(date: d, startedAt: d)
+            context.insert(t)
+            inserted.append(d)
+        }
+        try context.save()
+
+        let result = try repo.availableDates()
+
+        // 件数が一致している
+        XCTAssertEqual(result.count, 5, "availableDates は全件返す（S6-003）")
+
+        // 昇順になっている
+        let sortedExpected = inserted.sorted(by: <)
+        XCTAssertEqual(result, sortedExpected,
+                       "availableDates は昇順で返す（S6-003）")
+    }
 }
