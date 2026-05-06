@@ -1,26 +1,52 @@
 import SwiftUI
 
-/// 設定画面（S3-001 / S3-002 / S3-004）。
+/// 設定画面（S3-001 / S3-002 / S3-004 / S4-004 / S4-007）。
 ///
 /// 構造:
 ///   - 「自宅」セクション: 登録済みの自宅情報表示 + 登録/解除ボタン（S3-002）
 ///   - 「記録モード」セクション: 常時 / トリガーの Picker（S3-004）
+///   - 「カレンダー同期」セクション: 同期 ON/OFF + 対象カレンダー選択（S4-004）
+///   - 「データ」セクション: エクスポート画面への遷移（S4-007）
 ///
 /// アーキテクチャ:
 ///   - `AppSettings` を `@Bindable` で受け取り、UI 操作で直接プロパティを更新
 ///     → AppSettings 内の didSet が UserDefaults に書き戻す
 ///   - 自宅登録 UI は `HomeRegistrationView` をシート表示（S3-002 で詳細実装）
+///   - カレンダー選択 UI は `CalendarPickerView` を NavigationLink で開く（S4-004）
+///   - エクスポート UI は `ExportView` を NavigationLink で開く（S4-007）
 struct SettingsView: View {
     /// アプリ全体で共有される `AppSettings`。RootView から `@Environment` 経由で受け取る。
     @Bindable var settings: AppSettings
 
+    /// CalendarSyncService を `@MainActor` プロパティとして注入（S4-004）。
+    /// テスト時は CalendarProviderProtocol のフェイクを内包したサービスを差し込む。
+    let calendarService: CalendarSyncService
+
+    /// 今日の TripRecord を CSV に書き出して URL を返すクロージャ（S4-007）。
+    /// ExportView へ橋渡しする。
+    let exportTodayTrip: @MainActor () async throws -> URL?
+
+    /// 全期間の TripRecord を CSV に書き出して URL を返すクロージャ（S4-007）。
+    let exportAllTrips: @MainActor () async throws -> URL?
+
+    /// 永続化されている TripRecord の件数（S4-007: disabled 制御用）。
+    let tripCount: @MainActor () -> Int
+
     /// 自宅登録シートの開閉状態。
     @State private var showingHomeRegistration: Bool = false
+
+    /// カレンダー権限拒否時のアラート文言（S4-004）。nil = 表示しない。
+    @State private var calendarPermissionAlert: String?
+
+    /// 権限要求中の二重起動防止フラグ（S4-004）。
+    @State private var isRequestingCalendarPermission: Bool = false
 
     var body: some View {
         Form {
             homeSection
             recordingModeSection
+            calendarSyncSection
+            dataSection
         }
         .navigationTitle("設定")
         .navigationBarTitleDisplayMode(.inline)
@@ -31,6 +57,19 @@ struct SettingsView: View {
                 }
             }
         }
+        .alert("カレンダー権限が必要です",
+               isPresented: Binding(
+                   get: { calendarPermissionAlert != nil },
+                   set: { if !$0 { calendarPermissionAlert = nil } }
+               ),
+               actions: {
+                   Button("OK", role: .cancel) { calendarPermissionAlert = nil }
+               },
+               message: {
+                   if let message = calendarPermissionAlert {
+                       Text(message)
+                   }
+               })
     }
 
     // MARK: - 自宅セクション（S3-002）
@@ -99,10 +138,109 @@ struct SettingsView: View {
             Text("記録モード")
         }
     }
+
+    // MARK: - カレンダー同期セクション（S4-004）
+
+    @ViewBuilder
+    private var calendarSyncSection: some View {
+        Section {
+            Toggle("カレンダー同期", isOn: $settings.calendarSyncEnabled)
+                .accessibilityIdentifier("calendar_sync_toggle")
+                .onChange(of: settings.calendarSyncEnabled) { _, newValue in
+                    handleCalendarSyncToggle(turnedOn: newValue)
+                }
+
+            NavigationLink {
+                CalendarPickerView(settings: settings,
+                                   calendarService: calendarService)
+            } label: {
+                HStack {
+                    Text("対象カレンダー")
+                    Spacer()
+                    Text(currentCalendarTitle)
+                        .foregroundStyle(.secondary)
+                        .font(.callout)
+                }
+            }
+            .disabled(!settings.calendarSyncEnabled)
+            .accessibilityIdentifier("calendar_picker_link")
+        } header: {
+            Text("カレンダー同期")
+        } footer: {
+            Text("ON にすると、滞留地点が自動で iOS のカレンダーに予定として記録されます。")
+                .font(.footnote)
+        }
+    }
+
+    /// `settings.calendarIdentifier` に対応する EKCalendar のタイトルを返す。
+    /// 一覧から見つからない場合は「未選択」を返す。
+    private var currentCalendarTitle: String {
+        guard let identifier = settings.calendarIdentifier,
+              !identifier.isEmpty else {
+            return "未選択"
+        }
+        let calendars = calendarService.availableCalendars()
+        if let match = calendars.first(where: { $0.calendarIdentifier == identifier }) {
+            return match.title
+        }
+        return "未選択"
+    }
+
+    /// Toggle の onChange ハンドラ（S4-004）。
+    /// ON 時は権限要求 → 拒否なら OFF に戻してアラート表示。
+    /// OFF 時は何もしない（識別子は破棄しない）。
+    private func handleCalendarSyncToggle(turnedOn: Bool) {
+        guard turnedOn else { return }
+        guard !isRequestingCalendarPermission else { return }
+        isRequestingCalendarPermission = true
+        Task { @MainActor in
+            let granted = await calendarService.requestFullAccessIfNeeded()
+            isRequestingCalendarPermission = false
+            if !granted {
+                // 拒否時は Toggle を OFF に戻し、アラートで設定アプリへ誘導する
+                settings.calendarSyncEnabled = false
+                calendarPermissionAlert =
+                    "カレンダー権限が必要です。iOS の「設定」アプリから許可してください。"
+            }
+        }
+    }
+
+    // MARK: - データセクション（S4-007）
+
+    @ViewBuilder
+    private var dataSection: some View {
+        Section {
+            NavigationLink {
+                ExportView(exportTodayTrip: exportTodayTrip,
+                           exportAllTrips: exportAllTrips,
+                           tripCount: tripCount)
+            } label: {
+                HStack {
+                    Text("エクスポート")
+                    Spacer()
+                    Image(systemName: "square.and.arrow.up")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .accessibilityIdentifier("export_link")
+        } header: {
+            Text("データ")
+        } footer: {
+            Text("CSV ファイルとして書き出し、iCloud Drive 等に保存できます。")
+                .font(.footnote)
+        }
+    }
 }
 
 #Preview {
-    NavigationStack {
-        SettingsView(settings: AppSettings())
+    let settings = AppSettings()
+    return NavigationStack {
+        SettingsView(
+            settings: settings,
+            calendarService: CalendarSyncService(appSettings: settings),
+            exportTodayTrip: { nil },
+            exportAllTrips: { nil },
+            tripCount: { 0 }
+        )
     }
 }

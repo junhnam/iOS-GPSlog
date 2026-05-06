@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// アプリ起動直後に表示されるルート画面。
 ///
@@ -26,6 +27,11 @@ struct RootView: View {
     /// 自宅判定・SLC・MKLocalSearch が機能するようにしている。
     @StateObject private var locationService: LocationService
 
+    /// アプリ全体で共有される CalendarSyncService（S4-002 / S4-004）。
+    /// SettingsView の「カレンダー同期」セクションと、S4-003 の滞留ピン → カレンダー
+    /// イベント自動作成で同じインスタンスを共有する。
+    @State private var calendarService: CalendarSyncService
+
     init() {
         let context = PersistenceController.shared.container.mainContext
         let repository = TripRepository(modelContext: context)
@@ -33,11 +39,14 @@ struct RootView: View {
         // ※ View の init で `_appSettings.wrappedValue` を直接読むのは保証されないため、
         //    RootView 用の AppSettings インスタンスを 1 つだけ作って両方に渡す。
         let settings = AppSettings()
+        let calendar = CalendarSyncService(appSettings: settings)
         self._appSettings = State(initialValue: settings)
+        self._calendarService = State(initialValue: calendar)
         self._locationService = StateObject(wrappedValue: LocationService(
             repository: repository,
             placeProvider: PlaceLookupService(),
-            appSettings: settings
+            appSettings: settings,
+            calendarSync: calendar
         ))
     }
 
@@ -62,7 +71,13 @@ struct RootView: View {
             .accessibilityLabel("履歴タブ")
 
             NavigationStack {
-                SettingsView(settings: appSettings)
+                SettingsView(
+                    settings: appSettings,
+                    calendarService: calendarService,
+                    exportTodayTrip: { try await Self.exportTodayTrip() },
+                    exportAllTrips: { try await Self.exportAllTrips() },
+                    tripCount: { Self.persistedTripCount() }
+                )
             }
             .tabItem {
                 Label("設定", systemImage: "gearshape")
@@ -78,6 +93,41 @@ struct RootView: View {
         case map
         case history
         case settings
+    }
+
+    // MARK: - Export hooks (S4-007 / 本番接続: S4-005 CSVExportService)
+
+    /// 当日の TripRecord を CSV に書き出して URL を返す。
+    /// 当日 trip が無ければ nil を返す（ExportView 側で「記録がまだありません」と通知）。
+    @MainActor
+    static func exportTodayTrip() async throws -> URL? {
+        let context = PersistenceController.shared.container.mainContext
+        let repository = TripRepository(modelContext: context)
+        guard let trip = try repository.todayTrip(creatingIfMissing: false) else {
+            return nil
+        }
+        return try CSVExportService().exportTripRecord(trip)
+    }
+
+    /// 永続化されている全 TripRecord を 1 ファイルにまとめて書き出して URL を返す。
+    /// 0 件なら nil を返す。
+    @MainActor
+    static func exportAllTrips() async throws -> URL? {
+        let context = PersistenceController.shared.container.mainContext
+        let descriptor = FetchDescriptor<TripRecord>(
+            sortBy: [SortDescriptor(\.date, order: .forward)]
+        )
+        let trips = (try? context.fetch(descriptor)) ?? []
+        guard !trips.isEmpty else { return nil }
+        return try CSVExportService().exportAllTrips(trips)
+    }
+
+    /// 永続化されている TripRecord 件数を返す（disabled 制御用）。
+    @MainActor
+    static func persistedTripCount() -> Int {
+        let context = PersistenceController.shared.container.mainContext
+        let descriptor = FetchDescriptor<TripRecord>()
+        return (try? context.fetchCount(descriptor)) ?? 0
     }
 }
 

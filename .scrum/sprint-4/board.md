@@ -10,19 +10,21 @@
 
 ## Todo
 
-- [ ] S4-007: エクスポート UI 画面 → dev-1
+（全チケット着手済み）
 
 ## In Progress
 
-- [~] S4-004: カレンダー同期 ON/OFF 設定 → dev-1
+（全チケット Review 以上）
 
 ## Review
 
 - [x] S4-001: CLGeocoder → MKReverseGeocodingRequest 移行（QA-S3-002 解消） → dev-2（実装完了 / レビュー待ち）
 - [x] S4-002: EventKit 連携基盤（権限取得 + カレンダー選択） → dev-2（実装完了 / レビュー待ち）
 - [x] S4-003: 滞留ピン → カレンダーイベント自動作成 → dev-2（実装完了 / レビュー待ち）
+- [x] S4-004: カレンダー同期 ON/OFF 設定 → dev-1（実装完了 / レビュー待ち）
 - [x] S4-005: CSV エクスポート機能（DBスキーマそのまま出力） → dev-2（実装完了 / レビュー待ち）
 - [x] S4-006: UIDocumentPickerViewController での保存先選択 → dev-1（実装完了 / レビュー待ち）
+- [x] S4-007: エクスポート UI 画面 → dev-1（実装完了 / レビュー待ち）
 - [x] S4-008: MapView HUD warning ロジックを HomeDetector へ統一 → dev-1（実装完了 / レビュー待ち）
 
 ## Done
