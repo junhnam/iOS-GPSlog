@@ -68,3 +68,7 @@ npm test        # テスト
 この懸念が払拭できるのであれば、その手段をよく検討して進めてください。
 <!-- このプロジェクト固有の注意点 -->
 
+### iOS 26 SwiftData / Swift 6 落とし穴メモ
+
+Sprint 2 で踏んだ SwiftData の落とし穴（`@Relationship` 配列に `= []` 既定値必須、テストの `ModelContainer` 強参照、`#Predicate` を避けてメモリフィルタを使う等）は [`.scrum/notes/ios26-swiftdata.md`](./.scrum/notes/ios26-swiftdata.md) に集約しています。新規 `@Model` クラスを追加するときは必ず参照してください。
+

@@ -137,9 +137,14 @@ iOS-GPSlog/
   - `.scrum/sprint-{N}/plan.md` … スプリント計画
   - `.scrum/sprint-{N}/board.md` … 進捗ボード（Todo / In Progress / Review / Done）
   - `.scrum/tickets/S{N}-{nnn}.md` … 各チケットの詳細
+  - `.scrum/notes/` … 技術ナレッジ集（iOS 26 SwiftData 落とし穴メモなど）
 - 各チケットは GitHub Issues とも紐付け（`github_issue` フィールド参照）
 - ブランチ戦略: `main` ＋ `feature/sprint-{N}-{ticket-id}`
 - コミットメッセージ: `feat:` / `fix:` / `chore:` / `docs:` のプレフィックス + `(S{N}-{nnn})`
+
+### 開発時に必ず参照するナレッジ
+
+- [`.scrum/notes/ios26-swiftdata.md`](./.scrum/notes/ios26-swiftdata.md) … iOS 26 SwiftData / Swift 6 落とし穴メモ（Sprint 2 retro Try「iOS 26 SwiftData の特殊事情をプロジェクト内に記録」を Sprint 3 S3-009 で実装）。新規 `@Model` クラスやテスト用 `ModelContainer` を追加するときは必ず読むこと。
 
 ## トラブルシューティング
 
