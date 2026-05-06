@@ -74,6 +74,9 @@ final class AppSettings {
         // S5-001 / S5-004: クラウド保存先 / 自動同期 ON/OFF。
         static let cloudProviderKind   = "gpslogger.settings.v1.cloudProviderKind"
         static let cloudAutoSyncEnabled = "gpslogger.settings.v1.cloudAutoSyncEnabled"
+        // S6-004: DB 自動消去 ON/OFF / しきい値。
+        static let dbAutoCleanupEnabled = "gpslogger.settings.v1.dbAutoCleanupEnabled"
+        static let dbAutoCleanupThresholdGB = "gpslogger.settings.v1.dbAutoCleanupThresholdGB"
     }
 
     // MARK: - Defaults
@@ -86,6 +89,10 @@ final class AppSettings {
     static let defaultCalendarSyncEnabled: Bool = false
     /// S5-004: クラウド自動同期は既定 OFF（jun さんが明示的に ON にしないと動かない）。
     static let defaultCloudAutoSyncEnabled: Bool = false
+    /// S6-004: DB 自動消去は既定 OFF（誤削除防止のため jun さんが明示的に ON にしないと動かない）。
+    static let defaultDbAutoCleanupEnabled: Bool = false
+    /// S6-004: DB 自動消去のしきい値（GB）。1.0 GB = 1,073,741,824 bytes。
+    static let defaultDbAutoCleanupThresholdGB: Double = 1.0
 
     // MARK: - Stored Properties (observed)
 
@@ -173,6 +180,32 @@ final class AppSettings {
         }
     }
 
+    /// DB 自動消去 ON/OFF（S6-004）。
+    /// true のとき、記録停止時に DatabaseAutoCleanupService が容量をチェックし
+    /// しきい値超過で古い TripRecord から削除する。
+    /// 既定は false（誤削除防止のため jun さんが明示的に ON にしないと動かない）。
+    var dbAutoCleanupEnabled: Bool {
+        didSet {
+            guard dbAutoCleanupEnabled != oldValue else { return }
+            defaults.set(dbAutoCleanupEnabled, forKey: Keys.dbAutoCleanupEnabled)
+        }
+    }
+
+    /// DB 自動消去のしきい値（GB）（S6-004）。
+    /// この値を超えたとき、古い日付の TripRecord から削除を行う。
+    /// 既定は 1.0 GB。0.1 未満は 0.1 にフォールバックして保存する。
+    var dbAutoCleanupThresholdGB: Double {
+        didSet {
+            let clamped = max(dbAutoCleanupThresholdGB, 0.1)
+            if clamped != dbAutoCleanupThresholdGB {
+                dbAutoCleanupThresholdGB = clamped
+                return
+            }
+            guard dbAutoCleanupThresholdGB != oldValue else { return }
+            defaults.set(dbAutoCleanupThresholdGB, forKey: Keys.dbAutoCleanupThresholdGB)
+        }
+    }
+
     // MARK: - Dependencies
 
     /// 注入された UserDefaults。本番では `.standard`、テストでは独立スイート。
@@ -232,6 +265,16 @@ final class AppSettings {
         } else {
             self.cloudAutoSyncEnabled = Self.defaultCloudAutoSyncEnabled
         }
+
+        // S6-004: DB 自動消去 ON/OFF / しきい値。
+        // 既定 false（誤削除防止のため明示的に ON にしないと動かない）。
+        if defaults.object(forKey: Keys.dbAutoCleanupEnabled) != nil {
+            self.dbAutoCleanupEnabled = defaults.bool(forKey: Keys.dbAutoCleanupEnabled)
+        } else {
+            self.dbAutoCleanupEnabled = Self.defaultDbAutoCleanupEnabled
+        }
+        let storedThreshold = defaults.object(forKey: Keys.dbAutoCleanupThresholdGB) as? Double
+        self.dbAutoCleanupThresholdGB = storedThreshold ?? Self.defaultDbAutoCleanupThresholdGB
     }
 
     // MARK: - Helpers

@@ -36,6 +36,7 @@ final class AppDependencyContainer {
     let placeLookupService: PlaceLookupService
     let cloudUploadRetryQueue: CloudUploadRetryQueue
     let cloudUploadCoordinator: CloudUploadCoordinator
+    let databaseAutoCleanupService: DatabaseAutoCleanupService
     let locationService: LocationService
 
     // MARK: - Providers (for SettingsView closures)
@@ -64,9 +65,11 @@ final class AppDependencyContainer {
     ///   - settings: 注入する AppSettings（テスト用 UserDefaults スイートを持つものを渡せる）。
     ///   - googleDriveService: GoogleDriveSyncService の実装（actor なので Spy 差し替えは別プロトコル経由が望ましいが、
     ///     本番と同インタフェースの GoogleDriveSyncService を受け取る形で統一する）。
+    ///   - databaseAutoCleanupService: DB 自動消去サービス（S6-004）。nil = デフォルト実装を使う。
     init(modelContainer: ModelContainer,
          settings: AppSettings,
-         googleDriveService: GoogleDriveSyncService) {
+         googleDriveService: GoogleDriveSyncService,
+         databaseAutoCleanupService: DatabaseAutoCleanupService? = nil) {
         self.modelContainer = modelContainer
 
         let context = modelContainer.mainContext
@@ -85,12 +88,17 @@ final class AppDependencyContainer {
             appSettings: settings,
             retryQueue: retryQueue
         )
+        // S6-004: DatabaseAutoCleanupService。差し込み引数があればそちらを使い、
+        // なければデフォルト実装（FileManager 計測）を生成する。
+        let cleanupService = databaseAutoCleanupService
+            ?? DatabaseAutoCleanupService(appSettings: settings, modelContext: context)
         let locationService = LocationService(
             repository: repository,
             placeProvider: placeLookupService,
             appSettings: settings,
             calendarSync: calendarService,
-            cloudUploadCoordinator: coordinator
+            cloudUploadCoordinator: coordinator,
+            databaseAutoCleanup: cleanupService
         )
 
         self.appSettings = settings
@@ -100,6 +108,7 @@ final class AppDependencyContainer {
         self.placeLookupService = placeLookupService
         self.cloudUploadRetryQueue = retryQueue
         self.cloudUploadCoordinator = coordinator
+        self.databaseAutoCleanupService = cleanupService
         self.locationService = locationService
         self.providers = providers
     }

@@ -13,7 +13,6 @@
 ## Todo
 
 - [ ] **S6-003** (#46): DB クリア機能（指定日付のデータ削除 + 設定画面 UI） → **dev-1** / Must / M
-- [ ] **S6-004** (#47): DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M
 - [ ] **S6-005** (#48): バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L
 - [ ] **S6-006** (#49): バックグラウンド復帰時の挙動安定化（SLC 復帰 / applicationDidBecomeActive 経路） → **dev-2** / Must / M
 - [ ] **S6-007** (#50): アプリアイコン（全サイズ）+ ローンチスクリーン → **designer / dev-1** / Must / M
@@ -28,6 +27,7 @@
 - [x] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + `RootViewIntegrationTests.swift` 末尾雛形コメント追加） → **po-sm（メイン代行）** / Must / S（コミット `954f23d` / 既存 173 テスト pass / 回帰なし）
 - [x] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約 / `@MainActor final class`） → **dev-1** / Must / M（コミット `8853972` / 176/176 pass / DI 検証ケース 3 件追加 / Swift 6 strict concurrency 整合）
 - [x] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S（コミット `39dba0e` / 179/179 pass / CSV 失敗時 retryCount 加算ロジック + テスト 3 件 / `.gitignore` + `.example` + `oauth-setup.md` / メイン代行修正: テスト DI 漏れ 1 件）
+- [x] **S6-004** (#47): DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M（コミット TBD / 185/185 pass / `DatabaseAutoCleanupService` 新規 + AppSettings 拡張 + LocationService 連携 + Container 統合 + Settings UI / 単体テスト 5 件 + DI カバレッジ 1 件 / メイン代行修正: `ModelContainer.defaultDirectoryURL` → `FileManager` 経由に変更 + `attrs[.size]` → `attrs[FileAttributeKey.size]` 明示）
 
 ---
 
@@ -73,7 +73,7 @@
 | S6-001 | po-sm（メイン代行） | TBD | 0（コード変更はコメント追加のみ） | 確認済 / 173/173 pass | 0（仕組み導入のため） |
 | S6-002 | dev-1 | 8853972 | 0（メイン代行確認済） | 確認済 / 176/176 pass | 3（DI 検証ケース） |
 | S6-003 | dev-1 | - | - | - | - |
-| S6-004 | dev-2 | - | - | - | - |
+| S6-004 | dev-2 | TBD | 0（メイン代行確認済） | 確認済 / 185/185 pass | 6（単体 5 + DI カバレッジ 1） |
 | S6-005 | dev-2 | - | - | - | - |
 | S6-006 | dev-2 | - | - | - | - |
 | S6-007 | designer / dev-1 | - | - | - | - |
@@ -86,10 +86,10 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 6 |
+| Todo | 5 |
 | In Progress | 0 |
-| Done | 3 |
-| **Sprint 6 完了** | **3/9** |
+| Done | 4 |
+| **Sprint 6 完了** | **4/9** |
 
 ---
 
@@ -98,6 +98,7 @@
 | コミット | 内容 |
 |---|---|
 | `39dba0e` | `CloudUploadRetryQueueTests.swift` の `test_successAfterCsvFailure_removesEntry_S6_009` で `stubProvider` を `makeQueue` に渡しておらず内部 default が `.failure` を返してしまうテスト DI 漏れを修正（S6-001 で導入した DI カバレッジ運用がテストコード側にも適用されるべきという学び） |
+| TBD（S6-004 同梱） | `DatabaseAutoCleanupService.swift` の DB ファイル URL 取得を `ModelContainer.defaultDirectoryURL`（iOS 26 で存在せず）から `FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)` 経由に変更。`attrs[.size]` の型推論エラーを `attrs[FileAttributeKey.size]` 明示で解消 |
 
 ---
 

@@ -113,6 +113,11 @@ final class LocationService: NSObject, ObservableObject {
     /// nil のときはクラウド連携を無効化（後方互換）。
     private let cloudUploadCoordinator: CloudUploadCoordinator?
 
+    /// DB 自動消去サービス（S6-004）。
+    /// 記録停止時に容量をチェックし、しきい値超過で古い TripRecord を削除する。
+    /// nil のときは自動消去を無効化（後方互換 / テスト時は nil 可）。
+    private let databaseAutoCleanup: DatabaseAutoCleanupService?
+
     /// 直近の自宅判定状態（S3-003）。状態遷移時のみログを出すため保持。
     /// 初期値は `.unknown`（自宅未登録または最初の点が未到着）。
     private var lastHomeState: HomeState = .unknown
@@ -134,7 +139,8 @@ final class LocationService: NSObject, ObservableObject {
          placeProvider: (any PlaceProviderProtocol)? = nil,
          appSettings: AppSettings? = nil,
          calendarSync: CalendarSyncService? = nil,
-         cloudUploadCoordinator: CloudUploadCoordinator? = nil) {
+         cloudUploadCoordinator: CloudUploadCoordinator? = nil,
+         databaseAutoCleanup: DatabaseAutoCleanupService? = nil) {
         self.manager = manager
         self.repository = repository
         self.stayDetector = stayDetector
@@ -142,6 +148,7 @@ final class LocationService: NSObject, ObservableObject {
         self.appSettings = appSettings
         self.calendarSync = calendarSync
         self.cloudUploadCoordinator = cloudUploadCoordinator
+        self.databaseAutoCleanup = databaseAutoCleanup
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         configureManager()
@@ -189,6 +196,9 @@ final class LocationService: NSObject, ObservableObject {
         // 自動同期 OFF / プロバイダ未選択時は CloudUploadCoordinator が no-op に倒すため
         // ここでは設定をチェックせず、Coordinator に判断を委ねる。
         triggerCloudUploadIfNeeded()
+        // S6-004: 記録停止時に DB 自動消去をチェック。
+        // Toggle OFF / サービス未注入時は DatabaseAutoCleanupService 内部で no-op に倒す。
+        triggerDatabaseAutoCleanupIfNeeded()
     }
 
     /// 現在の TripRecord に対してクラウド自動アップロードを試みる（S5-005）。
@@ -201,6 +211,23 @@ final class LocationService: NSObject, ObservableObject {
         // Task の継承された isolation（@MainActor）を維持する。
         Task { @MainActor [weak self] in
             _ = await coordinator.uploadIfEnabled(for: trip)
+            _ = self
+        }
+    }
+
+    /// DB 自動消去をトリガーする（S6-004）。
+    /// DatabaseAutoCleanupService 未注入時は no-op。
+    /// Toggle OFF 時は DatabaseAutoCleanupService 内部で即 return するため、
+    /// ここではサービスの存在チェックのみ行う。
+    /// 失敗してもログのみで UI は止めない（バッテリー対策の一環として非同期 Task で実行）。
+    private func triggerDatabaseAutoCleanupIfNeeded() {
+        guard let cleanup = databaseAutoCleanup else { return }
+        Task { @MainActor [weak self] in
+            do {
+                try cleanup.cleanup()
+            } catch {
+                Self.logger.warning("DB 自動消去失敗: \(error.localizedDescription)")
+            }
             _ = self
         }
     }

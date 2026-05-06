@@ -258,6 +258,31 @@ struct SettingsView: View {
                 }
             }
 
+            // S6-004: DB 自動消去 ON/OFF Toggle
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("DB 自動消去", isOn: $settings.dbAutoCleanupEnabled)
+                    .accessibilityIdentifier("db_auto_cleanup_toggle")
+
+                Text("DB が設定サイズを超えたとき、記録停止時に古いデータから自動削除します。デフォルト OFF。")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            // S6-004: しきい値入力（Toggle ON のときのみ表示）
+            if settings.dbAutoCleanupEnabled {
+                Stepper(value: $settings.dbAutoCleanupThresholdGB,
+                        in: 0.1...10.0,
+                        step: 0.1) {
+                    HStack {
+                        Text("しきい値")
+                        Spacer()
+                        Text(String(format: "%.1f GB", settings.dbAutoCleanupThresholdGB))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .accessibilityIdentifier("db_auto_cleanup_threshold_stepper")
+            }
+
             // S4-007: エクスポート
             NavigationLink {
                 ExportView(exportTodayTrip: exportTodayTrip,

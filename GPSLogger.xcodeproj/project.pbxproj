@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		02F3021A9E754B31B1045491 /* TripDistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */; };
+		08714C8E933A91DCE103039F /* DatabaseAutoCleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C64D11D565BAB23BAB2B0369 /* DatabaseAutoCleanupServiceTests.swift */; };
 		0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */; };
 		19EADD4A080D05C952B14949 /* HistoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91BDB0748DBEDA85099441C1 /* HistoryDetailView.swift */; };
 		1A28E9FE263E40E979B1C2DF /* StayDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CFBBBCC65BC1A7E54445466 /* StayDetector.swift */; };
@@ -42,6 +43,7 @@
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
 		8785924DDCF929C7A8383E07 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DD5C1B6C6D40D970752F6B /* DocumentPickerView.swift */; };
 		8BD0DD04858D53DE773F496D /* CSVExportServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */; };
+		8CE573EDE96ABE3C6657D255 /* GoogleDriveOAuth-Info.plist.example in Resources */ = {isa = PBXBuildFile; fileRef = 65B5FC56A34F6DA25ACB0E13 /* GoogleDriveOAuth-Info.plist.example */; };
 		8D11C36DF24045BC25978350 /* CalendarSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */; };
 		8E691B87FFCD22FA8FEB8636 /* TripRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */; };
 		8FEA8A98433FD285EFA9A860 /* RecordingToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */; };
@@ -63,6 +65,7 @@
 		C31C0D5EA2F6242A5B33FB6C /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B469DE98253C140644E24C89 /* MapViewModel.swift */; };
 		C830F8651EE713969884D173 /* CloudStorageSyncSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2ED719F5EC694C0042B9DA /* CloudStorageSyncSettingsTests.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
+		D22725577D9F0817C606AF21 /* DatabaseAutoCleanupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CB8846995B729EDA0F0DB5F /* DatabaseAutoCleanupService.swift */; };
 		D5297EEC0C7DDB2EC872298C /* CloudUploadRetryQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC52EBDDC16E791A59801574 /* CloudUploadRetryQueue.swift */; };
 		D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89566F273738C6565096CEC1 /* RoutePoint.swift */; };
 		DD761802C2D5F898D463A9F6 /* PinRecordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */; };
@@ -90,6 +93,7 @@
 		0511C88FB507086BEA379EC6 /* GoogleDriveSyncServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleDriveSyncServiceTests.swift; sourceTree = "<group>"; };
 		0771CC5514403FBA9445A68C /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		0A6881F93CC5593380C7592D /* SignificantLocationChangesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignificantLocationChangesTests.swift; sourceTree = "<group>"; };
+		0CB8846995B729EDA0F0DB5F /* DatabaseAutoCleanupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseAutoCleanupService.swift; sourceTree = "<group>"; };
 		16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportServiceTests.swift; sourceTree = "<group>"; };
 		1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingToggleButtonTests.swift; sourceTree = "<group>"; };
 		23537070EBFE68FB77904B34 /* HomeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDetector.swift; sourceTree = "<group>"; };
@@ -112,6 +116,7 @@
 		51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASprint1AdditionalTests.swift; sourceTree = "<group>"; };
 		5697116473933AB9EF54B85B /* PendingUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingUpload.swift; sourceTree = "<group>"; };
 		5FD029C50DCD5065DEDA58B3 /* ExportViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportViewTests.swift; sourceTree = "<group>"; };
+		65B5FC56A34F6DA25ACB0E13 /* GoogleDriveOAuth-Info.plist.example */ = {isa = PBXFileReference; path = "GoogleDriveOAuth-Info.plist.example"; sourceTree = "<group>"; };
 		6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepository.swift; sourceTree = "<group>"; };
 		6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportService.swift; sourceTree = "<group>"; };
 		742A6F4CBB2E6A365A2BE85F /* CSVExportDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportDocumentTests.swift; sourceTree = "<group>"; };
@@ -142,6 +147,7 @@
 		BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerTests.swift; sourceTree = "<group>"; };
 		C23DFC5375D70DE8974871A5 /* HomeLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLocation.swift; sourceTree = "<group>"; };
 		C636BD1ED2E9F23F1A4EA689 /* PinRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinRecord.swift; sourceTree = "<group>"; };
+		C64D11D565BAB23BAB2B0369 /* DatabaseAutoCleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseAutoCleanupServiceTests.swift; sourceTree = "<group>"; };
 		C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDistanceCalculator.swift; sourceTree = "<group>"; };
 		C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerApp.swift; sourceTree = "<group>"; };
 		CC2ED719F5EC694C0042B9DA /* CloudStorageSyncSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStorageSyncSettingsTests.swift; sourceTree = "<group>"; };
@@ -169,6 +175,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		00286EBA3532B49942B31819 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				0CB8846995B729EDA0F0DB5F /* DatabaseAutoCleanupService.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
 		0CE16D1972DDC2BDC7EB9AC2 /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -223,6 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				3193D4B8A02F13BF3F5D299C /* Assets.xcassets */,
+				65B5FC56A34F6DA25ACB0E13 /* GoogleDriveOAuth-Info.plist.example */,
 				DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */,
 			);
 			path = Resources;
@@ -263,6 +278,7 @@
 				B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */,
 				742A6F4CBB2E6A365A2BE85F /* CSVExportDocumentTests.swift */,
 				16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */,
+				C64D11D565BAB23BAB2B0369 /* DatabaseAutoCleanupServiceTests.swift */,
 				49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */,
 				5FD029C50DCD5065DEDA58B3 /* ExportViewTests.swift */,
 				0511C88FB507086BEA379EC6 /* GoogleDriveSyncServiceTests.swift */,
@@ -398,6 +414,7 @@
 				21473425FB53612465868811 /* Location */,
 				F056D3FE128F2568530B2C43 /* Persistence */,
 				9A65B92EE75410CFAD561391 /* Place */,
+				00286EBA3532B49942B31819 /* Storage */,
 				784ACB41A35091F335CE0C5E /* Trip */,
 			);
 			path = Services;
@@ -492,6 +509,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				232E665630652985E70CE788 /* Assets.xcassets in Resources */,
+				8CE573EDE96ABE3C6657D255 /* GoogleDriveOAuth-Info.plist.example in Resources */,
 				AE27F46968F6EC770DE7756B /* GoogleMaps-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -513,6 +531,7 @@
 				2B9DC0DA23D447336A7B6557 /* CloudStorageProvider.swift in Sources */,
 				9E0FCAE07D3493E4BFFA4A45 /* CloudUploadCoordinator.swift in Sources */,
 				D5297EEC0C7DDB2EC872298C /* CloudUploadRetryQueue.swift in Sources */,
+				D22725577D9F0817C606AF21 /* DatabaseAutoCleanupService.swift in Sources */,
 				8785924DDCF929C7A8383E07 /* DocumentPickerView.swift in Sources */,
 				61BD1C28023B04335BC0E5DC /* ExportView.swift in Sources */,
 				8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */,
@@ -555,6 +574,7 @@
 				C830F8651EE713969884D173 /* CloudStorageSyncSettingsTests.swift in Sources */,
 				A066B652F4BC498CAFE0C87F /* CloudUploadCoordinatorTests.swift in Sources */,
 				84AEC36BBA7B194B79EDB1D2 /* CloudUploadRetryQueueTests.swift in Sources */,
+				08714C8E933A91DCE103039F /* DatabaseAutoCleanupServiceTests.swift in Sources */,
 				577D6B9171C8E2221D78413B /* DocumentPickerViewTests.swift in Sources */,
 				734CA4250B5B63D71A8969EA /* ExportViewTests.swift in Sources */,
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,

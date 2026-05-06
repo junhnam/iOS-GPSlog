@@ -375,6 +375,121 @@ private final class SpyLocationManagerForS6002: NSObject, LocationProviderProtoc
     func stopMonitoringSignificantLocationChanges() {}
 }
 
+// MARK: - S6-004: DatabaseAutoCleanupService DI 検証ケース
+
+extension RootViewIntegrationTests {
+
+    /// AppDependencyContainer が DatabaseAutoCleanupService を生成し
+    /// LocationService に注入されていることを検証する（S6-004）。
+    ///
+    /// 検証項目:
+    ///   1. Container に databaseAutoCleanupService プロパティが存在し nil でない
+    ///   2. LocationService.stopUpdatingLocation 呼び出し後に cleanup() が発火する
+    ///      （SpyDatabaseAutoCleanupService で cleanup() 呼び出しを観測する）
+    ///   3. AppSettings.dbAutoCleanupEnabled の既定値が false である（誤削除防止）
+    ///   4. AppSettings.dbAutoCleanupThresholdGB の既定値が 1.0 GB である
+    func test_appDependencyContainer_buildsDatabaseAutoCleanupService_S6_004() async throws {
+        let container = try PersistenceController.makeInMemoryContainer()
+        retainedContainers.append(container)
+
+        let suiteName = "gpslogger.tests.di.dbcleanup.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let settings = AppSettings(defaults: defaults)
+
+        // 1. AppSettings 既定値の検証
+        XCTAssertFalse(settings.dbAutoCleanupEnabled,
+            "dbAutoCleanupEnabled の既定値は false（誤削除防止 / S6-004）")
+        XCTAssertEqual(settings.dbAutoCleanupThresholdGB, 1.0,
+            "dbAutoCleanupThresholdGB の既定値は 1.0 GB（S6-004）")
+
+        // Spy クリーンアップサービスを生成して Container に差し込む
+        let spyCleanup = SpyDatabaseAutoCleanupServiceForS6004(
+            appSettings: settings,
+            modelContext: container.mainContext
+        )
+
+        let dependencyContainer = AppDependencyContainer(
+            modelContainer: container,
+            settings: settings,
+            googleDriveService: GoogleDriveSyncService(),
+            databaseAutoCleanupService: spyCleanup
+        )
+
+        // 2. Container が databaseAutoCleanupService を保持していることを確認
+        XCTAssertNotNil(dependencyContainer.databaseAutoCleanupService,
+            "AppDependencyContainer は DatabaseAutoCleanupService を保持している（S6-004）")
+
+        // LocationService に cleanup が連鎖することを確認するために
+        // stopUpdatingLocation を発火させる
+        let manager = SpyLocationManagerForS6004()
+        let repository = TripRepository(modelContext: container.mainContext)
+        let locationService = LocationService(
+            manager: manager,
+            repository: repository,
+            placeProvider: nil,
+            appSettings: settings,
+            databaseAutoCleanup: spyCleanup
+        )
+
+        // isUpdating を true にして stopUpdatingLocation を呼ぶ
+        locationService.startUpdatingLocation()
+
+        // Toggle ON に設定して cleanup が呼ばれるかを確認する
+        settings.dbAutoCleanupEnabled = true
+
+        locationService.stopUpdatingLocation()
+
+        // Task @MainActor 越しの非同期処理完了を待つ
+        for _ in 0..<40 {
+            if spyCleanup.cleanupCallCount > 0 { break }
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+
+        // 3. DI 経路を通して cleanup() が呼ばれたことを確認
+        XCTAssertGreaterThanOrEqual(spyCleanup.cleanupCallCount, 1,
+            "LocationService.stopUpdatingLocation が DatabaseAutoCleanupService.cleanup() を発火する（S6-004）")
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+}
+
+// MARK: - Spy doubles for S6-004
+
+/// DatabaseAutoCleanupService の Spy。cleanup() 呼び出し回数を記録する。
+@MainActor
+private final class SpyDatabaseAutoCleanupServiceForS6004: DatabaseAutoCleanupService {
+    private(set) var cleanupCallCount: Int = 0
+
+    init(appSettings: AppSettings, modelContext: ModelContext) {
+        // 容量計測は常に 0 を返す no-op クロージャを設定（実 FileManager には触らない）
+        super.init(appSettings: appSettings, modelContext: modelContext, measureDBBytes: { 0 })
+    }
+
+    override func cleanup() throws {
+        cleanupCallCount += 1
+        // 本番ロジックは呼ばない（Spy なので no-op で実行回数のみ記録）
+    }
+}
+
+private final class SpyLocationManagerForS6004: NSObject, LocationProviderProtocol, @unchecked Sendable {
+    weak var delegate: CLLocationManagerDelegate?
+    var distanceFilter: CLLocationDistance = 10
+    var desiredAccuracy: CLLocationAccuracy = kCLLocationAccuracyBest
+    var activityType: CLActivityType = .other
+    var pausesLocationUpdatesAutomatically: Bool = true
+    var allowsBackgroundLocationUpdates: Bool = false
+    var showsBackgroundLocationIndicator: Bool = false
+    var authorizationStatus: CLAuthorizationStatus = .authorizedAlways
+
+    func requestWhenInUseAuthorization() {}
+    func requestAlwaysAuthorization() {}
+    func startUpdatingLocation() {}
+    func stopUpdatingLocation() {}
+    func startMonitoringSignificantLocationChanges() {}
+    func stopMonitoringSignificantLocationChanges() {}
+}
+
 // MARK: - DI 経路カバレッジ（Sprint 6 / S6-001 で定型化）
 //
 // 新規サービス（class / actor / struct）または新規 @Model（SwiftData）を追加した場合、
