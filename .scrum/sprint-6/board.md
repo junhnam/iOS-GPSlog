@@ -12,7 +12,6 @@
 
 ## Todo
 
-- [ ] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + 雛形コメント追加） → **po-sm** / Must / S
 - [ ] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約） → **dev-1** / Must / M
 - [ ] **S6-003** (#46): DB クリア機能（指定日付のデータ削除 + 設定画面 UI） → **dev-1** / Must / M
 - [ ] **S6-004** (#47): DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M
@@ -28,7 +27,7 @@
 
 ## Done
 
-（なし）
+- [x] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + `RootViewIntegrationTests.swift` 末尾雛形コメント追加） → **po-sm（メイン代行）** / Must / S（コミット TBD / 既存 173 テスト pass / 回帰なし）
 
 ---
 
@@ -71,7 +70,7 @@
 
 | チケット | 担当 | コミット | フル再ビルド warning | メイン代行確認 | 追加テスト数 |
 |---|---|---|---|---|---|
-| S6-001 | po-sm | - | - | - | - |
+| S6-001 | po-sm（メイン代行） | TBD | 0（コード変更はコメント追加のみ） | 確認済 / 173/173 pass | 0（仕組み導入のため） |
 | S6-002 | dev-1 | - | - | - | - |
 | S6-003 | dev-1 | - | - | - | - |
 | S6-004 | dev-2 | - | - | - | - |
@@ -87,10 +86,10 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 9 |
+| Todo | 8 |
 | In Progress | 0 |
-| Done | 0 |
-| **Sprint 6 完了** | **0/9** |
+| Done | 1 |
+| **Sprint 6 完了** | **1/9** |
 
 ---
 

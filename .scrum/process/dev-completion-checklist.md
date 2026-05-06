@@ -22,6 +22,7 @@
 - 既存テストの回帰: 0 件
 - 自分が追加したテスト: 全て pass
 - pass 数 / fail 数を board.md のチケット行コメントにスタンプする
+- **新規サービス / 新規 @Model を追加した場合は、必ず RootView 統合テストで DI 経路を検証する**（詳細は本ドキュメント末尾「8. 新規サービス / 新規 @Model 追加時の DI 経路カバレッジ」を参照）
 
 ### 2. 静的解析（Swift コンパイラ警告）が 0 件
 
@@ -67,6 +68,39 @@ xcodebuild clean build \
   - 例: `feat: Google Drive OAuth 認証フロー実装 (S5-001)`
 - 単一のチケット = 1 コミット原則
 - ブランチは `main` 直接（このプロジェクトの運用）
+
+### 8. 【**Sprint 6 から必須**】新規サービス / 新規 @Model 追加時の DI 経路カバレッジ
+
+Sprint 4 の QA-S4-001（CalendarSyncService 依存漏れ）、Sprint 5 の QA-S5-001/002（CloudUploadCoordinator / RetryQueue 依存漏れ + `.task` 起動漏れ）と同型の「依存組立漏れ」型 Critical/High バグを再発させないためのチェック。Sprint 5 retro Try「DI 経路カバレッジテストの定型化」を Sprint 6 から運用開始する。
+
+#### このチェックが適用される条件（いずれか 1 つでも該当したら必須）
+
+- 新規 `class` / `actor` / `struct` のうち、`RootView.init` で生成または依存注入される予定のもの
+- 新規 `@Model`（SwiftData）が追加され、`PersistenceController` 経由で永続化されるもの
+- 既存サービスに新しい依存（init 引数 / プロパティ）が追加され、`RootView.init` 側で組立変更が必要になるもの
+- 起動時処理（`.task` / `onAppear` / `applicationDidBecomeActive`）に新しいトリガーを追加する場合
+
+#### 何を検証するか（最低 4 項目）
+
+1. **インスタンス生成の検証**: `RootView.init` 内で当該サービスがインスタンス化されている（または注入されている）こと
+2. **依存注入の検証**: `LocationService` などの集約クラスへ正しく注入され、本番経路で nil にならないこと
+3. **起動時処理の発火検証**: `.task` / `onAppear` 経由で起動時処理が確実に発火すること（ネットワーク監視 / リトライキュー処理 など）
+4. **AppSettings 既定値の検証**: 新規 `AppSettings` プロパティを追加した場合、既定値が想定通りで `UserDefaults` 未設定時にも安全に動くこと
+
+#### どう検証するか
+
+- `GPSLoggerTests/RootViewIntegrationTests.swift` に新規テストケースを追加する（雛形コメントは同ファイル末尾に記載済み）
+- テスト名は `test_<対象機能>_<期待動作>_<ticket_id>` の形式で書く（例: `test_locationService_stopRecording_invokesCloudUploadCoordinator_QA_S5_001`）
+- Spy / Stub double はテストファイル内に `private` で書く（既存の `SpyCloudProvider` / `SpyCSVExporter` / `SpyLocationManager` を参考）
+- Actor / @MainActor 隔離型のサービスは `await Task.yield()` + `try? await Task.sleep` でイベントループを進めて非同期処理の完了を待つ
+
+#### 過去事例（再発防止対象）
+
+- Sprint 3 QA-S3-001（PlaceLookupService の依存漏れ）
+- Sprint 4 QA-S4-001（CalendarSyncService の依存漏れ）
+- Sprint 5 QA-S5-001/002（CloudUploadCoordinator / RetryQueue の依存漏れ）
+
+3 スプリント連続で同型バグを生んでおり、Sprint 6 でも対策が形骸化すると再発する蓋然性が高い。「新規サービス追加 = テスト追加」をセットで運用すること。
 
 ---
 
@@ -121,3 +155,4 @@ Dev フェーズ完了 = 以下が全て満たされた状態:
 | 日付 | 内容 |
 |---|---|
 | 2026-05-06 | 初版（Sprint 5 開始時、Sprint 4 retro Try / jun さん指示を反映） |
+| 2026-05-07 | 「8. 新規サービス / 新規 @Model 追加時の DI 経路カバレッジ」を Sprint 6 から必須として追記（Sprint 5 retro Try / S6-001） |

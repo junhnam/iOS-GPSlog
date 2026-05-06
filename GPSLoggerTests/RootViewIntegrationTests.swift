@@ -181,3 +181,33 @@ private final class SpyLocationManager: NSObject, LocationProviderProtocol, @unc
     func startMonitoringSignificantLocationChanges() {}
     func stopMonitoringSignificantLocationChanges() {}
 }
+
+// MARK: - DI 経路カバレッジ（Sprint 6 / S6-001 で定型化）
+//
+// 新規サービス（class / actor / struct）または新規 @Model（SwiftData）を追加した場合、
+// または既存サービスに新しい依存・起動時処理を足した場合は、ここに統合テストケースを追加すること。
+// .scrum/process/dev-completion-checklist.md「8. 新規サービス / 新規 @Model 追加時の
+// DI 経路カバレッジ」に詳細ルールあり。
+//
+// 最低限の検証 4 項目:
+//   1. RootView.init 内で当該サービスがインスタンス化されているか（または注入されているか）
+//   2. 依存先（LocationService 等）に正しく注入され、本番経路で nil にならないか
+//   3. .task / onAppear / applicationDidBecomeActive で起動時処理が発火するか
+//   4. AppSettings に新規プロパティを追加した場合、既定値が想定通りで UserDefaults 未設定時にも安全に動くか
+//
+// テスト名の規約:
+//   test_<対象機能>_<期待動作>_<ticket_id>
+//   例: test_locationService_stopRecording_invokesCloudUploadCoordinator_QA_S5_001
+//
+// Spy / Stub double はテストファイル内に private で書く
+// （既存の SpyCloudProvider / SpyCSVExporter / SpyLocationManager を参考にする）。
+//
+// Actor / @MainActor 隔離型サービスは
+//   await Task.yield()
+//   try? await Task.sleep(nanoseconds: 20_000_000)
+// でイベントループを進めて非同期処理の完了を待つ。
+//
+// 過去事例（再発防止対象）:
+//   Sprint 3 QA-S3-001（PlaceLookupService 依存漏れ）
+//   Sprint 4 QA-S4-001（CalendarSyncService 依存漏れ）
+//   Sprint 5 QA-S5-001/002（CloudUploadCoordinator / RetryQueue 依存漏れ + .task 起動漏れ）
