@@ -28,9 +28,10 @@ final class CloudUploadRetryQueueTests: XCTestCase {
     }
 
     private func makeQueue(provider: any CloudStorageProvider = StubProvider(),
+                           csvExporter: StubCSVExporter = StubCSVExporter(),
                            notifier: StubNotifier = StubNotifier(),
                            networkObserver: StubNetworkObserver = StubNetworkObserver())
-        throws -> (CloudUploadRetryQueue, ModelContainer, TripRepository, StubNotifier, StubNetworkObserver, StubProvider)
+        throws -> (CloudUploadRetryQueue, ModelContainer, TripRepository, StubNotifier, StubNetworkObserver, StubProvider, StubCSVExporter)
     {
         let container = try PersistenceController.makeInMemoryContainer()
         retainedContainers.append(container)
@@ -42,18 +43,18 @@ final class CloudUploadRetryQueueTests: XCTestCase {
             modelContext: context,
             tripRepository: repo,
             providers: [.googleDrive: stubProvider],
-            csvExporter: StubCSVExporter(),
+            csvExporter: csvExporter,
             appSettings: settings,
             notifier: notifier,
             networkObserver: networkObserver
         )
-        return (queue, container, repo, notifier, networkObserver, stubProvider)
+        return (queue, container, repo, notifier, networkObserver, stubProvider, csvExporter)
     }
 
     // MARK: - (1) enqueue → 永続化 → 成功 → 削除
 
     func test_enqueue_persistsAndProcessNow_removesEntryOnSuccess_S5_006() async throws {
-        let (queue, _, repo, _, _, provider) = try makeQueue()
+        let (queue, _, repo, _, _, provider, _) = try makeQueue()
 
         // TripRecord を作っておく
         let trip = try repo.todayTrip()
@@ -79,7 +80,7 @@ final class CloudUploadRetryQueueTests: XCTestCase {
         let stubProvider = StubProvider()
         stubProvider.uploadResult = .failure(.networkFailure(message: "offline"))
         let notifier = StubNotifier()
-        let (queue, _, repo, _, _, _) = try makeQueue(provider: stubProvider, notifier: notifier)
+        let (queue, _, repo, _, _, _, _) = try makeQueue(provider: stubProvider, notifier: notifier)
 
         let trip = try repo.todayTrip()
 
@@ -108,7 +109,7 @@ final class CloudUploadRetryQueueTests: XCTestCase {
         let stubProvider = StubProvider()
         stubProvider.uploadResult = .success
         let observer = StubNetworkObserver()
-        let (queue, _, repo, _, _, _) = try makeQueue(provider: stubProvider, networkObserver: observer)
+        let (queue, _, repo, _, _, _, _) = try makeQueue(provider: stubProvider, networkObserver: observer)
         let trip = try repo.todayTrip()
         try await queue.enqueue(tripDate: trip.date,
                                 providerKind: .googleDrive,
@@ -130,7 +131,7 @@ final class CloudUploadRetryQueueTests: XCTestCase {
     // MARK: - (4) バッジ表示用件数取得
 
     func test_pendingCount_reflectsEnqueueAndDelete_S5_006() async throws {
-        let (queue, _, repo, _, _, _) = try makeQueue()
+        let (queue, _, repo, _, _, _, _) = try makeQueue()
         XCTAssertEqual(try queue.pendingCount(), 0)
 
         let trip = try repo.todayTrip()
@@ -143,7 +144,7 @@ final class CloudUploadRetryQueueTests: XCTestCase {
     // MARK: - (5) 指数バックオフの計算
 
     func test_nextRetryDate_returnsCorrectBackoff_S5_006() throws {
-        let (queue, _, _, _, _, _) = try makeQueue()
+        let (queue, _, _, _, _, _, _) = try makeQueue()
         let base = Date(timeIntervalSince1970: 1_700_000_000)
 
         // retryCount = 1 → 30 秒後（インデックス [1] = 60 秒）
@@ -170,7 +171,7 @@ final class CloudUploadRetryQueueTests: XCTestCase {
     // MARK: - (6) 同じ tripDate で enqueue した場合は retryCount を加算
 
     func test_enqueue_aggregatesByTripDate_S5_006() async throws {
-        let (queue, _, repo, _, _, _) = try makeQueue()
+        let (queue, _, repo, _, _, _, _) = try makeQueue()
         let trip = try repo.todayTrip()
 
         try await queue.enqueue(tripDate: trip.date, providerKind: .googleDrive,
@@ -179,6 +180,85 @@ final class CloudUploadRetryQueueTests: XCTestCase {
                                 lastError: .networkFailure(message: "y"))
 
         XCTAssertEqual(try queue.pendingCount(), 1, "同じ tripDate なら 1 件に集約")
+    }
+
+    // MARK: - (7) CSV 生成失敗 1 回で retryCount が +1 される（S6-009 / QA-S5-004）
+
+    func test_csvFailure_incrementsRetryCount_S6_009() async throws {
+        let csvExporter = StubCSVExporter()
+        csvExporter.shouldFail = true
+        let (queue, _, repo, _, _, _, _) = try makeQueue(csvExporter: csvExporter)
+
+        let trip = try repo.todayTrip()
+        // 初回 enqueue（retryCount = 1 で永続化）
+        try await queue.enqueue(tripDate: trip.date,
+                                providerKind: .googleDrive,
+                                lastError: .networkFailure(message: "offline"))
+
+        // CSV 失敗でもエントリが残ることを確認（retryCount が加算されてキューに留まる）
+        XCTAssertEqual(try queue.pendingCount(), 1, "enqueue 後はエントリが存在する")
+
+        // processNow で CSV 失敗 → retryCount が +1 される（enqueue 時 = 1、processNow 後 = 2）
+        _ = try await queue.processNow()
+        XCTAssertEqual(try queue.pendingCount(), 1, "CSV 失敗時は retryCount が加算されエントリは残る")
+
+        // さらに 1 回 → retryCount = 3
+        _ = try await queue.processNow()
+        XCTAssertEqual(try queue.pendingCount(), 1, "CSV が失敗し続ける限りエントリは削除されない")
+    }
+
+    // MARK: - (8) CSV 生成失敗 5 回連続で通知が発火する（S6-009 / QA-S5-004）
+
+    func test_csvFailure_firesNotificationAfterFiveFailures_S6_009() async throws {
+        let csvExporter = StubCSVExporter()
+        csvExporter.shouldFail = true
+        let notifier = StubNotifier()
+        let (queue, _, repo, _, _, _, _) = try makeQueue(csvExporter: csvExporter, notifier: notifier)
+
+        let trip = try repo.todayTrip()
+        // 初回 enqueue（retryCount = 1）
+        try await queue.enqueue(tripDate: trip.date,
+                                providerKind: .googleDrive,
+                                lastError: .networkFailure(message: "offline"))
+
+        // processNow を 4 回呼ぶ → enqueue 1 回 + processNow 4 回 = retryCount 5 に到達
+        for _ in 0..<4 {
+            _ = try await queue.processNow()
+        }
+
+        let notifyCount = await notifier.notifyCount
+        XCTAssertEqual(notifyCount, 1, "CSV 生成失敗 5 回で通知が 1 回発火する")
+
+        // 6 回目以降は通知が重複しない
+        _ = try await queue.processNow()
+        let notifyCount2 = await notifier.notifyCount
+        XCTAssertEqual(notifyCount2, 1, "CSV 失敗でも通知は重複しない")
+    }
+
+    // MARK: - (9) 成功復帰時に retryCount がリセットされること（S6-009 / QA-S5-004）
+
+    func test_successAfterCsvFailure_removesEntry_S6_009() async throws {
+        let csvExporter = StubCSVExporter()
+        csvExporter.shouldFail = true
+        let (queue, _, repo, _, _, stubProvider, _) = try makeQueue(csvExporter: csvExporter)
+        stubProvider.uploadResult = .success
+
+        let trip = try repo.todayTrip()
+        // 初回 enqueue
+        try await queue.enqueue(tripDate: trip.date,
+                                providerKind: .googleDrive,
+                                lastError: .networkFailure(message: "offline"))
+
+        // CSV 失敗を 2 回繰り返す
+        _ = try await queue.processNow()
+        _ = try await queue.processNow()
+        XCTAssertEqual(try queue.pendingCount(), 1, "CSV 失敗中はエントリが残る")
+
+        // CSV 成功に切り替え → processNow で削除される（エントリ削除 = リセットと同義）
+        csvExporter.shouldFail = false
+        let succeeded = try await queue.processNow()
+        XCTAssertEqual(succeeded, 1, "CSV 成功後はアップロードが実行され成功カウントが 1 になる")
+        XCTAssertEqual(try queue.pendingCount(), 0, "成功すればエントリが削除される（retryCount リセット）")
     }
 }
 
@@ -206,9 +286,18 @@ private final class StubProvider: CloudStorageProvider, @unchecked Sendable {
     }
 }
 
-private struct StubCSVExporter: CSVExporting {
+private final class StubCSVExporter: CSVExporting, @unchecked Sendable {
+    var shouldFail: Bool = false
+
     func csvData(for trip: TripRecord) throws -> Data {
-        Data("csv".utf8)
+        if shouldFail {
+            throw StubCSVError.exportFailed
+        }
+        return Data("csv".utf8)
+    }
+
+    enum StubCSVError: Error {
+        case exportFailed
     }
 }
 

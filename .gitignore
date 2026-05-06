@@ -41,9 +41,11 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
-# 機密情報（Google Maps API キーなど）
+# 機密情報（Google Maps API キー、OAuth クライアント ID など）
 GoogleMaps-Info.plist
 GPSLogger/Resources/GoogleMaps-Info.plist
+GoogleDriveOAuth-Info.plist
+GPSLogger/Resources/GoogleDriveOAuth-Info.plist
 *.p12
 *.cer
 *.mobileprovision

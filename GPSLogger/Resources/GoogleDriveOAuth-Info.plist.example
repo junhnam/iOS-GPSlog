@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Google Drive 連携に使用する iOS OAuth 2.0 クライアント ID のテンプレートです。
+
+  使い方:
+    1. このファイルを同じディレクトリに `GoogleDriveOAuth-Info.plist` という名前でコピー
+       cp GPSLogger/Resources/GoogleDriveOAuth-Info.plist.example GPSLogger/Resources/GoogleDriveOAuth-Info.plist
+    2. Google Cloud Console（https://console.cloud.google.com/）で iOS 向けの
+       OAuth 2.0 クライアント ID を発行し、以下のプレースホルダーを実値に書き換える
+    3. Xcode を再起動（または xcodegen generate を再実行）して plist への参照を確認する
+
+  GoogleDriveOAuth-Info.plist 自体は .gitignore で除外済みなのでコミットされません。
+  設定手順の詳細は .scrum/notes/oauth-setup.md を参照してください。
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Google Cloud Console で発行した iOS OAuth 2.0 クライアント ID を貼り付けてください -->
+    <key>GoogleDriveOAuthClientID</key>
+    <string>YOUR_GOOGLE_OAUTH_CLIENT_ID_HERE</string>
+
+    <!--
+      Reverse Client ID: クライアント ID をドット区切りで逆順にした文字列。
+      例: クライアント ID が「123456789-abc...」の場合は
+          「com.googleusercontent.apps.123456789-abc...」となります。
+      Info.plist の CFBundleURLSchemes にも同じ値を設定してください。
+    -->
+    <key>GoogleDriveOAuthReverseClientID</key>
+    <string>YOUR_REVERSE_CLIENT_ID_HERE</string>
+</dict>
+</plist>

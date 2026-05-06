@@ -227,11 +227,20 @@ final class CloudUploadRetryQueue: CloudUploadRetryEnqueuing {
                 continue
             }
             // CSV データ生成
+            // CSV 生成失敗も retryCount に加算し、5 回連続失敗で通知を発火する（S6-009 / QA-S5-004）。
             let csvData: Data
             do {
                 csvData = try csvExporter.csvData(for: trip)
             } catch {
                 Self.logger.warning("リトライ中の CSV 出力失敗: \(error.localizedDescription)")
+                pending.retryCount += 1
+                pending.lastTriedAt = Date()
+                pending.lastErrorMessage = "CSV 生成失敗: \(error.localizedDescription)"
+                if pending.retryCount >= Self.maxAttempts && !pending.notifiedFinalFailure {
+                    pending.notifiedFinalFailure = true
+                    await notifier.notifyFinalFailure(tripDate: pending.tripDate, providerKind: kind)
+                }
+                try modelContext.save()
                 continue
             }
             // アップロード
