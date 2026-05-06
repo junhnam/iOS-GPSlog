@@ -11,7 +11,6 @@
 
 ## Todo
 
-- [ ] **S5-001**: Google Drive SDK 導入 + OAuth 認証 → **dev-2** / Must / L→分割可 / 承認取得済
 - ~~**S5-002**: Dropbox SDK 導入 + OAuth 認証~~ → **Sprint 6 へ繰越**（jun さん承認 / Issue #36 sprint-6 ラベル）
 - [ ] **S5-003**: クラウド保存先選択 UI → **dev-1** / Must / M
 - [ ] **S5-004**: 自動同期 ON/OFF 設定 → **dev-1** / Must / S
@@ -22,7 +21,8 @@
 ## In Progress
 
 - [~] **S5-008**: MapView Coordinator strict concurrency warning 解消 → **dev-1** / Should / S
-- [~] **S5-007**: PinRecord.address 追加 + addressFromPlaceURL 実体化（QA-S4-002 解消） → **dev-2** / Must / M
+- [~] **S5-007**: PinRecord.address 追加 + addressFromPlaceURL 実体化（QA-S4-002 解消） → **dev-2** / Must / M / 実装完了・ビルド確認待ち（コミット `d1d1476`）
+- [~] **S5-001**: Google Drive SDK 導入 + OAuth 認証 → **dev-2** / Must / L→分割可 / 承認取得済
 
 ## Done
 
@@ -55,6 +55,7 @@
 
 - Dev-2 が S5-001 着手前に `cloudProviderKind: CloudProviderKind?` と `cloudAutoSyncEnabled: Bool` を `Models/AppSettings.swift` に追加し commit
 - 該当 commit がプッシュ（main にマージ）された時点で Dev-1 は S5-003 / S5-004 に着手可能
+- **2026-05-06 完了**: コミット `a2d915f` で AppSettings 拡張済。`CloudProviderKind` enum / `cloudProviderKind` / `cloudAutoSyncEnabled` を追加。Dev-1 は S5-003 / S5-004 着手可能
 
 ### CalendarSyncService の addressFromPlaceURL 削除
 

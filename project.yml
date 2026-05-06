@@ -66,6 +66,21 @@ targets:
         # バックグラウンド実行モード（S1-003）
         UIBackgroundModes:
           - location
+        # Google Drive OAuth クライアント ID（S5-001）。
+        # 公開して問題ない値（PKCE フローを使うためクライアントシークレットなし）。
+        # 実値は jun さん側で Google Cloud Console から取得して差し替える運用。
+        # 例: "1234567890-abcdef.apps.googleusercontent.com"
+        # 空文字列のままでもアプリは起動する（OAuth 起動時に「未設定」エラーで失敗する）。
+        GoogleDriveOAuthClientID: ""
+        # Google Drive OAuth コールバック用 URL Scheme（S5-001）。
+        # クライアント ID を逆順にした文字列を URL Scheme として登録する（Google iOS OAuth 慣例）。
+        # 例: client_id "1234567890-abcdef.apps.googleusercontent.com" の場合
+        #     scheme は "com.googleusercontent.apps.1234567890-abcdef"
+        # jun さん側で実値に差し替える。空のままだと OAuth が起動できない（Sprint 5 では空でもユニットテストは通る）。
+        CFBundleURLTypes:
+          - CFBundleURLName: GoogleDriveOAuth
+            CFBundleURLSchemes:
+              - "com.googleusercontent.apps.PLACEHOLDER"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.junhnam.gpslogger
