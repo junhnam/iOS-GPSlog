@@ -5,15 +5,15 @@
 > **移動記録をクラウドストレージに自動同期し、機器を変えても残せる状態にする**
 
 期間: 2026-05-06 開始
-フェーズ: **planning_review**（jun さん承認待ち）
+フェーズ: **development**（jun さん承認取得済 / Google Drive のみ・Dropbox は Sprint 6 繰越）
 
 ---
 
 ## Todo
 
 - [ ] **S5-007**: PinRecord.address 追加 + addressFromPlaceURL 実体化（QA-S4-002 解消） → **dev-2** / Must / M
-- [ ] **S5-001**: Google Drive SDK 導入 + OAuth 認証 → **dev-2** / Must / L→分割可 / **要 jun さん事前承認**
-- [ ] **S5-002**: Dropbox SDK 導入 + OAuth 認証 → **dev-2** / Should / L→分割可 / **要 jun さん事前承認・Sprint 6 繰越選択肢あり**
+- [ ] **S5-001**: Google Drive SDK 導入 + OAuth 認証 → **dev-2** / Must / L→分割可 / 承認取得済
+- ~~**S5-002**: Dropbox SDK 導入 + OAuth 認証~~ → **Sprint 6 へ繰越**（jun さん承認 / Issue #36 sprint-6 ラベル）
 - [ ] **S5-003**: クラウド保存先選択 UI → **dev-1** / Must / M
 - [ ] **S5-004**: 自動同期 ON/OFF 設定 → **dev-1** / Must / S
 - [ ] **S5-005**: 「GPSログ/{日付}/data.csv」階層での自動アップロード → **dev-2** / Must / M

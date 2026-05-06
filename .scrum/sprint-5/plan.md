@@ -3,7 +3,15 @@
 - スプリント期間: 2026-05-06 開始（1 イテレーション完結予定）
 - 体制: PO/SM (Opus) + Dev x2 (Dev-1 / Dev-2 / Sonnet) + QA（qa-multi-agent / Single-Agent モード見込み）
 - リポジトリ: junhnam/iOS-GPSlog（main ブランチ・Sprint 4 まで origin と同期済 = 892e195）
-- 現在のフェーズ: **planning_review**（jun さん承認待ち）
+- 現在のフェーズ: **development**（jun さん承認取得済 2026-05-06）
+
+## jun さん承認結果（2026-05-06）
+
+- パッケージ追加: **案 A 採用 = Google Drive 公式 SDK のみ**。Dropbox は Sprint 6 へ繰越
+- Dev フェーズ完了基準 warning 0 チェック: **採用**
+- Sonnet サブエージェントの xcodebuild 代行運用: **継続**（settings.json は変更しない）
+- CSV 出力スキーマ: **address 列を追加**（CLAUDE.md「DB に収納しているデータをそのまま出力する」要件遵守）
+- **S5-002 (Dropbox SDK) は Sprint 5 では着手しない**（GitHub Issue #36 のラベルを sprint-6 に変更済）
 
 ---
 

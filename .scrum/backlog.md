@@ -92,7 +92,7 @@
 | ID | タイトル | 見積 | 担当 | 優先度 | ステータス | スプリント |
 |---|---|---|---|---|---|---|
 | S5-001 | Google Drive SDK 導入 + OAuth 認証 | L→分割可 | dev-2 | must | sprint | 5 |
-| S5-002 | Dropbox SDK 導入 + OAuth 認証 | L→分割可 | dev-2 | should | sprint | 5 |
+| S5-002 | Dropbox SDK 導入 + OAuth 認証 | L→分割可 | - | should | backlog | 6 |
 | S5-003 | クラウド保存先選択 UI | M | dev-1 | must | sprint | 5 |
 | S5-004 | 自動同期 ON/OFF 設定 | S | dev-1 | must | sprint | 5 |
 | S5-005 | 「GPSログ/{日付}/data.csv」階層での自動アップロード | M | dev-2 | must | sprint | 5 |
@@ -105,8 +105,8 @@
 
 - S5-007 は jun さん指示「PinRecord に address を追加」を反映した Sprint 4 申し送り #3 のチケット化
 - S5-008 / S5-009 は Sprint 4 申し送り #1 / #2 を取り込み（concurrency warning。クラウド連携と独立で吸収可能）
-- S5-002 は jun さんの「Sprint 5 で Dropbox を入れるか / Sprint 6 へ繰越か」の判断次第。Sprint 6 へ繰越時は Sprint 5 を 8 チケット構成（Must 5 / Should 1 / Could 1）にする
-- パッケージ追加（Google Drive / Dropbox SDK）は development 開始**前**に jun さん承認を取得
+- **S5-002 は jun さん指示で Sprint 6 へ繰越（2026-05-06）**。Sprint 5 は 8 チケット構成（Must 5 / Should 2 / Could 1）。GitHub Issue #36 のラベルを sprint-6 に変更済
+- パッケージ追加: jun さん承認取得済 = **Google Drive 公式 SDK のみ**。Dropbox SDK は Sprint 6 で別途承認
 - 運用変更: Dev フェーズ完了基準に「`xcodebuild clean build` warning 0 確認」を追加（`.scrum/process/dev-completion-checklist.md` 新規作成）。Sonnet サブエージェントの xcodebuild は引き続きメインエージェント（Opus）が代行
 
 ### Sprint 6: 運用機能 + リリース準備
