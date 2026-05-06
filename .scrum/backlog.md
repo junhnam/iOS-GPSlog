@@ -1,6 +1,6 @@
 # Product Backlog: iOS GPSロガーアプリ
 
-最終更新: 2026-05-06（Sprint 3 プランニング完了時点）
+最終更新: 2026-05-06（Sprint 3 完了 / レビュー時点）
 
 ## バックログ構成方針
 - CLAUDE.md の全要件を 6 スプリントに分割
@@ -44,25 +44,25 @@
 
 注: Sprint 2 では「お店情報の自動取得（旧 MKLocalSearch チケット）」は **Sprint 3 へ移動**。理由は (1) 自宅判定とセットの方が UX 上自然、(2) Sprint 2 のキャパシティを復元・履歴に集中させるため。
 
-### Sprint 3: 設定画面 + 自宅登録 + 記録モード + お店情報 + 復元エラー通知
+### Sprint 3: 設定画面 + 自宅登録 + 記録モード + お店情報 + 復元エラー通知（完了）
 
 スプリントゴール: 自宅 / 外出を区別して記録モードを自動切替し、滞留地点に店舗情報を紐付ける
 
 | ID | タイトル | 見積 | 担当 | ステータス | スプリント |
 |---|---|---|---|---|---|
-| S3-001 | 設定画面の骨格（List + UserDefaults + AppSettings） | M | dev-1 | sprint | 3 |
-| S3-002 | 自宅位置の登録 UI（地図ピック + 住所 + 候補選択） | M | dev-1 | sprint | 3 |
-| S3-003 | 自宅判定ロジック（半径内で記録自動停止） | M | dev-2 | sprint | 3 |
-| S3-004 | 常時 / トリガー記録モード切替（AppSettings 統合） | S | dev-1 | sprint | 3 |
-| S3-005 | トリガー記録用フローティングボタン（開始/停止） | M | dev-1 | sprint | 3 |
-| S3-006 | Significant Location Changes 併用 + 動的精度調整 | M | dev-2 | sprint | 3 |
-| S3-007 | MKLocalSearch によるお店情報取得（placeName/placeURL） | M | dev-2 | sprint | 3 |
-| S3-008 | restoreTodayTrip の silent failure をユーザー通知化（retro #4） | S | dev-1 | sprint | 3 |
-| S3-009 | iOS 26 SwiftData / Swift 6 落とし穴メモを notes 化（retro Try） | S | dev-1 | sprint | 3 |
+| S3-001 | 設定画面の骨格（List + UserDefaults + AppSettings） | M | dev-1 | done | 3 |
+| S3-002 | 自宅位置の登録 UI（地図ピック + 住所 + 候補選択） | M | dev-1 | done | 3 |
+| S3-003 | 自宅判定ロジック（半径内で記録自動停止） | M | dev-2 | done | 3 |
+| S3-004 | 常時 / トリガー記録モード切替（AppSettings 統合） | S | dev-1 | done | 3 |
+| S3-005 | トリガー記録用フローティングボタン（開始/停止） | M | dev-1 | done | 3 |
+| S3-006 | Significant Location Changes 併用 + 動的精度調整 | M | dev-2 | done | 3 |
+| S3-007 | MKLocalSearch によるお店情報取得（placeName/placeURL） | M | dev-2 | done | 3 |
+| S3-008 | restoreTodayTrip の silent failure をユーザー通知化（retro #4） | S | dev-1 | done | 3 |
+| S3-009 | iOS 26 SwiftData / Swift 6 落とし穴メモを notes 化（retro Try） | S | dev-1 | done | 3 |
 
 注: Sprint 3 では旧バックログの「設定画面 UI デザイン」独立チケットは S3-001 / S3-002 / S3-005 に内包し、S3-008（復元エラー通知）と S3-009（落とし穴ノート）を Sprint 2 retro/QA 申し送りから繰り上げて 9 件構成。Sprint 6 候補だった Significant Location Changes は S3-006 として先取り。
 
-### Sprint 4: iOSカレンダー同期 + CSV エクスポート（ローカル）
+### Sprint 4: iOSカレンダー同期 + CSV エクスポート（ローカル） + iOS 26 API 移行
 
 | ID | タイトル | 見積 | 担当 | ステータス | スプリント |
 |---|---|---|---|---|---|
@@ -72,6 +72,7 @@
 | S4-004 | CSV エクスポート機能（DBスキーマそのまま出力） | M | - | backlog | 4 |
 | S4-005 | UIDocumentPickerViewController での保存先選択 | M | - | backlog | 4 |
 | S4-006 | エクスポート UI 画面 | M | - | backlog | 4 |
+| S4-007 | CLGeocoder → MKReverseGeocodingRequest 移行（QA-S3-002 申し送り） | S | - | backlog | 4 |
 
 ---
 
@@ -129,7 +130,7 @@
 | 1 | プロジェクト基盤＋地図 | 9 | シミュレータで地図に経路表示（達成済） |
 | 2 | DB＋総移動距離＋滞留＋復元＋履歴 | 8 | 閉じても復元できる状態を作る |
 | 3 | 設定／自宅／記録モード／お店情報／復元通知／ノート | 9 | バッテリー懸念のベース対策＋ピン情報拡充＋retro 反映 |
-| 4 | カレンダー同期＋CSV出力 | 6 | データの外部化 |
+| 4 | カレンダー同期＋CSV出力＋iOS 26 API 移行 | 7 | データの外部化 + 申し送り解消 |
 | 5 | クラウド同期 | 6 | Drive/Dropbox 連携 |
 | 6 | 運用＋リリース準備 | 7 | App Store 申請可能状態 |
-| 合計 | | **45** | |
+| 合計 | | **46** | |
