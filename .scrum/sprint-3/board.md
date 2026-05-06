@@ -8,16 +8,17 @@
 
 ## Todo
 
-- [ ] S3-006: Significant Location Changes + 動的精度調整 → dev-2
+（なし）
 
 ## In Progress
 
-- [~] S3-003: 自宅判定ロジック（半径内で記録自動停止） → dev-2
+- [~] S3-006: Significant Location Changes + 動的精度調整 → dev-2
 
 ## Done
 
 - [x] S3-001: 設定画面の骨格（List + UserDefaults + AppSettings） → dev-1
 - [x] S3-002: 自宅位置の登録 UI（地図ピック + 住所 + 候補選択） → dev-1
+- [x] S3-003: 自宅判定ロジック（半径内で記録自動停止） → dev-2
 - [x] S3-004: 常時 / トリガー記録モード切替 → dev-1
 - [x] S3-005: トリガー記録用フローティングボタン → dev-1
 - [x] S3-007: MKLocalSearch によるお店情報取得 → dev-2
@@ -30,7 +31,7 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 1 |
+| Todo | 0 |
 | In Progress | 1 |
-| Done | 7 |
+| Done | 8 |
 | 合計 | 9 |

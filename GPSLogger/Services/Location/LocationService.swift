@@ -53,6 +53,18 @@ final class LocationService: NSObject, ObservableObject {
     /// placeName / placeURL を書き戻す。nil のときは取得処理をスキップ（後方互換）。
     private let placeProvider: (any PlaceProviderProtocol)?
 
+    /// アプリ設定（S3-003）。自宅判定 / 半径の参照に使う。
+    /// nil のときは自宅機能を無効化（後方互換）。
+    private let appSettings: AppSettings?
+
+    /// 直近の自宅判定状態（S3-003）。状態遷移時のみログを出すため保持。
+    /// 初期値は `.unknown`（自宅未登録または最初の点が未到着）。
+    private var lastHomeState: HomeState = .unknown
+
+    /// 自宅滞在中に記録をスキップしている件数（テスト用観測値）。
+    /// 本番ロジックには影響しないが、QA・テストで「自宅で何点スキップしたか」を確認するために公開する。
+    @Published private(set) var atHomeSkipCount: Int = 0
+
     private static let logger = Logger(subsystem: "com.junhnam.gpslogger",
                                        category: "LocationService")
 
@@ -63,11 +75,13 @@ final class LocationService: NSObject, ObservableObject {
     init(manager: CLLocationManager = CLLocationManager(),
          repository: TripRepository? = nil,
          stayDetector: StayDetector = StayDetector(),
-         placeProvider: (any PlaceProviderProtocol)? = nil) {
+         placeProvider: (any PlaceProviderProtocol)? = nil,
+         appSettings: AppSettings? = nil) {
         self.manager = manager
         self.repository = repository
         self.stayDetector = stayDetector
         self.placeProvider = placeProvider
+        self.appSettings = appSettings
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         configureManager()
@@ -121,12 +135,35 @@ final class LocationService: NSObject, ObservableObject {
         handleNewLocations(locations)
     }
 
+    /// テスト用に直近の自宅判定状態を読む（S3-003）。
+    var _lastHomeStateForTesting: HomeState { lastHomeState }
+
     // MARK: - Internal
 
     fileprivate func handleNewLocations(_ locations: [CLLocation]) {
         guard let last = locations.last else { return }
         let previous = currentLocation
         currentLocation = last
+
+        // S3-003: 自宅判定。.atHome なら RoutePoint 永続化と距離加算をスキップする。
+        // - homeLocation 未登録（settings.homeLocation == nil）の場合は .unknown が返り、通常記録。
+        // - 状態遷移（atHome → away など）はログに残し、デバッグの可視性を確保。
+        let homeState: HomeState = {
+            guard let settings = appSettings else { return .unknown }
+            return HomeDetector.detect(homeLocation: settings.homeLocation,
+                                       radius: settings.homeRadiusMeters,
+                                       currentLocation: last)
+        }()
+        if homeState != lastHomeState {
+            Self.logger.info("HomeState 遷移: \(String(describing: self.lastHomeState)) -> \(String(describing: homeState))")
+            lastHomeState = homeState
+        }
+        if homeState == .atHome {
+            // 自宅滞在中: route 描画も DB 書き込みも行わない（バッテリー対策）。
+            // 受け入れ条件: 「履歴には自宅状態でスキップした座標は記録しない」。
+            atHomeSkipCount += 1
+            return
+        }
 
         // S2-006: 滞留検出。half-circle: 半径外で滞留終了 -> PinRecord 作成。
         let stayEvent = stayDetector.ingest(location: last)
