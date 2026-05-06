@@ -27,7 +27,7 @@
 
 - [x] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + `RootViewIntegrationTests.swift` 末尾雛形コメント追加） → **po-sm（メイン代行）** / Must / S（コミット `954f23d` / 既存 173 テスト pass / 回帰なし）
 - [x] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約 / `@MainActor final class`） → **dev-1** / Must / M（コミット `8853972` / 176/176 pass / DI 検証ケース 3 件追加 / Swift 6 strict concurrency 整合）
-- [x] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S（コミット TBD / 179/179 pass / CSV 失敗時 retryCount 加算ロジック + テスト 3 件 / `.gitignore` + `.example` + `oauth-setup.md` / メイン代行修正: テスト DI 漏れ 1 件）
+- [x] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S（コミット `39dba0e` / 179/179 pass / CSV 失敗時 retryCount 加算ロジック + テスト 3 件 / `.gitignore` + `.example` + `oauth-setup.md` / メイン代行修正: テスト DI 漏れ 1 件）
 
 ---
 
@@ -78,7 +78,7 @@
 | S6-006 | dev-2 | - | - | - | - |
 | S6-007 | designer / dev-1 | - | - | - | - |
 | S6-008 | po-sm | - | - | jun さん実機 | - |
-| S6-009 | dev-2 | TBD | 0（メイン代行確認済） | 確認済 / 179/179 pass | 3（CSV 失敗時 retryCount 加算） |
+| S6-009 | dev-2 | 39dba0e | 0（メイン代行確認済） | 確認済 / 179/179 pass | 3（CSV 失敗時 retryCount 加算） |
 
 ---
 
@@ -97,7 +97,7 @@
 
 | コミット | 内容 |
 |---|---|
-| TBD（S6-009 同梱） | `CloudUploadRetryQueueTests.swift` の `test_successAfterCsvFailure_removesEntry_S6_009` で `stubProvider` を `makeQueue` に渡しておらず内部 default が `.failure` を返してしまうテスト DI 漏れを修正（S6-001 で導入した DI カバレッジ運用がテストコード側にも適用されるべきという学び） |
+| `39dba0e` | `CloudUploadRetryQueueTests.swift` の `test_successAfterCsvFailure_removesEntry_S6_009` で `stubProvider` を `makeQueue` に渡しておらず内部 default が `.failure` を返してしまうテスト DI 漏れを修正（S6-001 で導入した DI カバレッジ運用がテストコード側にも適用されるべきという学び） |
 
 ---
 
