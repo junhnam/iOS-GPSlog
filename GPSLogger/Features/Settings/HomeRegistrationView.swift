@@ -194,16 +194,17 @@ struct HomeRegistrationView: View {
             defer { isGeocoding = false }
             do {
                 // iOS 26 の MKReverseGeocodingRequest は init?(location:) のみで
-                // preferredLocale 引数を受け取らない。CLPlacemark 由来の表記は
-                // 端末のロケール（jun さんの環境では ja_JP）に従うため、
-                // 旧 CLGeocoder で渡していた Locale(identifier: "ja_JP") は省略する。
+                // preferredLocale 引数を受け取らない。住所表記は端末のロケール
+                // （jun さんの環境では ja_JP）に従う。
                 guard let request = MKReverseGeocodingRequest(location: location) else {
                     geocodeErrorMessage = "住所取得に失敗しました（位置のみ保存します）"
                     return
                 }
                 let mapItems = try await request.mapItems
                 if Task.isCancelled { return }
-                let formatted = mapItems.prefix(3).compactMap { Self.formatPlacemark($0.placemark) }
+                // QA-S4-001: 旧 `$0.placemark` は iOS 26 で deprecated。
+                // 新 API `MKMapItem.address: MKAddress?` の `fullAddress` を使う。
+                let formatted = mapItems.prefix(3).compactMap { $0.address?.fullAddress }
                 addressCandidates = formatted
                 if let first = formatted.first, selectedAddress == nil {
                     selectedAddress = first
@@ -214,21 +215,6 @@ struct HomeRegistrationView: View {
                 geocodeErrorMessage = "住所取得に失敗しました（位置のみ保存します）"
             }
         }
-    }
-
-    /// CLPlacemark から日本住所表記を組み立てる。空要素は除外。
-    /// S4-001: `static` にして Task キャプチャの自己参照を最小化。
-    private static func formatPlacemark(_ placemark: CLPlacemark) -> String? {
-        let parts: [String?] = [
-            placemark.administrativeArea,
-            placemark.locality,
-            placemark.subLocality,
-            placemark.thoroughfare,
-            placemark.subThoroughfare,
-            placemark.name
-        ]
-        let joined = parts.compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        return joined.isEmpty ? nil : joined
     }
 
     // MARK: - Current Location

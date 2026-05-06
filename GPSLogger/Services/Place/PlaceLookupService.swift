@@ -36,8 +36,8 @@ protocol PlaceProviderProtocol: Sendable {
 ///
 /// 設計方針:
 ///   - 半径 50m の正方形領域を `MKCoordinateRegion` で構築し POI のみを検索
-///   - 結果 0 件のときは `CLGeocoder.reverseGeocodeLocation` で住所だけ取得し fallback
-///   - MKLocalSearch / CLGeocoder のレート制限・ネットワーク失敗時は throw せず nil 化
+///   - 結果 0 件のときは `MKReverseGeocodingRequest` で住所だけ取得し fallback（S4-001）
+///   - MKLocalSearch / MKReverseGeocodingRequest のレート制限・ネットワーク失敗時は throw せず nil 化
 ///   - `Sendable` 準拠の `actor` ではなく struct + async でシンプルに（状態を持たない）
 ///
 /// LocationService から呼ぶ際は `await` で受け、StayDetector の PinRecord 生成直後に
@@ -159,12 +159,21 @@ protocol GeocoderPerforming: Sendable {
     func reverseGeocode(location: CLLocation) async throws -> String?
 }
 
-/// `MKReverseGeocodingRequest` を `GeocoderPerforming` として包む実装（S4-001）。
+/// `MKReverseGeocodingRequest` を `GeocoderPerforming` として包む実装（S4-001 / QA-S4-001 修正）。
 ///
 /// iOS 26 で `CLGeocoder` 全体が deprecated となったため、Apple 公式の置換 API
 /// `MKReverseGeocodingRequest`（MapKit）を利用する。`mapItems` プロパティが
-/// `[MKMapItem]` を返すため、先頭の `MKMapItem.placemark`（CLPlacemark）を
-/// `PlacemarkAddressFormatter.format` に通して住所文字列を組み立てる。
+/// `[MKMapItem]` を返すため、先頭の `MKMapItem.address`（iOS 26 新 API）から
+/// `MKAddress.fullAddress` を取得する。
+///
+/// 注意（QA-S4-001）:
+///   - 当初実装では `MKMapItem.placemark` (CLPlacemark) を使っていたが、
+///     `placemark` プロパティ自体が iOS 26 で deprecated（"Use location, address and
+///     addressRepresentations instead"）。`MKMapItem.address: MKAddress?` への移行で
+///     deprecated warning を解消する。
+///   - フォールバックとして `addressRepresentations?.fullAddress(includingRegion:singleLine:)`
+///     を使うことも可能だが、本サービスでは「日本語の住所文字列が 1 行で取れれば十分」
+///     という要件のため `MKAddress.fullAddress` を採用する。
 ///
 /// 旧 `CLGeocoder.cancelGeocode()` 相当のキャンセルは、async API 呼び出しを
 /// `Task` で包んで `Task.cancel()` で中断するパターンに切替える（S4-001 技術メモ）。
@@ -179,7 +188,8 @@ struct AppleGeocoder: GeocoderPerforming {
             return nil
         }
         let mapItems = try await request.mapItems
-        guard let placemark = mapItems.first?.placemark else { return nil }
-        return PlacemarkAddressFormatter.format(placemark)
+        // QA-S4-001: 旧 `mapItems.first?.placemark` は iOS 26 で deprecated。
+        // 新 API `MKMapItem.address: MKAddress?` の `fullAddress` を使う。
+        return mapItems.first?.address?.fullAddress
     }
 }

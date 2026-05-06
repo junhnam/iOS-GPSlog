@@ -18,17 +18,19 @@
 ### 推奨置換
 
 - 単発の逆ジオコーディング: `MKReverseGeocodingRequest`（iOS 26 新 API、MapKit）
-- 構造化された住所が欲しい場合: `MKMapItem.placemark` の `CLPlacemark` を引き続き利用可（`MKMapItem` 自体は deprecated ではない）
+- 住所文字列が欲しい場合: `MKMapItem.address: MKAddress?` の `fullAddress`（iOS 26 新 API）
+  - 警告: `MKMapItem.placemark`（CLPlacemark）プロパティ自体も iOS 26 で deprecated（"Use location, address and addressRepresentations instead"）。CLPlacemark 経由の住所組み立てを継続するとビルド warning が新規発生するので使わないこと
+  - 国名込みの完全表記が欲しい場合は `MKMapItem.addressRepresentations?.fullAddress(includingRegion:singleLine:)` を使う
 - キャンセルは `Task` の `cancel()` で代替（`MKReverseGeocodingRequest` の async API は Task キャンセルで中断される）
 
 ### Sprint 4 での対応
 
 - **S4-001** で `HomeRegistrationView.swift` と `PlaceLookupService.swift`（`AppleGeocoder`）を移行。
-- ステータス: **対応済（2026-05-06 / Sprint 4 / Dev-2）**
+- ステータス: **対応済（2026-05-06 / Sprint 4 / Dev-2 + QA-S4-001 修正で完了）**
   - `AppleGeocoder.reverseGeocode(location:)` を `MKReverseGeocodingRequest(location:).mapItems` ベースに置換
-  - `HomeRegistrationView.triggerReverseGeocode` を `Task` + `MKReverseGeocodingRequest(location:preferredLocale:)` ベースに置換
+  - `HomeRegistrationView.triggerReverseGeocode` を `Task` + `MKReverseGeocodingRequest(location:)` ベースに置換
   - `CLGeocoder.cancelGeocode()` は `Task.cancel()` で代替
-  - `MKMapItem.placemark`（CLPlacemark）を `PlacemarkAddressFormatter.format` に通す既存変換層を再利用
+- **QA-S4-001（Agent A 観察事項）**: 当初実装では `MKMapItem.placemark`（CLPlacemark）を使っていたが、`placemark` プロパティ自体が iOS 26 で deprecated。フル再ビルドで `'placemark' was deprecated in iOS 26.0` が 4 件出ていたため、QA フェーズで `MKMapItem.address?.fullAddress` に切り替えて解消（PlaceLookupService.swift / HomeRegistrationView.swift の 2 箇所）。
 
 ---
 
