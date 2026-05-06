@@ -35,6 +35,7 @@
 		AF70A7A59D5720314956BCDB /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CEB4C730011080C237426F /* TripRecord.swift */; };
 		B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0771CC5514403FBA9445A68C /* MapView.swift */; };
 		B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */; };
+		BB708118D2A2426E0F490270 /* SignificantLocationChangesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6881F93CC5593380C7592D /* SignificantLocationChangesTests.swift */; };
 		BB910DECFFA5FD364C6C0048 /* HomeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23537070EBFE68FB77904B34 /* HomeDetector.swift */; };
 		BC8364AD3E29A573A29086A7 /* TripRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975470EA32C831B3AC3AC8F2 /* TripRestoreTests.swift */; };
 		BE25912257AE2CF0AB1CAB1B /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC8CD2F54F4FE8714ABE361 /* HistoryListView.swift */; };
@@ -60,6 +61,7 @@
 
 /* Begin PBXFileReference section */
 		0771CC5514403FBA9445A68C /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		0A6881F93CC5593380C7592D /* SignificantLocationChangesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignificantLocationChangesTests.swift; sourceTree = "<group>"; };
 		1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingToggleButtonTests.swift; sourceTree = "<group>"; };
 		23537070EBFE68FB77904B34 /* HomeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDetector.swift; sourceTree = "<group>"; };
 		26C1672AD957E9B012EADDFE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -205,6 +207,7 @@
 				51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */,
 				1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */,
 				F85A4A7B99D7B66DFC094569 /* RestoreErrorTests.swift */,
+				0A6881F93CC5593380C7592D /* SignificantLocationChangesTests.swift */,
 				92C5F95F252B8D8D514304D2 /* StayDetectorTests.swift */,
 				A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */,
 				FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */,
@@ -426,6 +429,7 @@
 				1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */,
 				FD4DFBC2710E7869578E11E2 /* RecordingToggleButtonTests.swift in Sources */,
 				FBA105A82A0CBDC0CEDBFFF9 /* RestoreErrorTests.swift in Sources */,
+				BB708118D2A2426E0F490270 /* SignificantLocationChangesTests.swift in Sources */,
 				2A327260972B87620CB2944C /* StayDetectorTests.swift in Sources */,
 				B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */,
 				96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */,

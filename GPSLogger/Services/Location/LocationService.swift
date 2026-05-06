@@ -3,6 +3,33 @@ import CoreLocation
 import Combine
 import os
 
+/// CLLocationManager の最小限のインタフェース（S3-006）。
+///
+/// SLC（Significant Location Changes）切替・desiredAccuracy 動的調整をテスト可能にするため、
+/// 利用するメソッド・プロパティだけを抽出してプロトコル化する。
+///
+/// 本物の CLLocationManager はこのプロトコルにそのまま適合する（拡張で実装）。
+/// テストではモッククラスを差し替え、SLC のオン/オフや desiredAccuracy の変化を検証する。
+protocol LocationProviderProtocol: AnyObject {
+    var desiredAccuracy: CLLocationAccuracy { get set }
+    var distanceFilter: CLLocationDistance { get set }
+    var activityType: CLActivityType { get set }
+    var pausesLocationUpdatesAutomatically: Bool { get set }
+    var allowsBackgroundLocationUpdates: Bool { get set }
+    var showsBackgroundLocationIndicator: Bool { get set }
+    var authorizationStatus: CLAuthorizationStatus { get }
+    var delegate: CLLocationManagerDelegate? { get set }
+
+    func requestWhenInUseAuthorization()
+    func requestAlwaysAuthorization()
+    func startUpdatingLocation()
+    func stopUpdatingLocation()
+    func startMonitoringSignificantLocationChanges()
+    func stopMonitoringSignificantLocationChanges()
+}
+
+extension CLLocationManager: LocationProviderProtocol {}
+
 /// アプリ全体で共有される位置情報サービス。
 ///
 /// Core Location を SwiftUI から扱いやすいよう `ObservableObject` でラップする。
@@ -35,7 +62,25 @@ final class LocationService: NSObject, ObservableObject {
     /// 位置情報更新が現在オンかどうか（外部から状態確認用）。
     @Published private(set) var isUpdating: Bool = false
 
-    private let manager: CLLocationManager
+    private let manager: any LocationProviderProtocol
+
+    /// SLC（Significant Location Changes）が現在オンかどうか（S3-006）。
+    /// テストや UI から状態確認できるよう公開しているが書き込みは内部のみ。
+    @Published private(set) var isMonitoringSignificantChanges: Bool = false
+
+    /// 走行 / 停止判定のために直近 RoutePoint 履歴を保持する（S3-006）。
+    /// 受け入れ条件: 「走行中（5 秒以内に 10m 超移動）= Best」「停止/低速（20 秒以上ほぼ動かず）= HundredMeters」
+    /// 履歴は最大 5 件まで保持（メモリ圧縮）。
+    private var recentLocationHistory: [CLLocation] = []
+
+    /// 直近の動的 desiredAccuracy 値（テスト用に観測可能にする）。
+    /// 本来は manager.desiredAccuracy を直接読めば良いが、CLLocationAccuracy は
+    /// Double 型のため `==` 比較で精度問題が出ないよう、内部で抽象的な enum で保持する。
+    enum DynamicAccuracy: String, Sendable {
+        case best
+        case hundredMeters
+    }
+    @Published private(set) var dynamicAccuracy: DynamicAccuracy = .best
 
     /// DB 永続化用リポジトリ（DI 可能、デフォルト nil）。
     /// nil の場合はメモリのみで動作（テスト・後方互換）。
@@ -72,7 +117,7 @@ final class LocationService: NSObject, ObservableObject {
     /// 受け入れ条件: 「5m 以上なら appendRoutePoint で永続化」。
     private static let dbWriteThresholdMeters: Double = 5.0
 
-    init(manager: CLLocationManager = CLLocationManager(),
+    init(manager: any LocationProviderProtocol = CLLocationManager(),
          repository: TripRepository? = nil,
          stayDetector: StayDetector = StayDetector(),
          placeProvider: (any PlaceProviderProtocol)? = nil,
@@ -127,6 +172,33 @@ final class LocationService: NSObject, ObservableObject {
         isUpdating = false
     }
 
+    // MARK: - Significant Location Changes（S3-006）
+
+    /// SLC（Significant Location Changes）モニタリングを開始する。
+    /// 自宅滞在中はこちらに切り替え、通常の startUpdatingLocation を停止する（電池節約）。
+    /// 自宅未登録（appSettings.homeLocation == nil）の場合は何もしない。
+    func startSignificantChangesIfHome() {
+        guard let settings = appSettings, settings.homeLocation != nil else { return }
+        guard !isMonitoringSignificantChanges else { return }
+        // 通常 GPS は停止
+        if isUpdating {
+            manager.stopUpdatingLocation()
+            isUpdating = false
+        }
+        manager.startMonitoringSignificantLocationChanges()
+        isMonitoringSignificantChanges = true
+        Self.logger.info("SLC 開始（自宅滞在中の省電力モード）")
+    }
+
+    /// SLC モニタリングを停止する。
+    /// 自宅退出時に呼ばれ、通常 GPS の startUpdatingLocation に戻すフローで使う。
+    func stopSignificantChanges() {
+        guard isMonitoringSignificantChanges else { return }
+        manager.stopMonitoringSignificantLocationChanges()
+        isMonitoringSignificantChanges = false
+        Self.logger.info("SLC 停止")
+    }
+
     // MARK: - Test hooks
 
     /// テスト用に外部から位置情報をフィードできるエントリ。
@@ -154,9 +226,12 @@ final class LocationService: NSObject, ObservableObject {
                                        radius: settings.homeRadiusMeters,
                                        currentLocation: last)
         }()
-        if homeState != lastHomeState {
-            Self.logger.info("HomeState 遷移: \(String(describing: self.lastHomeState)) -> \(String(describing: homeState))")
+        let previousHomeState = lastHomeState
+        if homeState != previousHomeState {
+            Self.logger.info("HomeState 遷移: \(String(describing: previousHomeState)) -> \(String(describing: homeState))")
             lastHomeState = homeState
+            // S3-006: 状態遷移に応じて SLC / 通常 GPS を切替。
+            handleHomeStateTransition(from: previousHomeState, to: homeState)
         }
         if homeState == .atHome {
             // 自宅滞在中: route 描画も DB 書き込みも行わない（バッテリー対策）。
@@ -164,6 +239,9 @@ final class LocationService: NSObject, ObservableObject {
             atHomeSkipCount += 1
             return
         }
+
+        // S3-006: 走行 / 停止判定を行い、desiredAccuracy を動的に切替。
+        updateDynamicAccuracy(adding: last)
 
         // S2-006: 滞留検出。half-circle: 半径外で滞留終了 -> PinRecord 作成。
         let stayEvent = stayDetector.ingest(location: last)
@@ -251,6 +329,86 @@ final class LocationService: NSObject, ObservableObject {
 
     fileprivate func handleAuthorizationChange(_ status: CLAuthorizationStatus) {
         authorizationStatus = status
+    }
+
+    /// 自宅状態遷移時に SLC / 通常 GPS を切替（S3-006）。
+    /// - .atHome に入ったとき: 通常 GPS を停止し、SLC を開始
+    /// - .away に出たとき: SLC を停止し、通常 GPS を再開
+    private func handleHomeStateTransition(from previous: HomeState, to current: HomeState) {
+        if current == .atHome {
+            startSignificantChangesIfHome()
+        } else if previous == .atHome {
+            // atHome から離脱した瞬間、SLC を停止して通常 GPS を再開する
+            stopSignificantChanges()
+            // 既に updating 中ならそのまま、停止中なら再開する。
+            // 現実装では isUpdating フラグで二重起動を防いでいるためそのまま start を呼べる。
+            if !isUpdating {
+                manager.startUpdatingLocation()
+                isUpdating = true
+            }
+        }
+    }
+
+    /// 動的精度調整（S3-006）。
+    ///
+    /// 受け入れ条件:
+    ///   - 走行中（5 秒以内に 10m 超移動）= `kCLLocationAccuracyBest`
+    ///   - 停止/低速（20 秒以上ほぼ動かず）= `kCLLocationAccuracyHundredMeters`
+    ///
+    /// 内部実装:
+    ///   - `recentLocationHistory` に直近最大 5 件保持
+    ///   - 直近 5 秒の差分が 10m 超なら走行 → Best
+    ///   - 直近 20 秒の差分が 5m 未満なら停止 → HundredMeters
+    ///   - どちらでもなければ現状維持
+    private func updateDynamicAccuracy(adding location: CLLocation) {
+        recentLocationHistory.append(location)
+        // メモリ抑制: 最新 5 件まで
+        if recentLocationHistory.count > 5 {
+            recentLocationHistory.removeFirst(recentLocationHistory.count - 5)
+        }
+
+        // 走行判定: 5 秒以内に 10m 超移動
+        let movingThresholdMeters: Double = 10
+        let movingTimeWindow: TimeInterval = 5
+        let stoppedTimeWindow: TimeInterval = 20
+        let stoppedThresholdMeters: Double = 5
+
+        // 直近 5 秒のうちの最古点と現在点の距離
+        if let movingAnchor = recentLocationHistory.first(where: {
+            location.timestamp.timeIntervalSince($0.timestamp) <= movingTimeWindow
+        }), movingAnchor !== location {
+            let distance = location.distance(from: movingAnchor)
+            if distance > movingThresholdMeters {
+                applyDynamicAccuracy(.best)
+                return
+            }
+        }
+
+        // 直近 20 秒のうちの最古点と現在点の距離
+        if let stoppedAnchor = recentLocationHistory.first(where: {
+            location.timestamp.timeIntervalSince($0.timestamp) <= stoppedTimeWindow
+        }), stoppedAnchor !== location {
+            let elapsed = location.timestamp.timeIntervalSince(stoppedAnchor.timestamp)
+            let distance = location.distance(from: stoppedAnchor)
+            if elapsed >= stoppedTimeWindow && distance < stoppedThresholdMeters {
+                applyDynamicAccuracy(.hundredMeters)
+                return
+            }
+        }
+        // どちらの条件にも該当しなければ現状維持
+    }
+
+    /// desiredAccuracy を実際に切り替える。
+    private func applyDynamicAccuracy(_ accuracy: DynamicAccuracy) {
+        guard accuracy != dynamicAccuracy else { return }
+        dynamicAccuracy = accuracy
+        switch accuracy {
+        case .best:
+            manager.desiredAccuracy = kCLLocationAccuracyBest
+        case .hundredMeters:
+            manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        }
+        Self.logger.info("desiredAccuracy 切替: \(accuracy.rawValue)")
     }
 
     /// S3-007: 永続化済みの PinRecord に対し、PlaceLookupService を呼んで
