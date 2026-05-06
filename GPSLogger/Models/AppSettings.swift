@@ -1,0 +1,138 @@
+import Foundation
+import Observation
+
+/// 記録モード（S3-001 / S3-004）。
+///
+/// - `continuous`: 常時記録（CLAUDE.md のデフォルト挙動）。
+///   ※ 自宅判定が `.atHome` の場合は記録停止（S3-003 連携）。
+/// - `trigger`: フローティングボタンで開始/停止を制御（S3-005）。
+enum RecordingMode: String, Codable, CaseIterable, Sendable {
+    case continuous
+    case trigger
+
+    var displayName: String {
+        switch self {
+        case .continuous: return "常時記録"
+        case .trigger:    return "トリガー記録"
+        }
+    }
+}
+
+/// アプリ全体の設定状態（S3-001）。
+///
+/// 役割:
+///   - 設定画面（SettingsView）が読み書きする状態のソース・オブ・トゥルース
+///   - UserDefaults との read/write を 1 箇所に集約
+///   - LocationService 等のサービス層が AppSettings を参照して挙動を切り替える
+///
+/// 永続化キー（名前空間 `gpslogger.settings.v1.*`）:
+///   - `gpslogger.settings.v1.recordingMode`: String (RecordingMode.rawValue)
+///   - `gpslogger.settings.v1.homeLocation`: Data (HomeLocation を JSON エンコード)
+///   - `gpslogger.settings.v1.homeRadiusMeters`: Double
+///
+/// 設計判断:
+///   - `@Observable` macro（iOS 17+）を採用。SwiftUI から `@Bindable` で双方向バインドできる。
+///   - SwiftData ではなく UserDefaults に保存することで `@Relationship` 配列ルールの
+///     落とし穴を回避（`.scrum/notes/ios26-swiftdata.md`）。
+///   - 不正データ（破損 JSON 等）に出会った場合はデフォルト値にフォールバックする。
+///     UserDefaults に書き込まずに済むよう「読み込み時のみ」フォールバックを行う。
+///   - DI 用に UserDefaults を差し替え可能にし、テストで分離できるようにする。
+@MainActor
+@Observable
+final class AppSettings {
+    // MARK: - Keys
+
+    enum Keys {
+        static let recordingMode    = "gpslogger.settings.v1.recordingMode"
+        static let homeLocation     = "gpslogger.settings.v1.homeLocation"
+        static let homeRadiusMeters = "gpslogger.settings.v1.homeRadiusMeters"
+    }
+
+    // MARK: - Defaults
+
+    static let defaultRecordingMode: RecordingMode = .continuous
+    static let defaultHomeRadiusMeters: Double = 100.0
+    static let homeRadiusMinMeters: Double = 50.0
+    static let homeRadiusMaxMeters: Double = 300.0
+
+    // MARK: - Stored Properties (observed)
+
+    /// 記録モード。書き込み時に UserDefaults に同期する。
+    var recordingMode: RecordingMode {
+        didSet {
+            guard recordingMode != oldValue else { return }
+            defaults.set(recordingMode.rawValue, forKey: Keys.recordingMode)
+        }
+    }
+
+    /// 自宅位置。nil = 未登録。書き込み時に UserDefaults に JSON で同期。
+    var homeLocation: HomeLocation? {
+        didSet {
+            guard homeLocation != oldValue else { return }
+            if let homeLocation {
+                if let data = try? JSONEncoder().encode(homeLocation) {
+                    defaults.set(data, forKey: Keys.homeLocation)
+                }
+            } else {
+                defaults.removeObject(forKey: Keys.homeLocation)
+            }
+        }
+    }
+
+    /// 自宅半径（メートル）。50〜300 の範囲にクランプして保存。
+    var homeRadiusMeters: Double {
+        didSet {
+            let clamped = Self.clampRadius(homeRadiusMeters)
+            // 範囲外は自動修正。didSet 内で代入するため、再帰防止のため値が違うときのみ書き戻す。
+            if clamped != homeRadiusMeters {
+                homeRadiusMeters = clamped
+                return
+            }
+            guard homeRadiusMeters != oldValue else { return }
+            defaults.set(homeRadiusMeters, forKey: Keys.homeRadiusMeters)
+        }
+    }
+
+    // MARK: - Dependencies
+
+    /// 注入された UserDefaults。本番では `.standard`、テストでは独立スイート。
+    private let defaults: UserDefaults
+
+    // MARK: - Init
+
+    /// 本番用イニシャライザ（UserDefaults.standard）。
+    convenience init() {
+        self.init(defaults: .standard)
+    }
+
+    /// DI 用イニシャライザ。テスト時は `UserDefaults(suiteName:)` で独立した defaults を渡す。
+    init(defaults: UserDefaults) {
+        self.defaults = defaults
+
+        // 読み込み: 不正データはデフォルト値にフォールバック。
+        if let raw = defaults.string(forKey: Keys.recordingMode),
+           let mode = RecordingMode(rawValue: raw) {
+            self.recordingMode = mode
+        } else {
+            self.recordingMode = Self.defaultRecordingMode
+        }
+
+        if let data = defaults.data(forKey: Keys.homeLocation),
+           let decoded = try? JSONDecoder().decode(HomeLocation.self, from: data) {
+            self.homeLocation = decoded
+        } else {
+            self.homeLocation = nil
+        }
+
+        let storedRadius = defaults.object(forKey: Keys.homeRadiusMeters) as? Double
+        let radius = storedRadius ?? Self.defaultHomeRadiusMeters
+        self.homeRadiusMeters = Self.clampRadius(radius)
+    }
+
+    // MARK: - Helpers
+
+    /// 半径値を許容範囲（50〜300）にクランプする。
+    static func clampRadius(_ value: Double) -> Double {
+        min(max(value, homeRadiusMinMeters), homeRadiusMaxMeters)
+    }
+}

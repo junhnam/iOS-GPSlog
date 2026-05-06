@@ -6,10 +6,15 @@ import SwiftUI
 /// 各タブの中身は順次差し替えていく:
 ///   - 地図タブ: Sprint 1 で Dev-2 が `MapView`（Google Maps 経路表示）を実装済み
 ///   - 履歴タブ: Sprint 2（S2-008）で `HistoryListView` に差し替え済み
-///   - 設定タブ: Sprint 3 以降で本実装に差し替える
+///   - 設定タブ: Sprint 3（S3-001 / S3-002 / S3-004）で `SettingsView` に差し替え済み
 struct RootView: View {
     /// `TabView` の選択状態。デフォルトは「地図」タブ（受け入れ条件: 起動時に地図タブが選択）。
     @State private var selectedTab: Tab = .map
+
+    /// アプリ全体で共有される設定オブジェクト（S3-001）。
+    /// 子ビュー（MapView / SettingsView 等）から `@Environment(AppSettings.self)`
+    /// で参照して挙動切り替えに使う。
+    @State private var appSettings: AppSettings = AppSettings()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -32,9 +37,7 @@ struct RootView: View {
             .accessibilityLabel("履歴タブ")
 
             NavigationStack {
-                SettingsPlaceholderView()
-                    .navigationTitle("設定")
-                    .navigationBarTitleDisplayMode(.inline)
+                SettingsView(settings: appSettings)
             }
             .tabItem {
                 Label("設定", systemImage: "gearshape")
@@ -42,6 +45,7 @@ struct RootView: View {
             .tag(Tab.settings)
             .accessibilityLabel("設定タブ")
         }
+        .environment(appSettings)
     }
 
     /// タブ識別子。`@State` での選択状態保持と将来のディープリンク用。
@@ -49,30 +53,6 @@ struct RootView: View {
         case map
         case history
         case settings
-    }
-}
-
-// MARK: - Tab Placeholders
-
-/// 設定タブのプレースホルダ。Sprint 3 以降で本実装する。
-struct SettingsPlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "gearshape")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 56, height: 56)
-                .foregroundStyle(.secondary)
-            Text("設定画面（Sprint 3 以降実装予定）")
-                .font(.headline)
-            Text("自宅登録 / 同期モード / クラウド連携などをここで設定します。")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("設定画面のプレースホルダ。Sprint 3 以降で実装予定。")
     }
 }
 
