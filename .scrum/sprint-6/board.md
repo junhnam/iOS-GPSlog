@@ -12,15 +12,15 @@
 
 ## Todo
 
-- [ ] **S6-001**: DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + 雛形コメント追加） → **po-sm** / Must / S
-- [ ] **S6-002**: `AppDependencyContainer` 導入（`RootView.init` の DI 集約） → **dev-1** / Must / M
-- [ ] **S6-003**: DB クリア機能（指定日付のデータ削除 + 設定画面 UI） → **dev-1** / Must / M
-- [ ] **S6-004**: DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M
-- [ ] **S6-005**: バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L
-- [ ] **S6-006**: バックグラウンド復帰時の挙動安定化（SLC 復帰 / applicationDidBecomeActive 経路） → **dev-2** / Must / M
-- [ ] **S6-007**: アプリアイコン（全サイズ）+ ローンチスクリーン → **designer / dev-1** / Must / M
-- [ ] **S6-008**: 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M
-- [ ] **S6-009**: QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S
+- [ ] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + 雛形コメント追加） → **po-sm** / Must / S
+- [ ] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約） → **dev-1** / Must / M
+- [ ] **S6-003** (#46): DB クリア機能（指定日付のデータ削除 + 設定画面 UI） → **dev-1** / Must / M
+- [ ] **S6-004** (#47): DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M
+- [ ] **S6-005** (#48): バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L
+- [ ] **S6-006** (#49): バックグラウンド復帰時の挙動安定化（SLC 復帰 / applicationDidBecomeActive 経路） → **dev-2** / Must / M
+- [ ] **S6-007** (#50): アプリアイコン（全サイズ）+ ローンチスクリーン → **designer / dev-1** / Must / M
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M
+- [ ] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S
 
 ## In Progress
 
