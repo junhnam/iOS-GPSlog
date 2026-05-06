@@ -14,13 +14,38 @@ struct RootView: View {
     /// アプリ全体で共有される設定オブジェクト（S3-001）。
     /// 子ビュー（MapView / SettingsView 等）から `@Environment(AppSettings.self)`
     /// で参照して挙動切り替えに使う。
-    @State private var appSettings: AppSettings = AppSettings()
+    /// init で LocationService と同じインスタンスを共有させるため、宣言時の初期値は付けず
+    /// `init()` 内で `State(initialValue:)` を使って生成する。
+    @State private var appSettings: AppSettings
+
+    /// アプリ全体で共有される位置情報サービス（S3-003 / S3-006 / S3-007 統合点）。
+    /// MapView 内で生成すると、`@StateObject` のクロージャ初期化時点で
+    /// `@Environment(AppSettings.self)` が利用できないため AppSettings / placeProvider が
+    /// 注入できず、自宅判定 / SLC / お店情報取得が無効化される問題があった（QA-S3-001）。
+    /// RootView 側でまとめて生成し、MapView へは引数で受け渡すことで本番経路でも
+    /// 自宅判定・SLC・MKLocalSearch が機能するようにしている。
+    @StateObject private var locationService: LocationService
+
+    init() {
+        let context = PersistenceController.shared.container.mainContext
+        let repository = TripRepository(modelContext: context)
+        // appSettings は @State の初期値と同じ値を別インスタンスで生成し LocationService へ DI。
+        // ※ View の init で `_appSettings.wrappedValue` を直接読むのは保証されないため、
+        //    RootView 用の AppSettings インスタンスを 1 つだけ作って両方に渡す。
+        let settings = AppSettings()
+        self._appSettings = State(initialValue: settings)
+        self._locationService = StateObject(wrappedValue: LocationService(
+            repository: repository,
+            placeProvider: PlaceLookupService(),
+            appSettings: settings
+        ))
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
             // 地図タブ: Dev-2 の MapView を埋め込む（Sprint 1 中に S1-006 / S1-007 で実装）。
             // 地図は SafeArea を含む全画面表示にしたいため、NavigationStack は使わず直接置く。
-            MapView()
+            MapView(locationService: locationService)
                 .tabItem {
                     Label("地図", systemImage: "map")
                 }

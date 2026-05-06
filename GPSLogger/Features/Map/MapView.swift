@@ -15,13 +15,11 @@ import CoreLocation
 ///   - `MapViewModel` を介して当日の TripRecord を起動時に読み込み、
 ///     経路 / ピン / 総移動距離を地図に復元表示する
 struct MapView: View {
-    @StateObject private var locationService: LocationService = {
-        // PersistenceController.shared.container.mainContext から TripRepository を生成。
-        // mainContext は @MainActor 上でのみ安全。MapView は @MainActor 前提で問題ない。
-        let context = PersistenceController.shared.container.mainContext
-        let repository = TripRepository(modelContext: context)
-        return LocationService(repository: repository)
-    }()
+    /// アプリ全体で共有される LocationService。RootView 側で生成し、
+    /// AppSettings / placeProvider を含めて DI 済みの状態で受け取る（QA-S3-001 修正）。
+    /// `@ObservedObject` で受けることで MapView 単独の `@StateObject` 初期化時点で
+    /// AppSettings が手元に無い問題を回避する。
+    @ObservedObject var locationService: LocationService
 
     /// 起動時の TripRecord 復元と HUD 値の保持を担う ViewModel（S2-007）。
     @StateObject private var viewModel = MapViewModel()
@@ -331,6 +329,9 @@ private struct GoogleMapContainer: UIViewRepresentable {
 }
 
 #Preview {
-    MapView()
-        .environment(AppSettings())
+    let context = PersistenceController.shared.container.mainContext
+    let repository = TripRepository(modelContext: context)
+    let settings = AppSettings()
+    return MapView(locationService: LocationService(repository: repository, appSettings: settings))
+        .environment(settings)
 }
