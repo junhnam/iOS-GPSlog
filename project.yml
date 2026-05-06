@@ -61,6 +61,8 @@ targets:
         NSLocationWhenInUseUsageDescription: "移動経路を地図上に記録するため、位置情報を利用します。"
         # Always: バックグラウンドでも継続記録するために必要
         NSLocationAlwaysAndWhenInUseUsageDescription: "移動経路を地図上に記録するため、位置情報を利用します。アプリを閉じていても記録するため、常に許可を選んでください。正確な位置情報を有効にすると経路の精度が向上します。"
+        # カレンダー（フルアクセス）の権限説明（S4-002 / iOS 17+ の新キー）
+        NSCalendarsFullAccessUsageDescription: "滞留地点を自動的にカレンダーに記録するために使用します。"
         # バックグラウンド実行モード（S1-003）
         UIBackgroundModes:
           - location

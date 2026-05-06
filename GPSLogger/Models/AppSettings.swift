@@ -29,6 +29,8 @@ enum RecordingMode: String, Codable, CaseIterable, Sendable {
 ///   - `gpslogger.settings.v1.recordingMode`: String (RecordingMode.rawValue)
 ///   - `gpslogger.settings.v1.homeLocation`: Data (HomeLocation を JSON エンコード)
 ///   - `gpslogger.settings.v1.homeRadiusMeters`: Double
+///   - `gpslogger.settings.v1.calendarSyncEnabled`: Bool（S4-002 で追加）
+///   - `gpslogger.settings.v1.calendarIdentifier`: String?（S4-002 で追加）
 ///
 /// 設計判断:
 ///   - `@Observable` macro（iOS 17+）を採用。SwiftUI から `@Bindable` で双方向バインドできる。
@@ -43,9 +45,12 @@ final class AppSettings {
     // MARK: - Keys
 
     enum Keys {
-        static let recordingMode    = "gpslogger.settings.v1.recordingMode"
-        static let homeLocation     = "gpslogger.settings.v1.homeLocation"
-        static let homeRadiusMeters = "gpslogger.settings.v1.homeRadiusMeters"
+        static let recordingMode       = "gpslogger.settings.v1.recordingMode"
+        static let homeLocation        = "gpslogger.settings.v1.homeLocation"
+        static let homeRadiusMeters    = "gpslogger.settings.v1.homeRadiusMeters"
+        // S4-002: カレンダー同期 ON/OFF と対象カレンダー識別子。
+        static let calendarSyncEnabled = "gpslogger.settings.v1.calendarSyncEnabled"
+        static let calendarIdentifier  = "gpslogger.settings.v1.calendarIdentifier"
     }
 
     // MARK: - Defaults
@@ -54,6 +59,8 @@ final class AppSettings {
     static let defaultHomeRadiusMeters: Double = 100.0
     static let homeRadiusMinMeters: Double = 50.0
     static let homeRadiusMaxMeters: Double = 300.0
+    /// S4-002: カレンダー同期は既定 OFF（jun さんの明示的な ON 操作を要求）。
+    static let defaultCalendarSyncEnabled: Bool = false
 
     // MARK: - Stored Properties (observed)
 
@@ -93,6 +100,30 @@ final class AppSettings {
         }
     }
 
+    /// カレンダー同期 ON/OFF（S4-002）。
+    /// true のとき、滞留ピン作成時に CalendarSyncService がイベントを生成する（S4-003）。
+    /// 既定は false（jun さんが明示的に ON にしないと書き込まれない）。
+    var calendarSyncEnabled: Bool {
+        didSet {
+            guard calendarSyncEnabled != oldValue else { return }
+            defaults.set(calendarSyncEnabled, forKey: Keys.calendarSyncEnabled)
+        }
+    }
+
+    /// 同期対象カレンダーの `EKCalendar.calendarIdentifier`（S4-002）。
+    /// nil = 未選択（同期 ON でも書き込みは行わない）。文字列 = EventKit の不変識別子。
+    /// 同期 OFF にしても識別子は破棄せず、ON 時に最後の選択を復元できるよう保持する。
+    var calendarIdentifier: String? {
+        didSet {
+            guard calendarIdentifier != oldValue else { return }
+            if let calendarIdentifier {
+                defaults.set(calendarIdentifier, forKey: Keys.calendarIdentifier)
+            } else {
+                defaults.removeObject(forKey: Keys.calendarIdentifier)
+            }
+        }
+    }
+
     // MARK: - Dependencies
 
     /// 注入された UserDefaults。本番では `.standard`、テストでは独立スイート。
@@ -127,6 +158,17 @@ final class AppSettings {
         let storedRadius = defaults.object(forKey: Keys.homeRadiusMeters) as? Double
         let radius = storedRadius ?? Self.defaultHomeRadiusMeters
         self.homeRadiusMeters = Self.clampRadius(radius)
+
+        // S4-002: カレンダー同期設定。
+        // 値が未設定（object(forKey:) が nil）のときはデフォルト false に倒す。
+        // bool(forKey:) は未設定時に false を返すため Bool 単体では区別できないが、
+        // 既定が false のため同等扱いで問題ない。
+        if defaults.object(forKey: Keys.calendarSyncEnabled) != nil {
+            self.calendarSyncEnabled = defaults.bool(forKey: Keys.calendarSyncEnabled)
+        } else {
+            self.calendarSyncEnabled = Self.defaultCalendarSyncEnabled
+        }
+        self.calendarIdentifier = defaults.string(forKey: Keys.calendarIdentifier)
     }
 
     // MARK: - Helpers
