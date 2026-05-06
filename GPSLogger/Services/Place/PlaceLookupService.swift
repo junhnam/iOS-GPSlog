@@ -159,13 +159,27 @@ protocol GeocoderPerforming: Sendable {
     func reverseGeocode(location: CLLocation) async throws -> String?
 }
 
-/// CLGeocoder を `GeocoderPerforming` として包む実装。
-/// `reverseGeocodeLocation` の結果から `PlacemarkAddressFormatter` で住所文字列を組み立てる。
+/// `MKReverseGeocodingRequest` を `GeocoderPerforming` として包む実装（S4-001）。
+///
+/// iOS 26 で `CLGeocoder` 全体が deprecated となったため、Apple 公式の置換 API
+/// `MKReverseGeocodingRequest`（MapKit）を利用する。`mapItems` プロパティが
+/// `[MKMapItem]` を返すため、先頭の `MKMapItem.placemark`（CLPlacemark）を
+/// `PlacemarkAddressFormatter.format` に通して住所文字列を組み立てる。
+///
+/// 旧 `CLGeocoder.cancelGeocode()` 相当のキャンセルは、async API 呼び出しを
+/// `Task` で包んで `Task.cancel()` で中断するパターンに切替える（S4-001 技術メモ）。
+/// 本ファイルの `AppleGeocoder.reverseGeocode(location:)` は単発の非同期呼び出しなので、
+/// 呼び出し側（PlaceLookupService）が必要に応じて Task のキャンセルで中断する。
 struct AppleGeocoder: GeocoderPerforming {
     func reverseGeocode(location: CLLocation) async throws -> String? {
-        let geocoder = CLGeocoder()
-        let placemarks = try await geocoder.reverseGeocodeLocation(location)
-        guard let placemark = placemarks.first else { return nil }
+        // MKReverseGeocodingRequest は失敗時の throw が起こり得るため、
+        // GeocoderPerforming プロトコルが async throws である契約を維持する。
+        guard let request = MKReverseGeocodingRequest(location: location) else {
+            // 不正な座標（NaN 等）で nil 返しになるケースを安全側で握る。
+            return nil
+        }
+        let mapItems = try await request.mapItems
+        guard let placemark = mapItems.first?.placemark else { return nil }
         return PlacemarkAddressFormatter.format(placemark)
     }
 }

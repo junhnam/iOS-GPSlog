@@ -24,7 +24,11 @@
 ### Sprint 4 での対応
 
 - **S4-001** で `HomeRegistrationView.swift` と `PlaceLookupService.swift`（`AppleGeocoder`）を移行。
-- 完了後に本ノートの該当エントリを「対応済」に更新する。
+- ステータス: **対応済（2026-05-06 / Sprint 4 / Dev-2）**
+  - `AppleGeocoder.reverseGeocode(location:)` を `MKReverseGeocodingRequest(location:).mapItems` ベースに置換
+  - `HomeRegistrationView.triggerReverseGeocode` を `Task` + `MKReverseGeocodingRequest(location:preferredLocale:)` ベースに置換
+  - `CLGeocoder.cancelGeocode()` は `Task.cancel()` で代替
+  - `MKMapItem.placemark`（CLPlacemark）を `PlacemarkAddressFormatter.format` に通す既存変換層を再利用
 
 ---
 

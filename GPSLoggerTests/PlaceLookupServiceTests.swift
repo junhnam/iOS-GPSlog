@@ -98,6 +98,39 @@ final class PlaceLookupServiceTests: XCTestCase {
         XCTAssertNil(candidate)
     }
 
+    // MARK: - S4-001: MKReverseGeocodingRequest 移行のレイヤ別テスト
+
+    /// (a) 住所取得成功で住所文字列が返る（GeocoderPerforming の契約検証）。
+    func test_geocoder_returnsAddressString_whenSucceeds_S4_001() async throws {
+        let stubGeo = StubGeocoder(result: .success("東京都 渋谷区 道玄坂 2-29-5"))
+        let result = try await stubGeo.reverseGeocode(
+            location: CLLocation(latitude: 35.658, longitude: 139.701)
+        )
+        XCTAssertEqual(result, "東京都 渋谷区 道玄坂 2-29-5")
+    }
+
+    /// (b) 0 件相当（住所組み立て失敗）で nil が返る。
+    func test_geocoder_returnsNil_whenNoAddress_S4_001() async throws {
+        let stubGeo = StubGeocoder(result: .success(nil))
+        let result = try await stubGeo.reverseGeocode(
+            location: CLLocation(latitude: 35.658, longitude: 139.701)
+        )
+        XCTAssertNil(result)
+    }
+
+    /// (c) ネットワーク失敗で throw → PlaceLookupService 側で握って nil 化される。
+    func test_lookup_withGeocoderNetworkFailure_returnsNil_S4_001() async {
+        let stubSearcher = StubLocalSearcher(result: .success([]))
+        let stubGeo = StubGeocoder(result: .failure(StubError.network))
+        let sut = PlaceLookupService(poiSearcher: stubSearcher, geocoder: stubGeo)
+
+        let candidate = await sut.lookup(
+            coordinate: CLLocationCoordinate2D(latitude: 35.658, longitude: 139.701)
+        )
+        // POI ヒット 0 件 + 逆ジオ失敗 → 全体 nil
+        XCTAssertNil(candidate)
+    }
+
     // MARK: - POI 失敗時に住所 fallback
 
     func test_lookup_withPOIFailure_fallbacksToAddress() async {

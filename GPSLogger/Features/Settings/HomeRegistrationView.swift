@@ -1,19 +1,22 @@
 import SwiftUI
 import GoogleMaps
 import CoreLocation
+import MapKit
 
-/// 自宅位置の登録 UI（S3-002）。
+/// 自宅位置の登録 UI（S3-002 / S4-001）。
 ///
 /// 機能:
 ///   - 地図上にピンを置き、ドラッグで自宅候補座標を変更
 ///   - 「現在地に合わせる」ボタンで CLLocationManager の位置にピンを移動
-///   - 逆ジオコーディング（CLGeocoder）で住所文字列を取得
+///   - 逆ジオコーディング（MKReverseGeocodingRequest, iOS 26+）で住所文字列を取得
 ///   - 住所候補が複数返る場合は List で 3 件まで表示し、jun さんが選択
 ///   - 「半径」スライダー（50〜300m, デフォルト 100m）
 ///   - 「保存」で `AppSettings.homeLocation` / `homeRadiusMeters` に書き込む
 ///
 /// 注意:
-///   - CLGeocoder は MainActor 隔離不要だが、コールバックは Main で扱う
+///   - S4-001 で `CLGeocoder` から `MKReverseGeocodingRequest` に移行。
+///     連続呼び出しキャンセルは旧 `CLGeocoder.cancelGeocode()` ではなく
+///     `Task.cancel()` で実現する（async/await ベースのキャンセル機構）。
 ///   - ネットワークエラー時は「住所取得に失敗しました」を表示し、座標のみで保存可能
 struct HomeRegistrationView: View {
     @Bindable var settings: AppSettings
@@ -40,8 +43,10 @@ struct HomeRegistrationView: View {
     /// 逆ジオコーディング進行中フラグ。
     @State private var isGeocoding: Bool = false
 
-    /// 逆ジオコーディング用の CLGeocoder。
-    private let geocoder = CLGeocoder()
+    /// 進行中の逆ジオコーディング Task（S4-001）。
+    /// 連続呼び出し時は前回の Task を `cancel()` してから新規 Task を起動する。
+    /// （旧 `CLGeocoder.cancelGeocode()` の置き換え）
+    @State private var geocodingTask: Task<Void, Never>?
 
     /// 現在地取得用の CLLocationManager（軽量。HomeRegistrationView の寿命中だけ生きる）。
     @State private var oneShotLocationManager: CLLocationManager = CLLocationManager()
@@ -178,37 +183,41 @@ struct HomeRegistrationView: View {
     // MARK: - Geocoding
 
     private func triggerReverseGeocode(coordinate: CLLocationCoordinate2D) {
-        // 短時間に何度も発火する（地図ドラッグ中の didChange）ため、進行中の geocode をキャンセル。
-        geocoder.cancelGeocode()
+        // S4-001: 短時間に何度も発火する（地図ドラッグ中の didChange）ため、
+        // 進行中の Task をキャンセルしてから新規 Task を起動する。
+        geocodingTask?.cancel()
         isGeocoding = true
         geocodeErrorMessage = nil
 
         let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        geocoder.reverseGeocodeLocation(location, preferredLocale: Locale(identifier: "ja_JP")) { placemarks, error in
-            // CLGeocoder のコールバックは main queue で来るので Task は不要だが、
-            // Swift 6 strict concurrency に合わせて MainActor で囲む。
-            Task { @MainActor in
-                isGeocoding = false
-                if let error {
-                    // キャンセルは無視（連続移動時のキャンセルはエラーではない）
-                    let nsError = error as NSError
-                    if nsError.domain == kCLErrorDomain && nsError.code == CLError.geocodeCanceled.rawValue {
-                        return
-                    }
+        geocodingTask = Task { @MainActor in
+            defer { isGeocoding = false }
+            do {
+                guard let request = MKReverseGeocodingRequest(
+                    location: location,
+                    preferredLocale: Locale(identifier: "ja_JP")
+                ) else {
                     geocodeErrorMessage = "住所取得に失敗しました（位置のみ保存します）"
                     return
                 }
-                let formatted = (placemarks ?? []).prefix(3).compactMap(formatPlacemark(_:))
+                let mapItems = try await request.mapItems
+                if Task.isCancelled { return }
+                let formatted = mapItems.prefix(3).compactMap { Self.formatPlacemark($0.placemark) }
                 addressCandidates = formatted
                 if let first = formatted.first, selectedAddress == nil {
                     selectedAddress = first
                 }
+            } catch {
+                if Task.isCancelled { return }
+                if error is CancellationError { return }
+                geocodeErrorMessage = "住所取得に失敗しました（位置のみ保存します）"
             }
         }
     }
 
     /// CLPlacemark から日本住所表記を組み立てる。空要素は除外。
-    private func formatPlacemark(_ placemark: CLPlacemark) -> String? {
+    /// S4-001: `static` にして Task キャプチャの自己参照を最小化。
+    private static func formatPlacemark(_ placemark: CLPlacemark) -> String? {
         let parts: [String?] = [
             placemark.administrativeArea,
             placemark.locality,
