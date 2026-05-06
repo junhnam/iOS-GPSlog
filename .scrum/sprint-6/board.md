@@ -27,7 +27,7 @@
 - [x] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約 / `@MainActor final class`） → **dev-1** / Must / M（コミット `8853972` / 176/176 pass / DI 検証ケース 3 件追加 / Swift 6 strict concurrency 整合）
 - [x] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S（コミット `39dba0e` / 179/179 pass / CSV 失敗時 retryCount 加算ロジック + テスト 3 件 / `.gitignore` + `.example` + `oauth-setup.md` / メイン代行修正: テスト DI 漏れ 1 件）
 - [x] **S6-004** (#47): DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M（コミット `7029d2f` / 185/185 pass / `DatabaseAutoCleanupService` 新規 + AppSettings 拡張 + LocationService 連携 + Container 統合 + Settings UI / 単体テスト 5 件 + DI カバレッジ 1 件 / メイン代行修正: `ModelContainer.defaultDirectoryURL` → `FileManager` 経由に変更 + `attrs[.size]` → `attrs[FileAttributeKey.size]` 明示）
-- [x] **S6-005** (#48): バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L（コミット `bb7e7c0` / warning 0 要メイン代行確認 / `BatteryAdaptiveLocationPolicy` Sendable 構造体新規 + LocationService 統合（distanceFilter 動的切替）+ pausesLocationUpdatesAutomatically=true 確認済 / 単体テスト 7 件 + DI 統合 1 件 = 計 8 件追加 / 185→193 件想定）
+- [x] **S6-005** (#48): バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L（コミット `bb7e7c0` / 193/193 pass / warning 0 / `BatteryAdaptiveLocationPolicy` Sendable 構造体新規 + LocationService 統合（distanceFilter 動的切替）+ pausesLocationUpdatesAutomatically=true 確認済 / 単体テスト 7 件 + DI 統合 1 件 = 計 8 件追加 / メイン代行確認済）
 
 ---
 
@@ -74,7 +74,7 @@
 | S6-002 | dev-1 | 8853972 | 0（メイン代行確認済） | 確認済 / 176/176 pass | 3（DI 検証ケース） |
 | S6-003 | dev-1 | - | - | - | - |
 | S6-004 | dev-2 | 7029d2f | 0（メイン代行確認済） | 確認済 / 185/185 pass | 6（単体 5 + DI カバレッジ 1） |
-| S6-005 | dev-2 | bb7e7c0 | 0 要確認（メイン代行依頼中） | 確認待ち / 185→193 pass 想定 | 8（単体 7 + DI 統合 1） |
+| S6-005 | dev-2 | bb7e7c0 | 0（メイン代行確認済） | 確認済 / 193/193 pass | 8（単体 7 + DI 統合 1） |
 | S6-006 | dev-2 | - | - | - | - |
 | S6-007 | designer / dev-1 | - | - | - | - |
 | S6-008 | po-sm | - | - | jun さん実機 | - |
