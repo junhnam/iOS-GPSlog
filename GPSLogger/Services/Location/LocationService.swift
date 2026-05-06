@@ -49,6 +49,10 @@ final class LocationService: NSObject, ObservableObject {
     /// テスト互換のため外部から差し替え可能（DI）にしておく。
     private let stayDetector: StayDetector
 
+    /// お店情報取得サービス（S3-007）。PinRecord 確定直後に MKLocalSearch を呼び、
+    /// placeName / placeURL を書き戻す。nil のときは取得処理をスキップ（後方互換）。
+    private let placeProvider: (any PlaceProviderProtocol)?
+
     private static let logger = Logger(subsystem: "com.junhnam.gpslogger",
                                        category: "LocationService")
 
@@ -58,10 +62,12 @@ final class LocationService: NSObject, ObservableObject {
 
     init(manager: CLLocationManager = CLLocationManager(),
          repository: TripRepository? = nil,
-         stayDetector: StayDetector = StayDetector()) {
+         stayDetector: StayDetector = StayDetector(),
+         placeProvider: (any PlaceProviderProtocol)? = nil) {
         self.manager = manager
         self.repository = repository
         self.stayDetector = stayDetector
+        self.placeProvider = placeProvider
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         configureManager()
@@ -149,6 +155,9 @@ final class LocationService: NSObject, ObservableObject {
                let trip = currentTrip {
                 do {
                     try repository.appendPin(pin, to: trip)
+                    // S3-007: お店情報を非同期で取得し PinRecord に書き戻す。
+                    // 取得失敗（ネットワーク・レート制限）でも UI と DB の整合は保たれる。
+                    enrichPinWithPlaceInfo(pin, repository: repository)
                 } catch {
                     Self.logger.warning("PinRecord 永続化失敗: \(error.localizedDescription)")
                 }
@@ -205,6 +214,28 @@ final class LocationService: NSObject, ObservableObject {
 
     fileprivate func handleAuthorizationChange(_ status: CLAuthorizationStatus) {
         authorizationStatus = status
+    }
+
+    /// S3-007: 永続化済みの PinRecord に対し、PlaceLookupService を呼んで
+    /// placeName / placeURL を埋める。ネットワーク失敗・レート制限・provider 未注入時は
+    /// 何もせず PinRecord は元のまま（placeName/URL は nil のまま）。
+    private func enrichPinWithPlaceInfo(_ pin: PinRecord, repository: TripRepository) {
+        guard let provider = placeProvider else { return }
+        let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let candidate = await provider.lookup(coordinate: coordinate)
+            guard let candidate else { return }
+            // POI ヒットがあれば name / url を、なければ住所のみ書く。
+            pin.placeName = candidate.name ?? candidate.address
+            pin.placeURL = candidate.url
+            do {
+                try repository.savePinUpdates()
+            } catch {
+                Self.logger.warning("PinRecord お店情報の保存失敗: \(error.localizedDescription)")
+            }
+            _ = self // 警告抑制（この行で MainActor を保持）
+        }
     }
 }
 

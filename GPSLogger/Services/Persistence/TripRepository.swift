@@ -148,4 +148,16 @@ final class TripRepository {
             throw TripRepositoryError.saveFailed(underlying: error)
         }
     }
+
+    /// PinRecord のプロパティを直接書き換えた後に呼び出して、ModelContext を保存する（S3-007）。
+    /// 例: MKLocalSearch で取得した placeName / placeURL を Pin に書き戻したあと。
+    /// 個別フィールドへの setter を増やすのではなく汎用 save にする方針（PinRecord 自体は @Model なので
+    /// プロパティ変更は context に追跡される）。
+    func savePinUpdates() throws {
+        do {
+            try modelContext.save()
+        } catch {
+            throw TripRepositoryError.saveFailed(underlying: error)
+        }
+    }
 }

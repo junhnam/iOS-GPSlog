@@ -26,13 +26,60 @@ struct HistoryDetailView: View {
                 .frame(maxHeight: .infinity)
                 .accessibilityIdentifier("history_detail_map")
 
-            HistoryDetailSummary(trip: trip)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(.regularMaterial)
+            VStack(spacing: 8) {
+                HistoryDetailSummary(trip: trip)
+                // S3-007: お店情報があるピンは「お店名 + マップで開く」リンクを縦に並べる。
+                if trip.pins.contains(where: { $0.placeName?.isEmpty == false }) {
+                    Divider()
+                    HistoryDetailPlaceList(pins: trip.pins)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(.regularMaterial)
         }
         .navigationTitle(Self.titleFormatter.string(from: trip.date))
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// 滞留ピンに紐付く「お店情報」を縦リストで表示する（S3-007）。
+/// `placeName` が入っているピンのみ最大 5 件表示。`placeURL` があれば「マップで開く」リンクを並べる。
+private struct HistoryDetailPlaceList: View {
+    let pins: [PinRecord]
+
+    private var displayedPins: [PinRecord] {
+        let withName = pins
+            .filter { ($0.placeName?.isEmpty == false) }
+            .sorted(by: { $0.stayedFrom < $1.stayedFrom })
+        return Array(withName.prefix(5))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("お店情報")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ForEach(Array(displayedPins.enumerated()), id: \.offset) { _, pin in
+                HStack(spacing: 8) {
+                    Image(systemName: "mappin.circle.fill")
+                        .foregroundStyle(.red)
+                    Text(pin.placeName ?? "")
+                        .font(.subheadline)
+                        .lineLimit(1)
+                    Spacer()
+                    if let url = pin.placeURL {
+                        Link("マップで開く", destination: url)
+                            .font(.caption)
+                            .accessibilityIdentifier("history_pin_link_open")
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("お店 \(pin.placeName ?? "")")
+            }
+        }
+        .accessibilityIdentifier("history_pin_place_list")
     }
 }
 
@@ -127,16 +174,22 @@ private struct HistoryDetailMapContainer: UIViewRepresentable {
         }
 
         // 滞留ピンを GMSMarker として配置。
-        // タイトルは「滞留 約 N 分」（受け入れ条件）。お店情報の Snippet は Sprint 3 で追加。
+        // タイトル: お店名があればお店名、なければ「滞留 約 N 分」（S3-007）。
+        // Snippet: お店名がある場合は「滞留 約 N 分」を Snippet に回し、両方見えるようにする。
         for pin in trip.pins.sorted(by: { $0.stayedFrom < $1.stayedFrom }) {
             let coord = CLLocationCoordinate2D(latitude: pin.latitude,
                                                longitude: pin.longitude)
             let marker = GMSMarker(position: coord)
             let minutes = max(1, Int(pin.stayedDurationSeconds / 60))
-            marker.title = "滞留 約\(minutes)分"
-            if let placeName = pin.placeName {
-                // Sprint 3 で MKLocalSearch 連携時にここに名称が入る。
-                marker.snippet = placeName
+            let stayLabel = "滞留 約\(minutes)分"
+            if let placeName = pin.placeName, !placeName.isEmpty {
+                marker.title = placeName
+                marker.snippet = stayLabel
+                // S3-007: タップ時に Apple Maps URL を開けるよう、userData に URL を保持。
+                // 実際の openURL は Sprint 4 のカレンダー連携と合わせて UI から扱う。
+                marker.userData = pin.placeURL
+            } else {
+                marker.title = stayLabel
             }
             marker.map = mapView
             bounds = bounds.includingCoordinate(coord)
