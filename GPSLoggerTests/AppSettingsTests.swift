@@ -99,4 +99,48 @@ final class AppSettingsTests: XCTestCase {
         settings.homeRadiusMeters = 300
         XCTAssertEqual(settings.homeRadiusMeters, 300)
     }
+
+    // MARK: - S5: クラウド保存先 / 自動同期
+
+    /// (S5-001 / S5-004) デフォルトは未選択 / OFF。
+    func test_cloudSettings_defaults_areNilAndOff() {
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertNil(settings.cloudProviderKind, "デフォルトは未選択")
+        XCTAssertFalse(settings.cloudAutoSyncEnabled, "デフォルトは OFF")
+    }
+
+    /// (S5-001) cloudProviderKind の永続化往復。
+    func test_cloudProviderKind_persistsAcrossInstances() {
+        let first = AppSettings(defaults: defaults)
+        first.cloudProviderKind = .googleDrive
+
+        let second = AppSettings(defaults: defaults)
+        XCTAssertEqual(second.cloudProviderKind, .googleDrive)
+    }
+
+    /// (S5-001) cloudProviderKind を nil に戻すと UserDefaults からキーが消える。
+    func test_clearingCloudProviderKind_removesFromDefaults() {
+        let settings = AppSettings(defaults: defaults)
+        settings.cloudProviderKind = .googleDrive
+        XCTAssertNotNil(defaults.string(forKey: AppSettings.Keys.cloudProviderKind))
+
+        settings.cloudProviderKind = nil
+        XCTAssertNil(defaults.string(forKey: AppSettings.Keys.cloudProviderKind))
+    }
+
+    /// (S5-004) cloudAutoSyncEnabled の永続化往復。
+    func test_cloudAutoSyncEnabled_persistsAcrossInstances() {
+        let first = AppSettings(defaults: defaults)
+        first.cloudAutoSyncEnabled = true
+
+        let second = AppSettings(defaults: defaults)
+        XCTAssertTrue(second.cloudAutoSyncEnabled)
+    }
+
+    /// 不正な cloudProviderKind 文字列はデフォルト nil に倒す。
+    func test_invalidCloudProviderKind_fallsBackToNil() {
+        defaults.set("not-a-valid-provider", forKey: AppSettings.Keys.cloudProviderKind)
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertNil(settings.cloudProviderKind)
+    }
 }

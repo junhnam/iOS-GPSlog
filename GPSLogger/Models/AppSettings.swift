@@ -18,6 +18,26 @@ enum RecordingMode: String, Codable, CaseIterable, Sendable {
     }
 }
 
+/// クラウドストレージの保存先種別（S5-001 / S5-003 / S5-004 / S5-005）。
+///
+/// - `googleDrive`: Google Drive（Sprint 5 Must。S5-001 で実装）
+/// - `dropbox`: Dropbox（Sprint 6 へ繰越。enum 値だけ Sprint 5 で予約しておくと
+///              UI 側 / Settings 側のスキーマ互換が Sprint 6 で楽になる）
+///
+/// nil（AppSettings.cloudProviderKind == nil）= 「未選択」状態。
+/// 自動同期 ON でも cloudProviderKind が nil なら CloudUploadCoordinator は no-op。
+enum CloudProviderKind: String, Codable, CaseIterable, Sendable {
+    case googleDrive
+    case dropbox
+
+    var displayName: String {
+        switch self {
+        case .googleDrive: return "Google Drive"
+        case .dropbox:     return "Dropbox"
+        }
+    }
+}
+
 /// アプリ全体の設定状態（S3-001）。
 ///
 /// 役割:
@@ -51,6 +71,9 @@ final class AppSettings {
         // S4-002: カレンダー同期 ON/OFF と対象カレンダー識別子。
         static let calendarSyncEnabled = "gpslogger.settings.v1.calendarSyncEnabled"
         static let calendarIdentifier  = "gpslogger.settings.v1.calendarIdentifier"
+        // S5-001 / S5-004: クラウド保存先 / 自動同期 ON/OFF。
+        static let cloudProviderKind   = "gpslogger.settings.v1.cloudProviderKind"
+        static let cloudAutoSyncEnabled = "gpslogger.settings.v1.cloudAutoSyncEnabled"
     }
 
     // MARK: - Defaults
@@ -61,6 +84,8 @@ final class AppSettings {
     static let homeRadiusMaxMeters: Double = 300.0
     /// S4-002: カレンダー同期は既定 OFF（jun さんの明示的な ON 操作を要求）。
     static let defaultCalendarSyncEnabled: Bool = false
+    /// S5-004: クラウド自動同期は既定 OFF（jun さんが明示的に ON にしないと動かない）。
+    static let defaultCloudAutoSyncEnabled: Bool = false
 
     // MARK: - Stored Properties (observed)
 
@@ -124,6 +149,30 @@ final class AppSettings {
         }
     }
 
+    /// クラウド保存先の選択（S5-001 / S5-003）。
+    /// nil = 未選択（自動同期 ON でも CloudUploadCoordinator は no-op）。
+    /// `googleDrive` / `dropbox` の rawValue を UserDefaults に文字列で保存する。
+    var cloudProviderKind: CloudProviderKind? {
+        didSet {
+            guard cloudProviderKind != oldValue else { return }
+            if let cloudProviderKind {
+                defaults.set(cloudProviderKind.rawValue, forKey: Keys.cloudProviderKind)
+            } else {
+                defaults.removeObject(forKey: Keys.cloudProviderKind)
+            }
+        }
+    }
+
+    /// クラウド自動同期 ON/OFF（S5-004）。
+    /// true のとき、記録停止時に CloudUploadCoordinator が CSV をアップロードする（S5-005）。
+    /// 既定は false（jun さんが明示的に ON にしないと動かない）。
+    var cloudAutoSyncEnabled: Bool {
+        didSet {
+            guard cloudAutoSyncEnabled != oldValue else { return }
+            defaults.set(cloudAutoSyncEnabled, forKey: Keys.cloudAutoSyncEnabled)
+        }
+    }
+
     // MARK: - Dependencies
 
     /// 注入された UserDefaults。本番では `.standard`、テストでは独立スイート。
@@ -169,6 +218,20 @@ final class AppSettings {
             self.calendarSyncEnabled = Self.defaultCalendarSyncEnabled
         }
         self.calendarIdentifier = defaults.string(forKey: Keys.calendarIdentifier)
+
+        // S5-001 / S5-003 / S5-004: クラウド保存先 / 自動同期。
+        // 不正な rawValue（CloudProviderKind に存在しない文字列）はデフォルト nil に倒す。
+        if let raw = defaults.string(forKey: Keys.cloudProviderKind),
+           let kind = CloudProviderKind(rawValue: raw) {
+            self.cloudProviderKind = kind
+        } else {
+            self.cloudProviderKind = nil
+        }
+        if defaults.object(forKey: Keys.cloudAutoSyncEnabled) != nil {
+            self.cloudAutoSyncEnabled = defaults.bool(forKey: Keys.cloudAutoSyncEnabled)
+        } else {
+            self.cloudAutoSyncEnabled = Self.defaultCloudAutoSyncEnabled
+        }
     }
 
     // MARK: - Helpers
