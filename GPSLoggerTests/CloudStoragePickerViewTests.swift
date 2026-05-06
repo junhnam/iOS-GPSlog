@@ -12,18 +12,18 @@ final class CloudStoragePickerViewTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "CloudStoragePickerViewTests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
         XCTAssertNotNil(defaults)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults?.removePersistentDomain(forName: suiteName)
         defaults = nil
         suiteName = nil
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     // MARK: - ヘルパー

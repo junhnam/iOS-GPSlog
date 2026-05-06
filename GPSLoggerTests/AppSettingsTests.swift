@@ -10,19 +10,19 @@ final class AppSettingsTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "AppSettingsTests-\(UUID().uuidString)"
         // makeIfNeeded は不要。空 suite が自動生成される。
         defaults = UserDefaults(suiteName: suiteName)
         XCTAssertNotNil(defaults, "テスト用 UserDefaults スイートを作成できなかった")
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults?.removePersistentDomain(forName: suiteName)
         defaults = nil
         suiteName = nil
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     // MARK: - Defaults

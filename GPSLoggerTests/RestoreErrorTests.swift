@@ -13,9 +13,9 @@ final class RestoreErrorTests: XCTestCase {
 
     private var retainedContainers: [ModelContainer] = []
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         retainedContainers.removeAll()
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     private func makeInMemoryRepository() throws -> TripRepository {

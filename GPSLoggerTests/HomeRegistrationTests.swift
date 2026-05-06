@@ -12,17 +12,17 @@ final class HomeRegistrationTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "HomeRegistrationTests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults?.removePersistentDomain(forName: suiteName)
         defaults = nil
         suiteName = nil
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     /// 受け入れ条件: 逆ジオコーディング失敗時に住所が空（nil）でも保存可能。

@@ -19,17 +19,17 @@ final class CalendarEventCreationTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "CalendarEventCreationTests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults?.removePersistentDomain(forName: suiteName)
         defaults = nil
         suiteName = nil
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     private func makeSettings(syncEnabled: Bool, calendarId: String?) -> AppSettings {

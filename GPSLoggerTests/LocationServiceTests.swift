@@ -15,9 +15,9 @@ final class LocationServiceTests: XCTestCase {
     /// container を必ず保持しておく必要がある。
     private var retainedContainers: [ModelContainer] = []
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         retainedContainers.removeAll()
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     // MARK: - Sprint 1 互換テスト（route / currentLocation）

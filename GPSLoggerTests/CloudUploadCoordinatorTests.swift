@@ -11,8 +11,8 @@ final class CloudUploadCoordinatorTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "CloudUploadCoordinatorTests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
     }

@@ -15,18 +15,18 @@ final class TripRestoreTests: XCTestCase {
     private var context: ModelContext!
     private var repo: TripRepository!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         container = try PersistenceController.makeInMemoryContainer()
         context = container.mainContext
         repo = TripRepository(modelContext: context)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         repo = nil
         context = nil
         container = nil
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     func test_restoreTodayTrip_appliesRoutePinsAndDistance() throws {

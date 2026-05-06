@@ -9,18 +9,18 @@ final class CloudStorageSyncSettingsTests: XCTestCase {
     private var suiteName: String!
     private var defaults: UserDefaults!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         suiteName = "CloudStorageSyncSettingsTests-\(UUID().uuidString)"
         defaults = UserDefaults(suiteName: suiteName)
         XCTAssertNotNil(defaults)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defaults?.removePersistentDomain(forName: suiteName)
         defaults = nil
         suiteName = nil
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     // MARK: - ヘルパー
@@ -115,7 +115,8 @@ final class CloudStorageSyncSettingsTests: XCTestCase {
         } else {
             XCTFail("自動同期 OFF なら .skipped 期待、実際: \(outcome)")
         }
-        XCTAssertEqual(provider.uploadedPaths, [], "アップロードは実行されない")
+        let uploadedPaths = await provider.uploadedPaths
+        XCTAssertEqual(uploadedPaths, [], "アップロードは実行されない")
     }
 
     // MARK: - ヘルパー
