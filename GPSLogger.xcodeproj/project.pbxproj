@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		02F3021A9E754B31B1045491 /* TripDistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */; };
+		0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */; };
 		19EADD4A080D05C952B14949 /* HistoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91BDB0748DBEDA85099441C1 /* HistoryDetailView.swift */; };
 		1A28E9FE263E40E979B1C2DF /* StayDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CFBBBCC65BC1A7E54445466 /* StayDetector.swift */; };
 		1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */; };
@@ -64,6 +65,7 @@
 		6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepository.swift; sourceTree = "<group>"; };
 		757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupServiceTests.swift; sourceTree = "<group>"; };
 		78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+		7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeRegistrationTests.swift; sourceTree = "<group>"; };
 		89566F273738C6565096CEC1 /* RoutePoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePoint.swift; sourceTree = "<group>"; };
 		91BDB0748DBEDA85099441C1 /* HistoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailView.swift; sourceTree = "<group>"; };
 		92C5F95F252B8D8D514304D2 /* StayDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayDetectorTests.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 			children = (
 				78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */,
 				BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */,
+				7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */,
 				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
 				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
 				757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */,
@@ -390,6 +393,7 @@
 			files = (
 				836A082EC5A456F11E4A9C1F /* AppSettingsTests.swift in Sources */,
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,
+				0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */,
 				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
 				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
 				ED033B0D7D5002820F01D032 /* PlaceLookupServiceTests.swift in Sources */,
