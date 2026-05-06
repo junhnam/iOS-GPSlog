@@ -12,21 +12,21 @@
 ## Todo
 
 - ~~**S5-002**: Dropbox SDK 導入 + OAuth 認証~~ → **Sprint 6 へ繰越**（jun さん承認 / Issue #36 sprint-6 ラベル）
-- [ ] **S5-003**: クラウド保存先選択 UI → **dev-1** / Must / M
+- [~] **S5-003**: クラウド保存先選択 UI → **dev-1** / Must / M （In Progress）
 - [ ] **S5-004**: 自動同期 ON/OFF 設定 → **dev-1** / Must / S
 - [ ] **S5-009**: テスト群の @MainActor strict concurrency warning 解消 → **dev-1** / Could / M
 
 ## In Progress
 
-- [~] **S5-008**: MapView Coordinator strict concurrency warning 解消 → **dev-1** / Should / S
-- [~] **S5-007**: PinRecord.address 追加 + addressFromPlaceURL 実体化（QA-S4-002 解消） → **dev-2** / Must / M / 実装完了・ビルド確認待ち（コミット `d1d1476`）
-- [~] **S5-001**: Google Drive SDK 導入 + OAuth 認証 → **dev-2** / Must / L→分割可 / 実装完了・ビルド確認待ち（コミット `8c43aaf`）
-- [~] **S5-005**: 「GPSログ/{日付}/data.csv」階層での自動アップロード → **dev-2** / Must / M / 実装完了・ビルド確認待ち
-- [~] **S5-006**: 同期失敗時のリトライ + 通知 → **dev-2** / Must / M / 実装完了・ビルド確認待ち
+（なし）
 
 ## Done
 
-（なし）
+- [x] **S5-008**: MapView Coordinator strict concurrency warning 解消 → **dev-1** / Should / S (コミット `8051930` / warning 0 / テスト追加 0)
+- [x] **S5-007**: PinRecord.address 追加 + addressFromPlaceURL 実体化（QA-S4-002 解消） → **dev-2** / Must / M (コミット `d1d1476` / warning 0 / テスト追加 8)
+- [x] **S5-001**: Google Drive SDK 導入 + OAuth 認証 → **dev-2** / Must / L (コミット `8c43aaf` / warning 0 / テスト追加 4+)
+- [x] **S5-005**: 「GPSログ/{日付}/data.csv」階層での自動アップロード → **dev-2** / Must / M (コミット `14f4936` / warning 0 / テスト追加 5+)
+- [x] **S5-006**: 同期失敗時のリトライ + 通知 → **dev-2** / Must / M (コミット `14f4936` / warning 0 / テスト追加 4+)
 
 ---
 
@@ -74,12 +74,12 @@
 
 | チケット | 担当 | コミット | フル再ビルド warning | 追加テスト数 |
 |---|---|---|---|---|
-| S5-001 | dev-2 | - | - | - |
-| S5-002 | dev-2 | - | - | - |
+| S5-001 | dev-2 | 8c43aaf | 0 (メイン代行確認済) | 4+ |
+| S5-002 | dev-2 | Sprint 6 繰越 | - | - |
 | S5-003 | dev-1 | - | - | - |
 | S5-004 | dev-1 | - | - | - |
-| S5-005 | dev-2 | - | - | - |
-| S5-006 | dev-2 | - | - | - |
-| S5-007 | dev-2 | - | - | - |
-| S5-008 | dev-1 | - | - | - |
+| S5-005 | dev-2 | 14f4936 | 0 (メイン代行確認済) | 5+ |
+| S5-006 | dev-2 | 14f4936 | 0 (メイン代行確認済) | 4+ |
+| S5-007 | dev-2 | d1d1476 | 0 (メイン代行確認済) | 8 |
+| S5-008 | dev-1 | 8051930 | 0 (メイン代行確認済) | 0 |
 | S5-009 | dev-1 | - | - | - |
