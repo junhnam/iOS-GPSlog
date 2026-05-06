@@ -20,6 +20,7 @@
 		2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */; };
 		310A9FC684206018CD088AFC /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB3F65917DC8E542E0510F6E /* RootView.swift */; };
 		32F3026C3BE5428958F6CADF /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC544193EF55BDEDE9C0D57 /* AppSettings.swift */; };
+		364240BE553E6F3C9AB9DF74 /* CloudStoragePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE71CA5F6AF0859C8D12A41D /* CloudStoragePickerView.swift */; };
 		399F5B44F7E5C0D6B7A54E6A /* PlaceLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B37FB6243B593D1536828AB0 /* PlaceLookupService.swift */; };
 		3A23BCAABAE933AAD3A2BBA7 /* HomeDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3F1ED182E80F8F3EB52399 /* HomeDetectorTests.swift */; };
 		3FDC7AC4EBE200A29D7FA4A2 /* CalendarPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B25A5CBD33C6E06195D0C35 /* CalendarPickerView.swift */; };
@@ -57,7 +58,9 @@
 		BB910DECFFA5FD364C6C0048 /* HomeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23537070EBFE68FB77904B34 /* HomeDetector.swift */; };
 		BC8364AD3E29A573A29086A7 /* TripRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975470EA32C831B3AC3AC8F2 /* TripRestoreTests.swift */; };
 		BE25912257AE2CF0AB1CAB1B /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC8CD2F54F4FE8714ABE361 /* HistoryListView.swift */; };
+		BF1290E2CF72E4E883738572 /* CloudStoragePickerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DC54EF575CD247E3602D4B /* CloudStoragePickerViewTests.swift */; };
 		C31C0D5EA2F6242A5B33FB6C /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B469DE98253C140644E24C89 /* MapViewModel.swift */; };
+		C830F8651EE713969884D173 /* CloudStorageSyncSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2ED719F5EC694C0042B9DA /* CloudStorageSyncSettingsTests.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
 		D5297EEC0C7DDB2EC872298C /* CloudUploadRetryQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC52EBDDC16E791A59801574 /* CloudUploadRetryQueue.swift */; };
 		D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89566F273738C6565096CEC1 /* RoutePoint.swift */; };
@@ -98,6 +101,7 @@
 		3D368B348251683C3272A93A /* GPSLoggerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GPSLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8CD2F54F4FE8714ABE361 /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
 		40A74F94B451AE4BD207C26F /* CalendarEventCreationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarEventCreationTests.swift; sourceTree = "<group>"; };
+		41DC54EF575CD247E3602D4B /* CloudStoragePickerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStoragePickerViewTests.swift; sourceTree = "<group>"; };
 		4687368FA960C567C58DDCA9 /* CloudStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStorageProvider.swift; sourceTree = "<group>"; };
 		46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingToggleButton.swift; sourceTree = "<group>"; };
 		471A3702C5EEEC77277A596E /* RootViewIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewIntegrationTests.swift; sourceTree = "<group>"; };
@@ -138,6 +142,7 @@
 		C636BD1ED2E9F23F1A4EA689 /* PinRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinRecord.swift; sourceTree = "<group>"; };
 		C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDistanceCalculator.swift; sourceTree = "<group>"; };
 		C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerApp.swift; sourceTree = "<group>"; };
+		CC2ED719F5EC694C0042B9DA /* CloudStorageSyncSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStorageSyncSettingsTests.swift; sourceTree = "<group>"; };
 		D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleMaps-Info.plist"; sourceTree = "<group>"; };
 		DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinRecordTests.swift; sourceTree = "<group>"; };
@@ -147,6 +152,7 @@
 		EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerTests.swift; sourceTree = "<group>"; };
 		F85A4A7B99D7B66DFC094569 /* RestoreErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreErrorTests.swift; sourceTree = "<group>"; };
 		FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepositoryTests.swift; sourceTree = "<group>"; };
+		FE71CA5F6AF0859C8D12A41D /* CloudStoragePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStoragePickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -249,6 +255,8 @@
 				40A74F94B451AE4BD207C26F /* CalendarEventCreationTests.swift */,
 				89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */,
 				2B37EF743063CED245F62C04 /* CalendarSyncSettingsTests.swift */,
+				41DC54EF575CD247E3602D4B /* CloudStoragePickerViewTests.swift */,
+				CC2ED719F5EC694C0042B9DA /* CloudStorageSyncSettingsTests.swift */,
 				BBA1500FED5E52CD71916C89 /* CloudUploadCoordinatorTests.swift */,
 				B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */,
 				742A6F4CBB2E6A365A2BE85F /* CSVExportDocumentTests.swift */,
@@ -370,6 +378,7 @@
 			isa = PBXGroup;
 			children = (
 				8B25A5CBD33C6E06195D0C35 /* CalendarPickerView.swift */,
+				FE71CA5F6AF0859C8D12A41D /* CloudStoragePickerView.swift */,
 				BD44FC296B085998F507FFCF /* HomeRegistrationView.swift */,
 				26C1672AD957E9B012EADDFE /* SettingsView.swift */,
 			);
@@ -496,6 +505,7 @@
 				916D1E6AA28EB92AD6FA4E90 /* CSVExportService.swift in Sources */,
 				3FDC7AC4EBE200A29D7FA4A2 /* CalendarPickerView.swift in Sources */,
 				7159A8566F7036066C98F9A9 /* CalendarSyncService.swift in Sources */,
+				364240BE553E6F3C9AB9DF74 /* CloudStoragePickerView.swift in Sources */,
 				2B9DC0DA23D447336A7B6557 /* CloudStorageProvider.swift in Sources */,
 				9E0FCAE07D3493E4BFFA4A45 /* CloudUploadCoordinator.swift in Sources */,
 				D5297EEC0C7DDB2EC872298C /* CloudUploadRetryQueue.swift in Sources */,
@@ -537,6 +547,8 @@
 				1BC7AEDDDD1189E87EEAE6AC /* CalendarEventCreationTests.swift in Sources */,
 				8D11C36DF24045BC25978350 /* CalendarSyncServiceTests.swift in Sources */,
 				8275A3D023B2B4B26330343D /* CalendarSyncSettingsTests.swift in Sources */,
+				BF1290E2CF72E4E883738572 /* CloudStoragePickerViewTests.swift in Sources */,
+				C830F8651EE713969884D173 /* CloudStorageSyncSettingsTests.swift in Sources */,
 				A066B652F4BC498CAFE0C87F /* CloudUploadCoordinatorTests.swift in Sources */,
 				84AEC36BBA7B194B79EDB1D2 /* CloudUploadRetryQueueTests.swift in Sources */,
 				577D6B9171C8E2221D78413B /* DocumentPickerViewTests.swift in Sources */,

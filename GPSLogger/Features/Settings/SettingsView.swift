@@ -1,18 +1,19 @@
 import SwiftUI
 
-/// 設定画面（S3-001 / S3-002 / S3-004 / S4-004 / S4-007）。
+/// 設定画面（S3-001 / S3-002 / S3-004 / S4-004 / S4-007 / S5-003 / S5-004）。
 ///
 /// 構造:
 ///   - 「自宅」セクション: 登録済みの自宅情報表示 + 登録/解除ボタン（S3-002）
 ///   - 「記録モード」セクション: 常時 / トリガーの Picker（S3-004）
 ///   - 「カレンダー同期」セクション: 同期 ON/OFF + 対象カレンダー選択（S4-004）
-///   - 「データ」セクション: エクスポート画面への遷移（S4-007）
+///   - 「データ」セクション: クラウド同期先 + 自動同期 ON/OFF + エクスポート（S5-003/S5-004/S4-007）
 ///
 /// アーキテクチャ:
 ///   - `AppSettings` を `@Bindable` で受け取り、UI 操作で直接プロパティを更新
 ///     → AppSettings 内の didSet が UserDefaults に書き戻す
 ///   - 自宅登録 UI は `HomeRegistrationView` をシート表示（S3-002 で詳細実装）
 ///   - カレンダー選択 UI は `CalendarPickerView` を NavigationLink で開く（S4-004）
+///   - クラウド同期先 UI は `CloudStoragePickerView` を NavigationLink で開く（S5-003）
 ///   - エクスポート UI は `ExportView` を NavigationLink で開く（S4-007）
 struct SettingsView: View {
     /// アプリ全体で共有される `AppSettings`。RootView から `@Environment` 経由で受け取る。
@@ -21,6 +22,19 @@ struct SettingsView: View {
     /// CalendarSyncService を `@MainActor` プロパティとして注入（S4-004）。
     /// テスト時は CalendarProviderProtocol のフェイクを内包したサービスを差し込む。
     let calendarService: CalendarSyncService
+
+    /// Google Drive 認証状態確認クロージャ（S5-003）。
+    /// CloudStoragePickerView へ橋渡しする。テスト時はフェイクに差し替え可能。
+    let isCloudProviderAuthenticated: @MainActor () async -> Bool
+
+    /// クラウド認証フロー起動クロージャ（S5-003）。
+    let authenticateCloudProvider: @MainActor (_ kind: CloudProviderKind) async throws -> Void
+
+    /// クラウドサインアウトクロージャ（S5-003）。
+    let signOutCloudProvider: @MainActor (_ kind: CloudProviderKind) -> Void
+
+    /// 認証済みラベル取得クロージャ（S5-003）。
+    let cloudAuthenticatedLabel: @MainActor (_ kind: CloudProviderKind) async -> String?
 
     /// 今日の TripRecord を CSV に書き出して URL を返すクロージャ（S4-007）。
     /// ExportView へ橋渡しする。
@@ -205,11 +219,46 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - データセクション（S4-007）
+    // MARK: - データセクション（S4-007 / S5-003 / S5-004）
 
     @ViewBuilder
     private var dataSection: some View {
         Section {
+            // S5-003: クラウド同期先選択（NavigationLink で CloudStoragePickerView を開く）
+            NavigationLink {
+                CloudStoragePickerView(
+                    settings: settings,
+                    isAuthenticated: isCloudProviderAuthenticated,
+                    authenticate: authenticateCloudProvider,
+                    signOut: signOutCloudProvider,
+                    authenticatedLabel: cloudAuthenticatedLabel
+                )
+            } label: {
+                HStack {
+                    Text("クラウド同期先")
+                    Spacer()
+                    Text(settings.cloudProviderKind?.displayName ?? "なし")
+                        .foregroundStyle(.secondary)
+                        .font(.callout)
+                }
+            }
+            .accessibilityIdentifier("cloud_provider_link")
+
+            // S5-004: 自動同期 ON/OFF Toggle
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("自動同期", isOn: $settings.cloudAutoSyncEnabled)
+                    .disabled(!cloudSyncToggleEnabled)
+                    .accessibilityIdentifier("cloud_auto_sync_toggle")
+
+                if !cloudSyncToggleEnabled {
+                    Text("保存先を選択して認証してください")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("cloud_auto_sync_help_text")
+                }
+            }
+
+            // S4-007: エクスポート
             NavigationLink {
                 ExportView(exportTodayTrip: exportTodayTrip,
                            exportAllTrips: exportAllTrips,
@@ -230,6 +279,13 @@ struct SettingsView: View {
                 .font(.footnote)
         }
     }
+
+    /// 自動同期 Toggle が有効かどうかの判定。
+    /// cloudProviderKind が選択されていることを条件とする（認証状態は CloudStoragePickerView 側で管理）。
+    /// S5-004: 「プロバイダ未選択時は Toggle を disable」の受け入れ条件に対応。
+    private var cloudSyncToggleEnabled: Bool {
+        settings.cloudProviderKind != nil
+    }
 }
 
 #Preview {
@@ -238,6 +294,10 @@ struct SettingsView: View {
         SettingsView(
             settings: settings,
             calendarService: CalendarSyncService(appSettings: settings),
+            isCloudProviderAuthenticated: { false },
+            authenticateCloudProvider: { _ in },
+            signOutCloudProvider: { _ in },
+            cloudAuthenticatedLabel: { _ in nil },
             exportTodayTrip: { nil },
             exportAllTrips: { nil },
             tripCount: { 0 }

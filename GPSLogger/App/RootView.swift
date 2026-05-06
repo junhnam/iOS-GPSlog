@@ -8,6 +8,7 @@ import SwiftData
 ///   - 地図タブ: Sprint 1 で Dev-2 が `MapView`（Google Maps 経路表示）を実装済み
 ///   - 履歴タブ: Sprint 2（S2-008）で `HistoryListView` に差し替え済み
 ///   - 設定タブ: Sprint 3（S3-001 / S3-002 / S3-004）で `SettingsView` に差し替え済み
+///   - クラウド同期先 / 自動同期 UI: Sprint 5（S5-003 / S5-004）で `CloudStoragePickerView` に差し替え済み
 struct RootView: View {
     /// `TabView` の選択状態。デフォルトは「地図」タブ（受け入れ条件: 起動時に地図タブが選択）。
     @State private var selectedTab: Tab = .map
@@ -32,6 +33,11 @@ struct RootView: View {
     /// イベント自動作成で同じインスタンスを共有する。
     @State private var calendarService: CalendarSyncService
 
+    /// Google Drive 同期サービス（S5-001 / S5-003）。
+    /// CloudStoragePickerView の認証クロージャに渡す。
+    /// actor ベースのため @State ではなく let で保持（再生成不要）。
+    private let googleDriveService: GoogleDriveSyncService
+
     init() {
         let context = PersistenceController.shared.container.mainContext
         let repository = TripRepository(modelContext: context)
@@ -40,8 +46,10 @@ struct RootView: View {
         //    RootView 用の AppSettings インスタンスを 1 つだけ作って両方に渡す。
         let settings = AppSettings()
         let calendar = CalendarSyncService(appSettings: settings)
+        let driveService = GoogleDriveSyncService()
         self._appSettings = State(initialValue: settings)
         self._calendarService = State(initialValue: calendar)
+        self.googleDriveService = driveService
         self._locationService = StateObject(wrappedValue: LocationService(
             repository: repository,
             placeProvider: PlaceLookupService(),
@@ -74,6 +82,19 @@ struct RootView: View {
                 SettingsView(
                     settings: appSettings,
                     calendarService: calendarService,
+                    // S5-003: Google Drive の認証クロージャ群を注入
+                    isCloudProviderAuthenticated: { [googleDriveService] in
+                        await googleDriveService.isAuthenticated()
+                    },
+                    authenticateCloudProvider: { [googleDriveService] _ in
+                        try await googleDriveService.authenticate()
+                    },
+                    signOutCloudProvider: { [googleDriveService] _ in
+                        googleDriveService.signOut()
+                    },
+                    cloudAuthenticatedLabel: { kind in
+                        kind.displayName + " にサインイン済み"
+                    },
                     exportTodayTrip: { try await Self.exportTodayTrip() },
                     exportAllTrips: { try await Self.exportAllTrips() },
                     tripCount: { Self.persistedTripCount() }
