@@ -236,9 +236,7 @@ private final class StubNetworkObserver: NetworkPathObserving, @unchecked Sendab
     }
 
     func simulatePathChange(satisfied: Bool) async {
-        lock.lock()
-        let h = handler
-        lock.unlock()
+        let h = lock.withLock { handler }
         h?(satisfied)
     }
 }

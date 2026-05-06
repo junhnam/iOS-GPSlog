@@ -72,11 +72,11 @@ final class GoogleDriveSyncServiceTests: XCTestCase {
                 // ルート GPSログ + 日付フォルダ ともに新規作成想定
                 return nil
             },
-            createFolderHandler: { name, parent in
-                return "folder-\(name)"
-            },
             findFileHandler: { _, _ in
                 return nil
+            },
+            createFolderHandler: { name, parent in
+                return "folder-\(name)"
             },
             uploadNewFileHandler: { _, parent, _ in
                 return GoogleDriveFileResponse(fileID: "new-file-001",
@@ -342,22 +342,19 @@ private final class FakeHTTPClient: GoogleDriveHTTPClient, @unchecked Sendable {
 
     var exchangedCode: String? {
         get async {
-            stateLock.lock(); defer { stateLock.unlock() }
-            return _exchangedCode
+            stateLock.withLock { _exchangedCode }
         }
     }
 
     var refreshCallCount: Int {
         get async {
-            stateLock.lock(); defer { stateLock.unlock() }
-            return _refreshCallCount
+            stateLock.withLock { _refreshCallCount }
         }
     }
 
     var createdFolders: [String] {
         get async {
-            stateLock.lock(); defer { stateLock.unlock() }
-            return _createdFolders
+            stateLock.withLock { _createdFolders }
         }
     }
 
@@ -365,9 +362,7 @@ private final class FakeHTTPClient: GoogleDriveHTTPClient, @unchecked Sendable {
                                codeVerifier: String,
                                clientID: String,
                                redirectURI: String) async throws -> GoogleDriveTokens {
-        stateLock.lock()
-        _exchangedCode = code
-        stateLock.unlock()
+        stateLock.withLock { _exchangedCode = code }
         switch tokenResponse {
         case .success(let tokens): return tokens
         case .failure(let err): throw err
@@ -375,9 +370,7 @@ private final class FakeHTTPClient: GoogleDriveHTTPClient, @unchecked Sendable {
     }
 
     func refreshTokens(refreshToken: String, clientID: String) async throws -> GoogleDriveTokens {
-        stateLock.lock()
-        _refreshCallCount += 1
-        stateLock.unlock()
+        stateLock.withLock { _refreshCallCount += 1 }
         switch tokenResponse {
         case .success(let tokens): return tokens
         case .failure(let err): throw err
@@ -399,9 +392,7 @@ private final class FakeHTTPClient: GoogleDriveHTTPClient, @unchecked Sendable {
     }
 
     func createFolder(name: String, parent: String?, accessToken: String) async throws -> String {
-        stateLock.lock()
-        _createdFolders.append(name)
-        stateLock.unlock()
+        stateLock.withLock { _createdFolders.append(name) }
         if let h = createFolderHandler {
             return try await h(name, parent)
         }
