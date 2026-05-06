@@ -10,6 +10,7 @@
 		02F3021A9E754B31B1045491 /* TripDistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */; };
 		08714C8E933A91DCE103039F /* DatabaseAutoCleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C64D11D565BAB23BAB2B0369 /* DatabaseAutoCleanupServiceTests.swift */; };
 		0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */; };
+		13EBC12588D03A603ECA279C /* BatteryAdaptiveLocationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C221B7DE0ED3125DFEC64A4D /* BatteryAdaptiveLocationPolicy.swift */; };
 		19EADD4A080D05C952B14949 /* HistoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91BDB0748DBEDA85099441C1 /* HistoryDetailView.swift */; };
 		1A28E9FE263E40E979B1C2DF /* StayDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CFBBBCC65BC1A7E54445466 /* StayDetector.swift */; };
 		1B94FA1D9214F95B33731823 /* CSVExportDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 742A6F4CBB2E6A365A2BE85F /* CSVExportDocumentTests.swift */; };
@@ -62,6 +63,7 @@
 		BC8364AD3E29A573A29086A7 /* TripRestoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975470EA32C831B3AC3AC8F2 /* TripRestoreTests.swift */; };
 		BE25912257AE2CF0AB1CAB1B /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC8CD2F54F4FE8714ABE361 /* HistoryListView.swift */; };
 		BF1290E2CF72E4E883738572 /* CloudStoragePickerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DC54EF575CD247E3602D4B /* CloudStoragePickerViewTests.swift */; };
+		C1910C9B4D97A3066BCC34D3 /* BatteryAdaptiveLocationPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD0C1AA312B81A6A6F32FB1 /* BatteryAdaptiveLocationPolicyTests.swift */; };
 		C31C0D5EA2F6242A5B33FB6C /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B469DE98253C140644E24C89 /* MapViewModel.swift */; };
 		C830F8651EE713969884D173 /* CloudStorageSyncSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2ED719F5EC694C0042B9DA /* CloudStorageSyncSettingsTests.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
@@ -145,6 +147,7 @@
 		BBC544193EF55BDEDE9C0D57 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		BD44FC296B085998F507FFCF /* HomeRegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeRegistrationView.swift; sourceTree = "<group>"; };
 		BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerTests.swift; sourceTree = "<group>"; };
+		C221B7DE0ED3125DFEC64A4D /* BatteryAdaptiveLocationPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryAdaptiveLocationPolicy.swift; sourceTree = "<group>"; };
 		C23DFC5375D70DE8974871A5 /* HomeLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLocation.swift; sourceTree = "<group>"; };
 		C636BD1ED2E9F23F1A4EA689 /* PinRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinRecord.swift; sourceTree = "<group>"; };
 		C64D11D565BAB23BAB2B0369 /* DatabaseAutoCleanupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseAutoCleanupServiceTests.swift; sourceTree = "<group>"; };
@@ -159,6 +162,7 @@
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerTests.swift; sourceTree = "<group>"; };
 		F85A4A7B99D7B66DFC094569 /* RestoreErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreErrorTests.swift; sourceTree = "<group>"; };
+		FDD0C1AA312B81A6A6F32FB1 /* BatteryAdaptiveLocationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryAdaptiveLocationPolicyTests.swift; sourceTree = "<group>"; };
 		FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepositoryTests.swift; sourceTree = "<group>"; };
 		FE71CA5F6AF0859C8D12A41D /* CloudStoragePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStoragePickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -210,6 +214,7 @@
 		21473425FB53612465868811 /* Location */ = {
 			isa = PBXGroup;
 			children = (
+				C221B7DE0ED3125DFEC64A4D /* BatteryAdaptiveLocationPolicy.swift */,
 				2E955F6ED4C6E26D78094677 /* LocationService.swift */,
 			);
 			path = Location;
@@ -269,6 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */,
+				FDD0C1AA312B81A6A6F32FB1 /* BatteryAdaptiveLocationPolicyTests.swift */,
 				40A74F94B451AE4BD207C26F /* CalendarEventCreationTests.swift */,
 				89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */,
 				2B37EF743063CED245F62C04 /* CalendarSyncSettingsTests.swift */,
@@ -523,6 +529,7 @@
 			files = (
 				58617E7F6825AECDDCA2F4A4 /* AppDependencyContainer.swift in Sources */,
 				32F3026C3BE5428958F6CADF /* AppSettings.swift in Sources */,
+				13EBC12588D03A603ECA279C /* BatteryAdaptiveLocationPolicy.swift in Sources */,
 				6AA72AAFEC8EA068AB09B114 /* CSVExportDocument.swift in Sources */,
 				916D1E6AA28EB92AD6FA4E90 /* CSVExportService.swift in Sources */,
 				3FDC7AC4EBE200A29D7FA4A2 /* CalendarPickerView.swift in Sources */,
@@ -565,6 +572,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				836A082EC5A456F11E4A9C1F /* AppSettingsTests.swift in Sources */,
+				C1910C9B4D97A3066BCC34D3 /* BatteryAdaptiveLocationPolicyTests.swift in Sources */,
 				1B94FA1D9214F95B33731823 /* CSVExportDocumentTests.swift in Sources */,
 				8BD0DD04858D53DE773F496D /* CSVExportServiceTests.swift in Sources */,
 				1BC7AEDDDD1189E87EEAE6AC /* CalendarEventCreationTests.swift in Sources */,

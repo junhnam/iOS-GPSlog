@@ -73,6 +73,27 @@ final class LocationService: NSObject, ObservableObject {
     /// 履歴は最大 5 件まで保持（メモリ圧縮）。
     private var recentLocationHistory: [CLLocation] = []
 
+    /// バッテリー適応ポリシー（S6-005）。
+    /// ステートレスな Sendable 構造体のため LocationService 内部で生成する。
+    private let batteryPolicy = BatteryAdaptiveLocationPolicy()
+
+    /// バッテリーポリシー評価用の直近位置履歴（S6-005）。
+    /// Sprint 3 の recentLocationHistory（最大 5 件）とは別に保持する。
+    /// 5 分ウィンドウをカバーするため最大 60 件（概ね 5 秒間隔で 5 分分）まで保持する。
+    private var batteryPolicyLocationHistory: [CLLocation] = []
+
+    /// バッテリーポリシー履歴の最大保持件数。
+    private static let batteryPolicyHistoryLimit: Int = 60
+
+    /// 直近のバッテリーポリシー決定（distanceFilter 切替の重複適用を防ぐ）。
+    /// 初期値は .driving として、configureManager() の distanceFilter=10 と整合させる。
+    /// 最初に停車判定が来たとき必ず distanceFilter=100 への切替が発火するよう、
+    /// 停車状態の決定値は初期値に使わない。
+    private var lastBatteryPolicyDecision: BatteryAdaptiveLocationPolicy.Decision = .driving(
+        accuracy: BatteryAdaptiveLocationPolicy.drivingAccuracy,
+        distanceFilter: BatteryAdaptiveLocationPolicy.drivingDistanceFilter
+    )
+
     /// 直近の動的 desiredAccuracy 値（テスト用に観測可能にする）。
     /// 本来は manager.desiredAccuracy を直接読めば良いが、CLLocationAccuracy は
     /// Double 型のため `==` 比較で精度問題が出ないよう、内部で抽象的な enum で保持する。
@@ -303,6 +324,11 @@ final class LocationService: NSObject, ObservableObject {
         // S3-006: 走行 / 停止判定を行い、desiredAccuracy を動的に切替。
         updateDynamicAccuracy(adding: last)
 
+        // S6-005: バッテリー適応ポリシーを評価し、distanceFilter を動的に切替。
+        // desiredAccuracy は Sprint 3 の updateDynamicAccuracy が引き続き管理する。
+        // Policy は distanceFilter の切替と、5 分/100m 単位の走行/停車判定を担う。
+        updateBatteryPolicy(adding: last)
+
         // S2-006: 滞留検出。half-circle: 半径外で滞留終了 -> PinRecord 作成。
         let stayEvent = stayDetector.ingest(location: last)
 
@@ -469,6 +495,61 @@ final class LocationService: NSObject, ObservableObject {
             manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
         }
         Self.logger.info("desiredAccuracy 切替: \(accuracy.rawValue)")
+    }
+
+    // MARK: - Battery Adaptive Policy（S6-005）
+
+    /// バッテリー適応ポリシーを評価し、distanceFilter を動的に切り替える（S6-005）。
+    ///
+    /// desiredAccuracy は Sprint 3 の `updateDynamicAccuracy` が引き続き担うため、
+    /// ここでは distanceFilter のみを Policy 判定に基づいて更新する。
+    /// 判定が変化した場合のみ manager に書き込み、ログを出す（重複適用を防ぐ）。
+    private func updateBatteryPolicy(adding location: CLLocation) {
+        batteryPolicyLocationHistory.append(location)
+        if batteryPolicyLocationHistory.count > Self.batteryPolicyHistoryLimit {
+            batteryPolicyLocationHistory.removeFirst(
+                batteryPolicyLocationHistory.count - Self.batteryPolicyHistoryLimit
+            )
+        }
+
+        let decision = batteryPolicy.evaluate(
+            recentLocations: batteryPolicyLocationHistory,
+            homeLocation: appSettings?.homeLocation,
+            homeRadiusMeters: appSettings?.homeRadiusMeters ?? 100,
+            now: location.timestamp
+        )
+
+        // 前回と同じ決定なら manager への書き込みをスキップ
+        guard decision != lastBatteryPolicyDecision else { return }
+        lastBatteryPolicyDecision = decision
+
+        switch decision {
+        case .stopRecording:
+            // 自宅判定は handleNewLocations の HomeDetector で既に処理済みのため、
+            // ここでは distanceFilter の変更のみ行う（記録停止は上位ロジックが担う）。
+            break
+        case .driving(_, let filter):
+            manager.distanceFilter = filter
+            Self.logger.info("BatteryPolicy: driving → distanceFilter=\(filter)")
+        case .stopped(_, let filter):
+            manager.distanceFilter = filter
+            Self.logger.info("BatteryPolicy: stopped → distanceFilter=\(filter)")
+        }
+    }
+
+    /// テスト用: バッテリーポリシー履歴をリセットする。
+    /// リセット後の初期状態は .driving（configureManager の distanceFilter=10 と整合）。
+    func _resetBatteryPolicyHistoryForTesting() {
+        batteryPolicyLocationHistory.removeAll()
+        lastBatteryPolicyDecision = .driving(
+            accuracy: BatteryAdaptiveLocationPolicy.drivingAccuracy,
+            distanceFilter: BatteryAdaptiveLocationPolicy.drivingDistanceFilter
+        )
+    }
+
+    /// テスト用: 直近のバッテリーポリシー決定を読む（S6-005）。
+    var _lastBatteryPolicyDecisionForTesting: BatteryAdaptiveLocationPolicy.Decision {
+        lastBatteryPolicyDecision
     }
 
     /// S3-007: 永続化済みの PinRecord に対し、PlaceLookupService を呼んで

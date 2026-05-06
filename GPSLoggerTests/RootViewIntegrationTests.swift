@@ -490,6 +490,89 @@ private final class SpyLocationManagerForS6004: NSObject, LocationProviderProtoc
     func stopMonitoringSignificantLocationChanges() {}
 }
 
+// MARK: - S6-005: BatteryAdaptiveLocationPolicy 統合検証
+
+extension RootViewIntegrationTests {
+
+    /// LocationService が BatteryAdaptiveLocationPolicy 経由で distanceFilter を
+    /// 動的切り替えすることを検証する（S6-005）。
+    ///
+    /// BatteryAdaptiveLocationPolicy は Sendable 構造体で LocationService 内部に生成されるため、
+    /// DI 経路カバレッジの条件（RootView.init で注入するサービス）には厳密には該当しない。
+    /// しかし「LocationService 経由で policy が機能していること」を統合テストで確認し、
+    /// 3 スプリント連続で起きた依存漏れの再発を防ぐ趣旨で 1 件追加する。
+    ///
+    /// 検証内容:
+    ///   - 走行状態（5 分以内に 100m 超移動）時に manager.distanceFilter = 10m に切り替わる
+    ///   - 停車状態（5 分以内に 100m 以下）時に manager.distanceFilter = 100m に切り替わる
+    func test_locationService_batteryPolicyAppliesDistanceFilter_S6_005() throws {
+        let repo = try makeInMemoryRepository()
+        let mock = MockDistanceFilterLocationProvider()
+
+        // appSettings なし（自宅判定スキップ）で LocationService を生成
+        let sut = LocationService(manager: mock, repository: repo, appSettings: nil)
+
+        let base = Date(timeIntervalSince1970: 1_750_000_000)
+
+        // Step 1: 停車状態を作る（同じ場所に 2 点）
+        // lastBatteryPolicyDecision 初期値が .driving のため、停車判定で切替が発火する
+        let loc0 = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.681236, longitude: 139.767125),
+            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+            timestamp: base
+        )
+        let loc1 = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.681236, longitude: 139.767125),
+            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+            timestamp: base.addingTimeInterval(60)  // 1 分後、同じ座標
+        )
+        sut._ingestForTesting([loc0])
+        sut._ingestForTesting([loc1])
+
+        XCTAssertEqual(mock.lastDistanceFilter, 100,
+            "停車状態（5 分以内 100m 以下）では distanceFilter = 100m になるべき（S6-005）")
+
+        // Step 2: 走行状態へ遷移（5 分以内に 100m 超移動）
+        // lastBatteryPolicyDecision が .stopped になっているため、走行判定で切替が発火する
+        let loc2 = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.682236, longitude: 139.767125),
+            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+            timestamp: base.addingTimeInterval(90)  // 1.5 分後に約 111m 移動
+        )
+        sut._ingestForTesting([loc2])
+
+        XCTAssertEqual(mock.lastDistanceFilter, 10,
+            "走行状態（5 分以内 100m 超移動）では distanceFilter = 10m になるべき（S6-005）")
+    }
+}
+
+// MARK: - Spy doubles for S6-005
+
+/// distanceFilter の変化を記録する MockLocationProvider（S6-005）。
+/// MockLocationProvider は SignificantLocationChangesTests 内で定義済みのため、
+/// ここでは distanceFilter 専用の軽量 Spy を別名で定義する。
+private final class MockDistanceFilterLocationProvider: NSObject, LocationProviderProtocol, @unchecked Sendable {
+    weak var delegate: CLLocationManagerDelegate?
+    var desiredAccuracy: CLLocationAccuracy = kCLLocationAccuracyBest
+    var distanceFilter: CLLocationDistance = 10 {
+        didSet { lastDistanceFilter = distanceFilter }
+    }
+    var activityType: CLActivityType = .other
+    var pausesLocationUpdatesAutomatically: Bool = true
+    var allowsBackgroundLocationUpdates: Bool = false
+    var showsBackgroundLocationIndicator: Bool = false
+    var authorizationStatus: CLAuthorizationStatus = .authorizedAlways
+
+    private(set) var lastDistanceFilter: CLLocationDistance = 10
+
+    func requestWhenInUseAuthorization() {}
+    func requestAlwaysAuthorization() {}
+    func startUpdatingLocation() {}
+    func stopUpdatingLocation() {}
+    func startMonitoringSignificantLocationChanges() {}
+    func stopMonitoringSignificantLocationChanges() {}
+}
+
 // MARK: - DI 経路カバレッジ（Sprint 6 / S6-001 で定型化）
 //
 // 新規サービス（class / actor / struct）または新規 @Model（SwiftData）を追加した場合、
