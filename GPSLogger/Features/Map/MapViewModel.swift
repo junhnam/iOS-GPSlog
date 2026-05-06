@@ -30,6 +30,11 @@ final class MapViewModel: ObservableObject {
     /// 復元処理が走ったかを示すフラグ。`onAppear` の重複防止に利用。
     @Published private(set) var didRestore: Bool = false
 
+    /// 起動時の TripRecord 復元失敗時にユーザー向けに表示するエラーメッセージ（S3-008）。
+    /// 通常時は nil。catch 節で `今日の記録の復元に失敗しました（{error}）` がセットされる。
+    /// View 側はこの値を購読して赤い帯を表示し、× ボタンで閉じる。
+    @Published var restoreError: String?
+
     /// DI 用の TripRepository。本番では `PersistenceController.shared.container.mainContext`
     /// で構築されたものを、テストではインメモリリポジトリを注入する。
     private let repository: TripRepository
@@ -83,9 +88,10 @@ final class MapViewModel: ObservableObject {
             // 表示用 km 値（モデル側で四捨五入済み）。
             self.totalDistanceKm = trip.totalDistanceKm
         } catch {
-            // 起動時の DB 読み出し失敗はクラッシュ要因にしない。
-            // QA 観点でユーザーが気づける必要がある場合は、Sprint 3 以降で UI 通知を検討。
+            // S3-008: silent failure を解消。ログに加えて UI 通知用の文言を設定する。
+            // View 側（MapView）がこの restoreError を購読して赤い帯で表示する。
             print("[MapViewModel] WARNING: Failed to restore today's trip: \(error.localizedDescription)")
+            self.restoreError = "今日の記録の復元に失敗しました（\(error.localizedDescription)）"
         }
     }
 }
