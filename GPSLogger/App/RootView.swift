@@ -16,6 +16,10 @@ struct RootView: View {
     /// `TabView` の選択状態。デフォルトは「地図」タブ（受け入れ条件: 起動時に地図タブが選択）。
     @State private var selectedTab: Tab = .map
 
+    /// scenePhase: アプリがフォアグラウンドに復帰したとき（.active）にバックグラウンド
+    /// 復帰経路（resumeTrackingAfterRelaunch）を発火させるために監視する（S6-006）。
+    @Environment(\.scenePhase) private var scenePhase
+
     /// アプリ全体の依存を保持する DIコンテナ（S6-002）。
     /// 組立処理は AppDependencyContainer に集約し、RootView は取り出すだけにする。
     private let dependencies: AppDependencyContainer
@@ -102,6 +106,17 @@ struct RootView: View {
         .task { [retryQueue = dependencies.cloudUploadRetryQueue] in
             _ = try? await retryQueue.processOnAppLaunch()
             retryQueue.startObservingNetwork()
+        }
+        // S6-006: scenePhase が .active になったとき（フォアグラウンド復帰 /
+        // SLC 起床後の applicationDidBecomeActive 相当）に前回の記録状態を復元する。
+        // kill 後の SLC 起床でも ScenePhase.active が発火するため、
+        // applicationDidBecomeActive 通知を個別に購読する必要はない。
+        // .onChange クロージャは @MainActor で実行されるため、
+        // @MainActor 隔離の LocationService を直接参照できる。
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                locationService.resumeTrackingAfterRelaunch()
+            }
         }
     }
 

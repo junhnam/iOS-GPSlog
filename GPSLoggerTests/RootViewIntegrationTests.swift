@@ -573,6 +573,70 @@ private final class MockDistanceFilterLocationProvider: NSObject, LocationProvid
     func stopMonitoringSignificantLocationChanges() {}
 }
 
+// MARK: - S6-006: バックグラウンド復帰 wasTracking フラグ DI 検証
+
+extension RootViewIntegrationTests {
+
+    /// AppSettings に追加した wasTracking フラグの既定値が false であり、
+    /// startUpdatingLocation / stopUpdatingLocation で正しく書き換わることを検証する（S6-006）。
+    ///
+    /// 検証項目:
+    ///   1. AppSettings.wasTracking の既定値が false である
+    ///   2. LocationService.startUpdatingLocation を呼ぶと wasTracking=true になる
+    ///   3. LocationService.stopUpdatingLocation を呼ぶと wasTracking=false に戻る
+    ///   4. resumeTrackingAfterRelaunch は wasTracking=false の場合に startUpdatingLocation を呼ばない
+    func test_wasTrackingFlag_defaultFalseAndUpdatedByLocationService_S6_006() throws {
+        let suiteName = "gpslogger.tests.di.wastracking.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let settings = AppSettings(defaults: defaults)
+
+        // 1. 既定値が false
+        XCTAssertFalse(settings.wasTracking,
+            "wasTracking の既定値は false（S6-006）")
+
+        let mockManager = SpyLocationManagerForS6006()
+        let sut = LocationService(manager: mockManager, appSettings: settings)
+
+        // 2. startUpdatingLocation → wasTracking=true
+        sut.startUpdatingLocation()
+        XCTAssertTrue(settings.wasTracking,
+            "startUpdatingLocation 後は wasTracking=true（S6-006）")
+
+        // 3. stopUpdatingLocation → wasTracking=false
+        sut.stopUpdatingLocation()
+        XCTAssertFalse(settings.wasTracking,
+            "stopUpdatingLocation 後は wasTracking=false（S6-006）")
+
+        // 4. wasTracking=false のとき resumeTrackingAfterRelaunch は記録再開しない
+        settings.wasTracking = false
+        sut.resumeTrackingAfterRelaunch()
+        XCTAssertFalse(sut.isUpdating,
+            "wasTracking=false の場合、resumeTrackingAfterRelaunch は記録を再開しない（S6-006）")
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+}
+
+// MARK: - Spy doubles for S6-006
+
+private final class SpyLocationManagerForS6006: NSObject, LocationProviderProtocol, @unchecked Sendable {
+    weak var delegate: CLLocationManagerDelegate?
+    var distanceFilter: CLLocationDistance = 10
+    var desiredAccuracy: CLLocationAccuracy = kCLLocationAccuracyBest
+    var activityType: CLActivityType = .other
+    var pausesLocationUpdatesAutomatically: Bool = true
+    var allowsBackgroundLocationUpdates: Bool = false
+    var showsBackgroundLocationIndicator: Bool = false
+    var authorizationStatus: CLAuthorizationStatus = .authorizedAlways
+
+    func requestWhenInUseAuthorization() {}
+    func requestAlwaysAuthorization() {}
+    func startUpdatingLocation() {}
+    func stopUpdatingLocation() {}
+    func startMonitoringSignificantLocationChanges() {}
+    func stopMonitoringSignificantLocationChanges() {}
+}
+
 // MARK: - DI 経路カバレッジ（Sprint 6 / S6-001 で定型化）
 //
 // 新規サービス（class / actor / struct）または新規 @Model（SwiftData）を追加した場合、

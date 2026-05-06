@@ -77,6 +77,8 @@ final class AppSettings {
         // S6-004: DB 自動消去 ON/OFF / しきい値。
         static let dbAutoCleanupEnabled = "gpslogger.settings.v1.dbAutoCleanupEnabled"
         static let dbAutoCleanupThresholdGB = "gpslogger.settings.v1.dbAutoCleanupThresholdGB"
+        // S6-006: バックグラウンド復帰用フラグ。kill 後の SLC 起床時に記録を再開するか判定する。
+        static let wasTracking = "gpslogger.settings.v1.wasTracking"
     }
 
     // MARK: - Defaults
@@ -93,6 +95,8 @@ final class AppSettings {
     static let defaultDbAutoCleanupEnabled: Bool = false
     /// S6-004: DB 自動消去のしきい値（GB）。1.0 GB = 1,073,741,824 bytes。
     static let defaultDbAutoCleanupThresholdGB: Double = 1.0
+    /// S6-006: バックグラウンド復帰フラグは既定 false（初回起動・クリーンインストール時は自動再開しない）。
+    static let defaultWasTracking: Bool = false
 
     // MARK: - Stored Properties (observed)
 
@@ -191,6 +195,19 @@ final class AppSettings {
         }
     }
 
+    /// バックグラウンド復帰用フラグ（S6-006）。
+    ///
+    /// `startUpdatingLocation` 時に true、`stopUpdatingLocation` 時に false を書き込む。
+    /// アプリが OS により kill された後、SLC で起床した際に `resumeTrackingAfterRelaunch()`
+    /// がこのフラグを見て記録を再開すべきか判定する。
+    /// 既定は false（意図的な記録なし状態から起動した場合、自動再開しない）。
+    var wasTracking: Bool {
+        didSet {
+            guard wasTracking != oldValue else { return }
+            defaults.set(wasTracking, forKey: Keys.wasTracking)
+        }
+    }
+
     /// DB 自動消去のしきい値（GB）（S6-004）。
     /// この値を超えたとき、古い日付の TripRecord から削除を行う。
     /// 既定は 1.0 GB。0.1 未満は 0.1 にフォールバックして保存する。
@@ -275,6 +292,12 @@ final class AppSettings {
         }
         let storedThreshold = defaults.object(forKey: Keys.dbAutoCleanupThresholdGB) as? Double
         self.dbAutoCleanupThresholdGB = storedThreshold ?? Self.defaultDbAutoCleanupThresholdGB
+
+        // S6-006: バックグラウンド復帰フラグ。
+        // 未設定時（クリーンインストール直後）は false（自動再開しない）。
+        // bool(forKey:) は未設定時に false を返すため、ここでは object(forKey:) で未設定判定不要
+        // （既定値も false のため同等）。
+        self.wasTracking = defaults.bool(forKey: Keys.wasTracking)
     }
 
     // MARK: - Helpers

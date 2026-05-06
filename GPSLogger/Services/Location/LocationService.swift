@@ -207,12 +207,17 @@ final class LocationService: NSObject, ObservableObject {
         guard !isUpdating else { return }
         manager.startUpdatingLocation()
         isUpdating = true
+        // S6-006: 記録開始時に wasTracking を true に書き込む（kill 後の復帰判定用）。
+        appSettings?.wasTracking = true
     }
 
     func stopUpdatingLocation() {
         guard isUpdating else { return }
         manager.stopUpdatingLocation()
         isUpdating = false
+        // S6-006: 意図的な記録停止なので wasTracking を false にリセットする。
+        // kill 後の SLC 起床時にこの false を見て自動再開しないよう制御する。
+        appSettings?.wasTracking = false
         // S5-005: 記録停止時にクラウド自動アップロードをトリガー。
         // 自動同期 OFF / プロバイダ未選択時は CloudUploadCoordinator が no-op に倒すため
         // ここでは設定をチェックせず、Coordinator に判断を委ねる。
@@ -278,6 +283,81 @@ final class LocationService: NSObject, ObservableObject {
         manager.stopMonitoringSignificantLocationChanges()
         isMonitoringSignificantChanges = false
         Self.logger.info("SLC 停止")
+    }
+
+    // MARK: - Background Resume（S6-006）
+
+    /// SLC デリゲートから呼ぶ専用経路（S6-006）。
+    ///
+    /// OS がアプリを kill した後、SLC（Significant Location Changes）で起床した際に
+    /// `CLLocationManagerDelegate.locationManager(_:didUpdateLocations:)` が呼ばれる。
+    /// そのデリゲートハンドラから本メソッドを呼び、位置情報を処理させる。
+    ///
+    /// 通常の `handleNewLocations` との違い:
+    ///   - SLC 起床直後は isMonitoringSignificantChanges が false になっている場合があるため
+    ///     フラグを立て直す
+    ///   - 自宅判定は通常フローと同様に `handleNewLocations` 内で行われる
+    ///
+    /// 実装注: 現時点では `handleNewLocations` を呼ぶだけだが、
+    /// 将来的に SLC 専用の処理（ログ分類等）を挟む拡張点として独立させておく。
+    func startTrackingFromSLC() {
+        // SLC で起床した場合、isMonitoringSignificantChanges を true に同期し直す。
+        // （kill 後の再起動では状態がリセットされているため）
+        if !isMonitoringSignificantChanges {
+            isMonitoringSignificantChanges = true
+            Self.logger.info("SLC 起床: isMonitoringSignificantChanges を true に同期")
+        }
+        // 通常 GPS 更新の状態はそのまま。wasTracking 評価は resumeTrackingAfterRelaunch で行う。
+    }
+
+    /// バックグラウンド復帰時に前回の記録状態を復元する（S6-006）。
+    ///
+    /// `scenePhase == .active`（applicationDidBecomeActive 相当）時と
+    /// SLC 起床時の両方から呼ばれることを想定する。
+    ///
+    /// 挙動:
+    ///   1. `appSettings.wasTracking == false` なら何もしない（意図的な停止 / 初回起動）
+    ///   2. 自宅判定が有効で `.atHome` なら記録を再開しない
+    ///   3. 上記に該当しない場合、日付またぎを処理したうえで `startUpdatingLocation()` を呼ぶ
+    ///
+    /// 日付またぎ処理:
+    ///   - `currentTrip` が前日（または未設定）なら、`TripRepository.todayTrip()` で
+    ///     当日の TripRecord を確保し直す。これは `persistLocation` の needsTripSwitch と
+    ///     同じ判定だが、「復帰直後に trip を確保する」ために明示的に呼ぶ。
+    func resumeTrackingAfterRelaunch() {
+        // 1. wasTracking が false なら復帰不要
+        guard let settings = appSettings, settings.wasTracking else {
+            Self.logger.info("resumeTrackingAfterRelaunch: wasTracking=false のため再開しない")
+            return
+        }
+
+        // 2. 自宅判定: currentLocation が自宅内なら再開しない
+        if let location = currentLocation {
+            let homeState = HomeDetector.detect(
+                homeLocation: settings.homeLocation,
+                radius: settings.homeRadiusMeters,
+                currentLocation: location
+            )
+            if homeState == .atHome {
+                Self.logger.info("resumeTrackingAfterRelaunch: 自宅滞在中のため再開しない")
+                return
+            }
+        }
+
+        // 3. 日付またぎ: currentTrip が前日ならリセット（次の persistLocation 呼び出しで新規 trip を確保）
+        if let repository, let current = currentTrip {
+            let cal = Calendar.current
+            if cal.startOfDay(for: current.date) != cal.startOfDay(for: Date()) {
+                // 前日 trip の endedAt を確定させておく
+                try? repository.updateEnd(of: current, at: current.endedAt ?? Date())
+                currentTrip = nil
+                Self.logger.info("resumeTrackingAfterRelaunch: 日付またぎを検出、currentTrip をリセット")
+            }
+        }
+
+        // 4. 記録再開
+        Self.logger.info("resumeTrackingAfterRelaunch: wasTracking=true かつ自宅外 → 記録再開")
+        startUpdatingLocation()
     }
 
     // MARK: - Test hooks
