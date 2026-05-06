@@ -16,7 +16,7 @@ import Foundation
 ///   - `GPSログ/{YYYY-MM-DD}/data.csv` のような階層パスを `/` 区切りで指定する
 ///   - フォルダが存在しない場合は実装側で作成すること（Drive / Dropbox とも API がある）
 ///   - 同一パスに既にファイルがある場合は上書きすること（同日内で複数回記録停止する想定）
-public protocol CloudStorageProvider: Sendable {
+protocol CloudStorageProvider: Sendable {
     /// プロバイダ識別子（CloudProviderKind との対応）。
     var kind: CloudProviderKind { get }
 
@@ -49,15 +49,15 @@ public protocol CloudStorageProvider: Sendable {
 /// 実装側（Google Drive / Dropbox）で取得できる識別子・URL を共通形に詰めて返す。
 /// Sprint 5 では返り値を直接使う箇所はないが、ログ出力 / 将来の「アップロード先を開く」UI で
 /// `webViewLink` を使う想定。
-public struct CloudUploadResult: Sendable, Equatable {
+struct CloudUploadResult: Sendable, Equatable {
     /// プロバイダ側のファイル ID（Drive: fileId / Dropbox: id）
-    public let fileID: String
+    let fileID: String
     /// プロバイダ側のフルパス（`GPSログ/2026-05-06/data.csv` 等）
-    public let path: String
+    let path: String
     /// Web で開くための URL（オプション。Drive の `webViewLink` 等）
-    public let webViewLink: URL?
+    let webViewLink: URL?
 
-    public init(fileID: String, path: String, webViewLink: URL?) {
+    init(fileID: String, path: String, webViewLink: URL?) {
         self.fileID = fileID
         self.path = path
         self.webViewLink = webViewLink
@@ -68,7 +68,7 @@ public struct CloudUploadResult: Sendable, Equatable {
 ///
 /// `Sendable` で値型として伝搬。CloudUploadCoordinator (S5-005) と
 /// CloudUploadRetryQueue (S5-006) が本 enum をハンドルしてリトライ判定に使う。
-public enum CloudStorageError: Error, Sendable, Equatable {
+enum CloudStorageError: Error, Sendable, Equatable {
     /// 未認証（authenticate を呼んでいない、Keychain クリア済み）。
     case notAuthenticated
     /// 認証期限切れ。リフレッシュも失敗（再認証が必要）。
@@ -84,7 +84,7 @@ public enum CloudStorageError: Error, Sendable, Equatable {
     /// 想定外のエラー（パース失敗等）。
     case unknown(message: String)
 
-    public static func == (lhs: CloudStorageError, rhs: CloudStorageError) -> Bool {
+    static func == (lhs: CloudStorageError, rhs: CloudStorageError) -> Bool {
         switch (lhs, rhs) {
         case (.notAuthenticated, .notAuthenticated): return true
         case (.authenticationExpired, .authenticationExpired): return true
@@ -100,14 +100,13 @@ public enum CloudStorageError: Error, Sendable, Equatable {
     /// リトライキュー（S5-006）でリトライ対象とすべきエラーかを判定する。
     /// ネットワーク失敗 / 5xx は再試行で回復する可能性があるため true。
     /// ユーザー操作（拒否）や認証エラーは再試行不要のため false。
-    public var isRetryable: Bool {
+    var isRetryable: Bool {
         switch self {
         case .networkFailure: return true
         case .apiError(let statusCode, _): return statusCode >= 500
         case .notAuthenticated, .authenticationExpired, .userCancelled,
              .keychainFailure, .unknown:
             return false
-        case .apiError: return false
         }
     }
 }

@@ -30,8 +30,8 @@ import os
 ///   1. 親フォルダ（GPSログ）を Drive 内で検索 / なければ作成
 ///   2. 日付フォルダ（YYYY-MM-DD）を上記内で検索 / なければ作成
 ///   3. 既存 data.csv があれば PATCH で上書き、無ければ multipart upload
-public actor GoogleDriveSyncService: CloudStorageProvider {
-    public nonisolated var kind: CloudProviderKind { .googleDrive }
+actor GoogleDriveSyncService: CloudStorageProvider {
+    nonisolated var kind: CloudProviderKind { .googleDrive }
 
     /// HTTP クライアント。テスト時に差し替え可能。
     private let httpClient: any GoogleDriveHTTPClient
@@ -52,9 +52,9 @@ public actor GoogleDriveSyncService: CloudStorageProvider {
                                        category: "GoogleDriveSyncService")
 
     /// Drive 上のルートフォルダ名（「GPSログ」）。S5-005 の階層仕様に対応。
-    public static let rootFolderName: String = "GPSログ"
+    static let rootFolderName: String = "GPSログ"
 
-    public init(
+    init(
         httpClient: any GoogleDriveHTTPClient = LiveGoogleDriveHTTPClient(),
         clientIDProvider: any GoogleDriveClientIDProviding = InfoPlistGoogleDriveClientIDProvider(),
         tokenStore: any GoogleDriveTokenStoring = KeychainGoogleDriveTokenStore(),
@@ -71,12 +71,12 @@ public actor GoogleDriveSyncService: CloudStorageProvider {
     // MARK: - CloudStorageProvider
 
     @MainActor
-    public func isAuthenticated() async -> Bool {
+    func isAuthenticated() async -> Bool {
         return (try? await self.hasValidTokens()) ?? false
     }
 
     @MainActor
-    public func authenticate() async throws {
+    func authenticate() async throws {
         // 1. クライアント ID / PKCE / リダイレクト URI を取得（actor 越しの読み取り）
         let clientID: String? = self.clientIDProvider.clientID()
         guard let clientID, !clientID.isEmpty else {
@@ -134,7 +134,7 @@ public actor GoogleDriveSyncService: CloudStorageProvider {
     }
 
     @MainActor
-    public func signOut() {
+    func signOut() {
         // fire-and-forget。actor 上で Keychain クリアを実行する。
         // 失敗時はログのみ（UI に影響しない）。
         Task { [weak self] in
@@ -142,7 +142,7 @@ public actor GoogleDriveSyncService: CloudStorageProvider {
         }
     }
 
-    public func uploadCSV(_ data: Data, toPath path: String) async throws -> CloudUploadResult {
+    func uploadCSV(_ data: Data, toPath path: String) async throws -> CloudUploadResult {
         // 1. トークン確認 / 期限切れならリフレッシュ
         let accessToken = try await acquireValidAccessToken()
 
@@ -299,12 +299,12 @@ public actor GoogleDriveSyncService: CloudStorageProvider {
 
 /// Google Drive の OAuth トークンセット（S5-001）。
 /// Keychain に保存され、Sendable で actor 越しに渡せる値型。
-public struct GoogleDriveTokens: Sendable, Equatable, Codable {
-    public let accessToken: String
-    public let refreshToken: String
-    public let expiresAt: Date?
+struct GoogleDriveTokens: Sendable, Equatable, Codable {
+    let accessToken: String
+    let refreshToken: String
+    let expiresAt: Date?
 
-    public init(accessToken: String, refreshToken: String, expiresAt: Date?) {
+    init(accessToken: String, refreshToken: String, expiresAt: Date?) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
         self.expiresAt = expiresAt
@@ -312,11 +312,11 @@ public struct GoogleDriveTokens: Sendable, Equatable, Codable {
 }
 
 /// Drive ファイル / フォルダ作成・更新の戻り値。
-public struct GoogleDriveFileResponse: Sendable, Equatable {
-    public let fileID: String
-    public let webViewLink: URL?
+struct GoogleDriveFileResponse: Sendable, Equatable {
+    let fileID: String
+    let webViewLink: URL?
 
-    public init(fileID: String, webViewLink: URL?) {
+    init(fileID: String, webViewLink: URL?) {
         self.fileID = fileID
         self.webViewLink = webViewLink
     }
@@ -327,7 +327,7 @@ public struct GoogleDriveFileResponse: Sendable, Equatable {
 /// HTTP 通信の最小限のインタフェース（S5-001）。
 /// 本番では URLSession で Drive REST v3 / OAuth エンドポイントを叩く `LiveGoogleDriveHTTPClient`、
 /// テストでは決定論的なフェイクを差し込む。
-public protocol GoogleDriveHTTPClient: Sendable {
+protocol GoogleDriveHTTPClient: Sendable {
     func exchangeCodeForTokens(code: String,
                                codeVerifier: String,
                                clientID: String,
@@ -359,35 +359,35 @@ public protocol GoogleDriveHTTPClient: Sendable {
 }
 
 /// OAuth クライアント ID / リダイレクト URI / コールバックスキームの提供。
-public protocol GoogleDriveClientIDProviding: Sendable {
+protocol GoogleDriveClientIDProviding: Sendable {
     func clientID() -> String?
     func redirectURI() -> String
     func callbackScheme() -> String
 }
 
 /// Keychain ラッパー（テスト時はインメモリ実装に差し替え）。
-public protocol GoogleDriveTokenStoring: Sendable {
+protocol GoogleDriveTokenStoring: Sendable {
     func loadTokens() async throws -> GoogleDriveTokens?
     func saveTokens(_ tokens: GoogleDriveTokens) async throws
     func clearTokens() async throws
 }
 
 /// OAuth Web セッション起動。
-public protocol GoogleDriveWebAuthRunning: Sendable {
+protocol GoogleDriveWebAuthRunning: Sendable {
     @MainActor
     func start(authURL: URL, callbackURLScheme: String) async throws -> URL
 }
 
 /// PKCE 用ランダム値生成。
-public protocol GoogleDrivePKCEGenerating: Sendable {
+protocol GoogleDrivePKCEGenerating: Sendable {
     func generate() -> GoogleDrivePKCEPair
 }
 
-public struct GoogleDrivePKCEPair: Sendable, Equatable {
-    public let codeVerifier: String
-    public let codeChallenge: String
+struct GoogleDrivePKCEPair: Sendable, Equatable {
+    let codeVerifier: String
+    let codeChallenge: String
 
-    public init(codeVerifier: String, codeChallenge: String) {
+    init(codeVerifier: String, codeChallenge: String) {
         self.codeVerifier = codeVerifier
         self.codeChallenge = codeChallenge
     }
@@ -397,14 +397,14 @@ public struct GoogleDrivePKCEPair: Sendable, Equatable {
 
 /// 本番用 HTTP クライアント。URLSession で Google API を叩く。
 /// Sprint 5 ではユニットテストでは触らず、jun さん側のシミュレータ実 OAuth 確認で動作検証する。
-public struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
+struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
     private let session: URLSession
 
-    public init(session: URLSession = .shared) {
+    init(session: URLSession = .shared) {
         self.session = session
     }
 
-    public func exchangeCodeForTokens(code: String,
+    func exchangeCodeForTokens(code: String,
                                       codeVerifier: String,
                                       clientID: String,
                                       redirectURI: String) async throws -> GoogleDriveTokens {
@@ -422,7 +422,7 @@ public struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
         return try await Self.parseTokenResponse(session: session, request: request)
     }
 
-    public func refreshTokens(refreshToken: String,
+    func refreshTokens(refreshToken: String,
                               clientID: String) async throws -> GoogleDriveTokens {
         var request = URLRequest(url: URL(string: "https://oauth2.googleapis.com/token")!)
         request.httpMethod = "POST"
@@ -439,7 +439,7 @@ public struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
         return refreshed
     }
 
-    public func findFolder(name: String,
+    func findFolder(name: String,
                            parent: String?,
                            accessToken: String) async throws -> String? {
         try await findItem(name: name,
@@ -448,13 +448,13 @@ public struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
                            accessToken: accessToken)
     }
 
-    public func findFile(name: String,
+    func findFile(name: String,
                          parent: String,
                          accessToken: String) async throws -> String? {
         try await findItem(name: name, parent: parent, mimeType: nil, accessToken: accessToken)
     }
 
-    public func createFolder(name: String,
+    func createFolder(name: String,
                              parent: String?,
                              accessToken: String) async throws -> String {
         var metadata: [String: Any] = [
@@ -479,7 +479,7 @@ public struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
         return id
     }
 
-    public func uploadNewFile(name: String,
+    func uploadNewFile(name: String,
                               parent: String,
                               data: Data,
                               accessToken: String) async throws -> GoogleDriveFileResponse {
@@ -501,7 +501,7 @@ public struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
         return try Self.parseFileResponse(responseData)
     }
 
-    public func updateFileContents(fileID: String,
+    func updateFileContents(fileID: String,
                                    data: Data,
                                    accessToken: String) async throws -> GoogleDriveFileResponse {
         var request = URLRequest(url: URL(string: "https://www.googleapis.com/upload/drive/v3/files/\(fileID)?uploadType=media&fields=id,webViewLink")!)
@@ -603,21 +603,21 @@ public struct LiveGoogleDriveHTTPClient: GoogleDriveHTTPClient {
 }
 
 /// Info.plist から OAuth クライアント ID を読む実装。
-public struct InfoPlistGoogleDriveClientIDProvider: GoogleDriveClientIDProviding {
-    public init() {}
+struct InfoPlistGoogleDriveClientIDProvider: GoogleDriveClientIDProviding {
+    init() {}
 
-    public func clientID() -> String? {
+    func clientID() -> String? {
         Bundle.main.object(forInfoDictionaryKey: "GoogleDriveOAuthClientID") as? String
     }
 
-    public func redirectURI() -> String {
+    func redirectURI() -> String {
         // Google iOS OAuth の慣例: <reversed-client-id>:/oauth/callback
         let id = clientID() ?? ""
         let reversed = id.split(separator: ".").reversed().joined(separator: ".")
         return "\(reversed):/oauth/callback"
     }
 
-    public func callbackScheme() -> String {
+    func callbackScheme() -> String {
         let id = clientID() ?? ""
         return id.split(separator: ".").reversed().joined(separator: ".")
     }
@@ -625,18 +625,18 @@ public struct InfoPlistGoogleDriveClientIDProvider: GoogleDriveClientIDProviding
 
 /// Keychain にトークンを保存する実装（Sprint 5 では最小実装）。
 /// Sprint 6 で SecKey ベースの暗号化を強化する余地を残す。
-public actor KeychainGoogleDriveTokenStore: GoogleDriveTokenStoring {
+actor KeychainGoogleDriveTokenStore: GoogleDriveTokenStoring {
     private let service: String
     private let account: String
 
-    public init(service: String = "com.junhnam.gpslogger.googledrive",
+    init(service: String = "com.junhnam.gpslogger.googledrive",
                 account: String = "tokens.v1") {
         self.service = service
         self.account = account
     }
 
-    public func loadTokens() async throws -> GoogleDriveTokens? {
-        var query: [String: Any] = [
+    func loadTokens() async throws -> GoogleDriveTokens? {
+        let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
@@ -652,7 +652,7 @@ public actor KeychainGoogleDriveTokenStore: GoogleDriveTokenStoring {
         return try JSONDecoder().decode(GoogleDriveTokens.self, from: data)
     }
 
-    public func saveTokens(_ tokens: GoogleDriveTokens) async throws {
+    func saveTokens(_ tokens: GoogleDriveTokens) async throws {
         let data = try JSONEncoder().encode(tokens)
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -667,7 +667,7 @@ public actor KeychainGoogleDriveTokenStore: GoogleDriveTokenStoring {
         }
     }
 
-    public func clearTokens() async throws {
+    func clearTokens() async throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -682,11 +682,11 @@ public actor KeychainGoogleDriveTokenStore: GoogleDriveTokenStoring {
 
 /// `ASWebAuthenticationSession` を MainActor で起動する実装。
 /// Sprint 5 ユニットテストでは触らない（jun さん側の実 OAuth 確認で動作検証）。
-public final class ASWebAuthGoogleDriveWebAuthRunner: NSObject, GoogleDriveWebAuthRunning, ASWebAuthenticationPresentationContextProviding, @unchecked Sendable {
-    public override init() { super.init() }
+final class ASWebAuthGoogleDriveWebAuthRunner: NSObject, GoogleDriveWebAuthRunning, ASWebAuthenticationPresentationContextProviding, @unchecked Sendable {
+    nonisolated override init() { super.init() }
 
     @MainActor
-    public func start(authURL: URL, callbackURLScheme: String) async throws -> URL {
+    func start(authURL: URL, callbackURLScheme: String) async throws -> URL {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
             let session = ASWebAuthenticationSession(
                 url: authURL,
@@ -714,25 +714,32 @@ public final class ASWebAuthGoogleDriveWebAuthRunner: NSObject, GoogleDriveWebAu
         }
     }
 
-    nonisolated public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+    nonisolated func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         // ASWebAuthenticationPresentationContextProviding の要件は nonisolated。
         // ただし ASWebAuthenticationSession は本クラスを MainActor 上から `start` するため、
         // 実行時には常に MainActor 上で呼ばれる。MainActor.assumeIsolated で安全に
         // UIApplication.shared にアクセスする（Sprint 4 で確立したパターン）。
         MainActor.assumeIsolated {
-            UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .flatMap(\.windows)
-                .first(where: { $0.isKeyWindow }) ?? ASPresentationAnchor()
+            guard let scene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first else {
+                preconditionFailure("OAuth フロー起動時に UIWindowScene が取得できない")
+            }
+            if let keyWindow = scene.windows.first(where: { $0.isKeyWindow }) {
+                return keyWindow
+            }
+            // iOS 26: ASPresentationAnchor.init() / init(frame:) が deprecated のため
+            // windowScene 経由で生成する。
+            return ASPresentationAnchor(windowScene: scene)
         }
     }
 }
 
 /// PKCE ランダム値の本番実装（CryptoKit）。
-public struct LiveGoogleDrivePKCEGenerator: GoogleDrivePKCEGenerating {
-    public init() {}
+struct LiveGoogleDrivePKCEGenerator: GoogleDrivePKCEGenerating {
+    init() {}
 
-    public func generate() -> GoogleDrivePKCEPair {
+    func generate() -> GoogleDrivePKCEPair {
         let verifier = Self.makeRandomString(length: 64)
         let challenge = Self.codeChallenge(for: verifier)
         return GoogleDrivePKCEPair(codeVerifier: verifier, codeChallenge: challenge)

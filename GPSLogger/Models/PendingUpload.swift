@@ -20,27 +20,27 @@ import SwiftData
 ///   - 単一エンティティでリレーション無しなので `@Relationship` 配列の落とし穴は無関係
 ///   - 既存 DB に PendingUpload テーブルを増やすマイグレーション挙動は SwiftData 自動対応
 @Model
-public final class PendingUpload {
+final class PendingUpload {
     /// 対象の TripRecord.date と同じ正規化日時。日付主キーで TripRecord と突き合わせる。
-    public var tripDate: Date
+    var tripDate: Date
 
     /// リトライ済み回数（0 から開始）。`retryCount >= maxAttempts` で打ち切り通知。
-    public var retryCount: Int
+    var retryCount: Int
 
     /// 最終リトライ時刻。バックオフ計算に使う。
-    public var lastTriedAt: Date
+    var lastTriedAt: Date
 
     /// 最後に発生したエラーの人が読める表現（ログ・UI 表示用）。
-    public var lastErrorMessage: String?
+    var lastErrorMessage: String?
 
     /// クラウドプロバイダ種別（`CloudProviderKind.rawValue`）。
     /// 文字列として保存し、復元時に `CloudProviderKind(rawValue:)` で復号する。
-    public var providerKindRaw: String
+    var providerKindRaw: String
 
     /// 5 回失敗時の通知が既に送られたか。重複通知防止フラグ。
-    public var notifiedFinalFailure: Bool
+    var notifiedFinalFailure: Bool
 
-    public init(tripDate: Date,
+    init(tripDate: Date,
                 providerKind: CloudProviderKind,
                 retryCount: Int = 0,
                 lastTriedAt: Date = Date(),
@@ -56,7 +56,7 @@ public final class PendingUpload {
 
     /// `providerKindRaw` から復元した `CloudProviderKind`。
     /// 不正な rawValue の場合は nil（未知のプロバイダはリトライ対象外として扱う）。
-    public var providerKind: CloudProviderKind? {
+    var providerKind: CloudProviderKind? {
         CloudProviderKind(rawValue: providerKindRaw)
     }
 }

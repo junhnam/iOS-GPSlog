@@ -9,21 +9,21 @@ import os
 ///
 /// テスト容易性のため、`CSVExporting` プロトコルを介して差し替え可能にする。
 @MainActor
-public protocol CSVExporting: Sendable {
+protocol CSVExporting: Sendable {
     /// 指定 TripRecord を CSV データ（UTF-8 BOM 含む）に変換する。
     func csvData(for trip: TripRecord) throws -> Data
 }
 
 /// `CSVExportService` を `CSVExporting` として包む本番実装。
 @MainActor
-public struct CSVExportingAdapter: CSVExporting {
+struct CSVExportingAdapter: CSVExporting {
     private let service: CSVExportService
 
-    public init(service: CSVExportService = CSVExportService()) {
+    init(service: CSVExportService = CSVExportService()) {
         self.service = service
     }
 
-    public func csvData(for trip: TripRecord) throws -> Data {
+    func csvData(for trip: TripRecord) throws -> Data {
         let url = try service.exportTripRecord(trip)
         return try Data(contentsOf: url)
     }
@@ -42,7 +42,7 @@ public struct CSVExportingAdapter: CSVExporting {
 ///   - 内部のアップロードは Task で actor 越しに await
 ///   - 失敗してもクラッシュさせず、ログ + リトライキュー登録で吸収
 @MainActor
-public final class CloudUploadCoordinator {
+final class CloudUploadCoordinator {
     private let providers: [CloudProviderKind: any CloudStorageProvider]
     private let appSettings: AppSettings
     private let csvExporter: any CSVExporting
@@ -52,7 +52,7 @@ public final class CloudUploadCoordinator {
                                        category: "CloudUploadCoordinator")
 
     /// 1 回の `uploadIfEnabled(for:)` 呼び出しに対する完了状態（S5-006 で参照）。
-    public enum Outcome: Sendable, Equatable {
+    enum Outcome: Sendable, Equatable {
         /// 自動同期 OFF / プロバイダ未選択 / トリップ未準備 などで何もしなかった。
         case skipped(reason: String)
         /// アップロード成功。
@@ -60,7 +60,7 @@ public final class CloudUploadCoordinator {
         /// アップロード失敗。リトライ対象なら retryQueue に登録済み。
         case failed(error: CloudStorageError, enqueuedForRetry: Bool)
 
-        public static func == (lhs: Outcome, rhs: Outcome) -> Bool {
+        static func == (lhs: Outcome, rhs: Outcome) -> Bool {
             switch (lhs, rhs) {
             case (.skipped(let l), .skipped(let r)): return l == r
             case (.uploaded(let l), .uploaded(let r)): return l == r
@@ -71,7 +71,7 @@ public final class CloudUploadCoordinator {
         }
     }
 
-    public init(providers: [CloudProviderKind: any CloudStorageProvider],
+    init(providers: [CloudProviderKind: any CloudStorageProvider],
                 appSettings: AppSettings,
                 csvExporter: any CSVExporting = CSVExportingAdapter(),
                 retryQueue: (any CloudUploadRetryEnqueuing)? = nil) {
@@ -89,7 +89,7 @@ public final class CloudUploadCoordinator {
     /// 自動同期 ON ならアップロードを試みる。OFF なら no-op。
     /// 結果は `Outcome` で返し、呼び出し側はテストで検証可能。
     @discardableResult
-    public func uploadIfEnabled(for trip: TripRecord) async -> Outcome {
+    func uploadIfEnabled(for trip: TripRecord) async -> Outcome {
         // 1. 設定チェック
         guard appSettings.cloudAutoSyncEnabled else {
             return .skipped(reason: "cloudAutoSyncEnabled == false")
@@ -156,7 +156,7 @@ public final class CloudUploadCoordinator {
 ///
 /// CloudUploadCoordinator は具体実装を知らず、本プロトコル経由で enqueue する。
 /// Sprint 5 で `CloudUploadRetryQueue`（SwiftData 永続化）が同プロトコルを実装する。
-public protocol CloudUploadRetryEnqueuing: Sendable {
+protocol CloudUploadRetryEnqueuing: Sendable {
     func enqueue(tripDate: Date,
                  providerKind: CloudProviderKind,
                  lastError: CloudStorageError) async throws

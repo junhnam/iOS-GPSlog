@@ -8,19 +8,19 @@ import os
 ///
 /// `UNUserNotificationCenter.current()` を直接 retain せずプロトコル境界に置くことで、
 /// テスト時に通知発火を検証できるようにする。
-public protocol UploadFailureNotifying: Sendable {
+protocol UploadFailureNotifying: Sendable {
     /// 5 回失敗した PendingUpload に対して 1 度だけ通知を送る。
     /// 内部で必要に応じて `UNUserNotificationCenter.requestAuthorization` を呼ぶ。
     func notifyFinalFailure(tripDate: Date, providerKind: CloudProviderKind) async
 }
 
 /// `UNUserNotificationCenter` を使う本番実装。
-public struct UNNotificationFailureNotifier: UploadFailureNotifying {
+struct UNNotificationFailureNotifier: UploadFailureNotifying {
     private static let identifier: String = "com.junhnam.gpslogger.cloudUploadFinalFailure"
 
-    public init() {}
+    init() {}
 
-    public func notifyFinalFailure(tripDate: Date, providerKind: CloudProviderKind) async {
+    func notifyFinalFailure(tripDate: Date, providerKind: CloudProviderKind) async {
         let center = UNUserNotificationCenter.current()
         // 権限要求（拒否されたら通知をスキップする方針。受け入れ条件 S5-006）
         let granted: Bool
@@ -50,26 +50,26 @@ public struct UNNotificationFailureNotifier: UploadFailureNotifying {
 
 /// ネットワーク状態を監視する最小限のインタフェース（S5-006）。
 /// テスト時はフェイクで「回復イベント」を任意のタイミングで送る。
-public protocol NetworkPathObserving: Sendable {
+protocol NetworkPathObserving: Sendable {
     func startObserving(onPathChange: @escaping @Sendable (Bool) -> Void)
     func stopObserving()
 }
 
 /// `NWPathMonitor` を使う本番実装。
-public final class NWPathNetworkObserver: NetworkPathObserving, @unchecked Sendable {
+final class NWPathNetworkObserver: NetworkPathObserving, @unchecked Sendable {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "com.junhnam.gpslogger.networkObserver")
 
-    public init() {}
+    init() {}
 
-    public func startObserving(onPathChange: @escaping @Sendable (Bool) -> Void) {
+    func startObserving(onPathChange: @escaping @Sendable (Bool) -> Void) {
         monitor.pathUpdateHandler = { path in
             onPathChange(path.status == .satisfied)
         }
         monitor.start(queue: queue)
     }
 
-    public func stopObserving() {
+    func stopObserving() {
         monitor.cancel()
     }
 }
@@ -87,7 +87,7 @@ public final class NWPathNetworkObserver: NetworkPathObserving, @unchecked Senda
 ///   - 通知は Sprint 5 では「初回起動時 + ネットワーク回復時」の 2 トリガーのみ
 ///     （Background Fetch / BGTaskScheduler は Sprint 6 以降で検討）
 @MainActor
-public final class CloudUploadRetryQueue: CloudUploadRetryEnqueuing {
+final class CloudUploadRetryQueue: CloudUploadRetryEnqueuing {
     private let modelContext: ModelContext
     private let providers: [CloudProviderKind: any CloudStorageProvider]
     private let csvExporter: any CSVExporting
@@ -98,15 +98,15 @@ public final class CloudUploadRetryQueue: CloudUploadRetryEnqueuing {
 
     /// 指数バックオフ秒数（受け入れ条件 S5-006）。
     /// インデックスが retryCount に対応する（0 回目失敗後 = 30 秒、4 回目失敗後 = 10 分）。
-    public static let backoffSeconds: [TimeInterval] = [30, 60, 120, 300, 600]
+    static let backoffSeconds: [TimeInterval] = [30, 60, 120, 300, 600]
 
     /// 最大リトライ回数（受け入れ条件 S5-006）。
-    public static let maxAttempts: Int = 5
+    static let maxAttempts: Int = 5
 
     private static let logger = Logger(subsystem: "com.junhnam.gpslogger",
                                        category: "CloudUploadRetryQueue")
 
-    public init(modelContext: ModelContext,
+    init(modelContext: ModelContext,
                 tripRepository: TripRepository,
                 providers: [CloudProviderKind: any CloudStorageProvider],
                 csvExporter: any CSVExporting = CSVExportingAdapter(),
@@ -126,7 +126,7 @@ public final class CloudUploadRetryQueue: CloudUploadRetryEnqueuing {
 
     /// 失敗した TripRecord をリトライキューに登録する（CloudUploadCoordinator から呼ばれる）。
     /// 同じ tripDate のエントリが既にあれば retryCount を加算する。
-    public func enqueue(tripDate: Date,
+    func enqueue(tripDate: Date,
                         providerKind: CloudProviderKind,
                         lastError: CloudStorageError) async throws {
         let normalizedDate = Calendar.current.startOfDay(for: tripDate)
@@ -153,7 +153,7 @@ public final class CloudUploadRetryQueue: CloudUploadRetryEnqueuing {
     // MARK: - Public API
 
     /// 設定画面のバッジ用: 未送信件数を返す（S5-006 受け入れ条件）。
-    public func pendingCount() throws -> Int {
+    func pendingCount() throws -> Int {
         let descriptor = FetchDescriptor<PendingUpload>()
         return try modelContext.fetch(descriptor).count
     }
@@ -162,27 +162,29 @@ public final class CloudUploadRetryQueue: CloudUploadRetryEnqueuing {
     /// 全件を即時にリトライする。バックオフは無視する。
     /// 戻り値: 成功した件数（呼び出し側でトースト表示する想定）。
     @discardableResult
-    public func processNow() async throws -> Int {
+    func processNow() async throws -> Int {
         return try await processQueue(ignoringBackoff: true)
     }
 
     /// アプリ起動時の自動処理。バックオフを尊重して未送信分を試す（受け入れ条件 S5-006）。
     @discardableResult
-    public func processOnAppLaunch() async throws -> Int {
+    func processOnAppLaunch() async throws -> Int {
         return try await processQueue(ignoringBackoff: false)
     }
 
     /// ネットワーク監視を開始し、回復イベントごとに `processQueue` を起動する（受け入れ条件 S5-006）。
-    public func startObservingNetwork() {
+    /// 復旧イベントは「断絶 → 復旧」の遷移時にしか発火しないため、バックオフを無視して
+    /// 蓄積分を即時処理する（spam にはならない）。
+    func startObservingNetwork() {
         networkObserver.startObserving { [weak self] satisfied in
             guard satisfied else { return }
             Task { @MainActor [weak self] in
-                _ = try? await self?.processQueue(ignoringBackoff: false)
+                _ = try? await self?.processQueue(ignoringBackoff: true)
             }
         }
     }
 
-    public func stopObservingNetwork() {
+    func stopObservingNetwork() {
         networkObserver.stopObserving()
     }
 
