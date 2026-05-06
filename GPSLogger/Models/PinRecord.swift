@@ -36,6 +36,14 @@ final class PinRecord {
     /// お店 / 施設の詳細 URL。**Sprint 2 では nil。Sprint 3 で MKLocalSearch から書き込む。**
     var placeURL: URL?
 
+    /// 住所文字列（S5-007）。
+    /// MKLocalSearch のヒット時は `MKMapItem.address?.fullAddress` 由来、
+    /// POI ヒット 0 件時は `MKReverseGeocodingRequest` 由来の住所が入る。
+    /// nil 許容: MKLocalSearch / 逆ジオコーディング双方が失敗した場合は nil のまま。
+    /// CalendarSyncService の 3 段フォールバック（placeName → address → 座標）で利用される。
+    /// iOS 26 SwiftData ノート #5 に従い、新規プロパティは Optional で既存 DB と互換を取る。
+    var address: String?
+
     /// この PinRecord に対して作成済みの EKEvent.eventIdentifier（S4-003）。
     /// nil = 未作成。値あり = 既に EventKit にイベントが書き込まれている（重複作成防止）。
     /// iOS 26 SwiftData ノート #5 に従い、新規プロパティは Optional で既存 DB と互換を取る。
@@ -51,6 +59,7 @@ final class PinRecord {
          stayedDurationSeconds: Double,
          placeName: String? = nil,
          placeURL: URL? = nil,
+         address: String? = nil,
          calendarEventIdentifier: String? = nil,
          trip: TripRecord? = nil) {
         self.latitude = latitude
@@ -59,6 +68,7 @@ final class PinRecord {
         self.stayedDurationSeconds = stayedDurationSeconds
         self.placeName = placeName
         self.placeURL = placeURL
+        self.address = address
         self.calendarEventIdentifier = calendarEventIdentifier
         self.trip = trip
     }

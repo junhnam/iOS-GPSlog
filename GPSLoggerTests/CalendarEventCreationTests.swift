@@ -192,6 +192,97 @@ final class CalendarEventCreationTests: XCTestCase {
         XCTAssertEqual(provider.savedDrafts.count, 0)
     }
 
+    // MARK: - S5-007 受け入れ条件: 3 段フォールバック「placeName → address → 座標」
+
+    /// (S5-007-A) placeName のみ → location は placeName。
+    func test_createEvent_locationFallback_placeNameOnly_S5_007() async {
+        let settings = makeSettings(syncEnabled: true, calendarId: "cal-1")
+        let provider = StubCalendarProvider(
+            authorized: true, requestResult: true,
+            existingCalendarIds: ["cal-1"], saveResult: .success("event-S5-007-A")
+        )
+        let sut = CalendarSyncService(provider: provider, appSettings: settings)
+
+        let pin = PinRecord(latitude: 35.658, longitude: 139.701,
+                            stayedFrom: Date(timeIntervalSince1970: 1_700_000_000),
+                            stayedDurationSeconds: 600,
+                            placeName: "スターバックス渋谷店",
+                            address: nil)
+        _ = await sut.createEvent(for: pin)
+
+        let draft = try? XCTUnwrap(provider.savedDrafts.first)
+        XCTAssertEqual(draft?.title, "スターバックス渋谷店")
+        XCTAssertEqual(draft?.location, "スターバックス渋谷店",
+                       "placeName が優先されて location に入る")
+    }
+
+    /// (S5-007-B) address のみ → location は address、title は座標フォールバック。
+    func test_createEvent_locationFallback_addressOnly_S5_007() async {
+        let settings = makeSettings(syncEnabled: true, calendarId: "cal-1")
+        let provider = StubCalendarProvider(
+            authorized: true, requestResult: true,
+            existingCalendarIds: ["cal-1"], saveResult: .success("event-S5-007-B")
+        )
+        let sut = CalendarSyncService(provider: provider, appSettings: settings)
+
+        let pin = PinRecord(latitude: 35.658, longitude: 139.701,
+                            stayedFrom: Date(timeIntervalSince1970: 1_700_000_000),
+                            stayedDurationSeconds: 600,
+                            placeName: nil,
+                            address: "東京都 渋谷区 道玄坂 2-29-5")
+        _ = await sut.createEvent(for: pin)
+
+        let draft = try? XCTUnwrap(provider.savedDrafts.first)
+        XCTAssertEqual(draft?.location, "東京都 渋谷区 道玄坂 2-29-5",
+                       "placeName が無ければ address が location に入る")
+        XCTAssertEqual(draft?.title.hasPrefix("滞留地点 ("), true,
+                       "title は placeName が無いため座標フォールバック")
+    }
+
+    /// (S5-007-C) placeName と address が両方ある → location は placeName 優先。
+    func test_createEvent_locationFallback_bothPresent_prefersPlaceName_S5_007() async {
+        let settings = makeSettings(syncEnabled: true, calendarId: "cal-1")
+        let provider = StubCalendarProvider(
+            authorized: true, requestResult: true,
+            existingCalendarIds: ["cal-1"], saveResult: .success("event-S5-007-C")
+        )
+        let sut = CalendarSyncService(provider: provider, appSettings: settings)
+
+        let pin = PinRecord(latitude: 35.658, longitude: 139.701,
+                            stayedFrom: Date(timeIntervalSince1970: 1_700_000_000),
+                            stayedDurationSeconds: 600,
+                            placeName: "スターバックス渋谷店",
+                            address: "東京都 渋谷区 道玄坂 2-29-5")
+        _ = await sut.createEvent(for: pin)
+
+        let draft = try? XCTUnwrap(provider.savedDrafts.first)
+        XCTAssertEqual(draft?.title, "スターバックス渋谷店")
+        XCTAssertEqual(draft?.location, "スターバックス渋谷店",
+                       "両方ある場合は placeName 優先")
+    }
+
+    /// (S5-007-D) placeName / address とも nil → location は nil、title は座標。
+    func test_createEvent_locationFallback_bothNil_locationIsNil_S5_007() async {
+        let settings = makeSettings(syncEnabled: true, calendarId: "cal-1")
+        let provider = StubCalendarProvider(
+            authorized: true, requestResult: true,
+            existingCalendarIds: ["cal-1"], saveResult: .success("event-S5-007-D")
+        )
+        let sut = CalendarSyncService(provider: provider, appSettings: settings)
+
+        let pin = PinRecord(latitude: 35.658, longitude: 139.701,
+                            stayedFrom: Date(timeIntervalSince1970: 1_700_000_000),
+                            stayedDurationSeconds: 600,
+                            placeName: nil,
+                            address: nil)
+        _ = await sut.createEvent(for: pin)
+
+        let draft = try? XCTUnwrap(provider.savedDrafts.first)
+        XCTAssertNil(draft?.location, "placeName / address とも nil の場合 location は nil")
+        XCTAssertEqual(draft?.title.hasPrefix("滞留地点 ("), true,
+                       "title は座標フォールバック")
+    }
+
     // MARK: - (f) calendarIdentifier が無効で .calendarNotFound
 
     func test_createEvent_returnsCalendarNotFound_whenIdInvalid() async {

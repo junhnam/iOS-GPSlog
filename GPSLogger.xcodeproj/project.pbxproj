@@ -55,6 +55,7 @@
 		C31C0D5EA2F6242A5B33FB6C /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B469DE98253C140644E24C89 /* MapViewModel.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
 		D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89566F273738C6565096CEC1 /* RoutePoint.swift */; };
+		DD761802C2D5F898D463A9F6 /* PinRecordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */; };
 		ECBE75A04C2ED9EF2C3B3303 /* RootViewIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 471A3702C5EEEC77277A596E /* RootViewIntegrationTests.swift */; };
 		ED033B0D7D5002820F01D032 /* PlaceLookupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */; };
 		EE2A19120BD717FF5C324D56 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 1E9DA276A4AFB7648716131D /* GoogleMaps */; };
@@ -123,6 +124,7 @@
 		C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerApp.swift; sourceTree = "<group>"; };
 		D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleMaps-Info.plist"; sourceTree = "<group>"; };
+		DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinRecordTests.swift; sourceTree = "<group>"; };
 		E89388920445382DC577EA62 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportView.swift; sourceTree = "<group>"; };
 		EB3F65917DC8E542E0510F6E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -239,6 +241,7 @@
 				7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */,
 				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
 				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
+				DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */,
 				757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */,
 				51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */,
 				1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */,
@@ -504,6 +507,7 @@
 				0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */,
 				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
 				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
+				DD761802C2D5F898D463A9F6 /* PinRecordTests.swift in Sources */,
 				ED033B0D7D5002820F01D032 /* PlaceLookupServiceTests.swift in Sources */,
 				1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */,
 				FD4DFBC2710E7869578E11E2 /* RecordingToggleButtonTests.swift in Sources */,

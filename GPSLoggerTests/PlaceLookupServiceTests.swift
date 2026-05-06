@@ -189,6 +189,87 @@ final class PlaceLookupServiceTests: XCTestCase {
         XCTAssertEqual(pin.placeName, "スターバックス渋谷店")
         XCTAssertEqual(pin.placeURL?.absoluteString, "https://maps.apple.com/?q=Starbucks")
     }
+
+    // MARK: - S5-007: PinRecord.address 書き戻し
+
+    /// (S5-007 ケース 1) MKLocalSearch ヒット時、PlaceCandidate.address が
+    /// PinRecord.address に書き戻される（POI 経由）。
+    func test_locationService_writesAddressIntoPinRecord_whenPOIHit_withAddress_S5_007() async throws {
+        let repo = try makeInMemoryRepository()
+        let stayDetector = StayDetector(config: StayDetectionConfig(minDuration: 60, radiusMeters: 10))
+        let provider = StubPlaceProvider(candidate: PlaceCandidate(
+            name: "スターバックス渋谷店",
+            url: URL(string: "https://maps.apple.com/?q=Starbucks"),
+            address: "東京都 渋谷区 道玄坂 2-29-5"
+        ))
+        let sut = LocationService(repository: repo, stayDetector: stayDetector, placeProvider: provider)
+
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        let p1 = CLLocation(coordinate: .init(latitude: 35.658, longitude: 139.701),
+                            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5, timestamp: base)
+        let p2 = CLLocation(coordinate: .init(latitude: 35.658, longitude: 139.701),
+                            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+                            timestamp: base.addingTimeInterval(70))
+        let p3 = CLLocation(coordinate: .init(latitude: 35.660, longitude: 139.701),
+                            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+                            timestamp: base.addingTimeInterval(140))
+
+        sut._ingestForTesting([p1])
+        sut._ingestForTesting([p2])
+        sut._ingestForTesting([p3])
+
+        for _ in 0..<20 {
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+
+        let trip = try repo.todayTrip(creatingIfMissing: false)
+        let pin = try XCTUnwrap(try XCTUnwrap(trip).pins.first)
+        XCTAssertEqual(pin.placeName, "スターバックス渋谷店")
+        XCTAssertEqual(pin.address, "東京都 渋谷区 道玄坂 2-29-5",
+                       "S5-007: POI ヒット時にも MKMapItem.address?.fullAddress が書き戻される")
+    }
+
+    /// (S5-007 ケース 2) MKLocalSearch 0 件 → reverseGeocode 由来の住所が
+    /// PlaceCandidate.address として渡され、PinRecord.address に書き戻される。
+    func test_locationService_writesAddressIntoPinRecord_whenReverseGeocodeFallback_S5_007() async throws {
+        let repo = try makeInMemoryRepository()
+        let stayDetector = StayDetector(config: StayDetectionConfig(minDuration: 60, radiusMeters: 10))
+        // POI 0 件 → 逆ジオコーディング fallback の出力は name=nil, url=nil, address=住所
+        let provider = StubPlaceProvider(candidate: PlaceCandidate(
+            name: nil,
+            url: nil,
+            address: "東京都 千代田区 丸の内 1-9-1"
+        ))
+        let sut = LocationService(repository: repo, stayDetector: stayDetector, placeProvider: provider)
+
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        let p1 = CLLocation(coordinate: .init(latitude: 35.6812, longitude: 139.7671),
+                            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5, timestamp: base)
+        let p2 = CLLocation(coordinate: .init(latitude: 35.6812, longitude: 139.7671),
+                            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+                            timestamp: base.addingTimeInterval(70))
+        let p3 = CLLocation(coordinate: .init(latitude: 35.6832, longitude: 139.7671),
+                            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+                            timestamp: base.addingTimeInterval(140))
+
+        sut._ingestForTesting([p1])
+        sut._ingestForTesting([p2])
+        sut._ingestForTesting([p3])
+
+        for _ in 0..<20 {
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+
+        let trip = try repo.todayTrip(creatingIfMissing: false)
+        let pin = try XCTUnwrap(try XCTUnwrap(trip).pins.first)
+        // POI なしのため placeName は address に fallback して書き込まれる（既存挙動）。
+        XCTAssertEqual(pin.placeName, "東京都 千代田区 丸の内 1-9-1")
+        XCTAssertEqual(pin.address, "東京都 千代田区 丸の内 1-9-1",
+                       "S5-007: 逆ジオコーディング fallback でも address が書き戻される")
+        XCTAssertNil(pin.placeURL)
+    }
 }
 
 // MARK: - Test doubles

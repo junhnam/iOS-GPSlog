@@ -434,8 +434,12 @@ final class LocationService: NSObject, ObservableObject {
             // 1. PlaceLookup（注入されていれば）
             if let provider {
                 if let candidate = await provider.lookup(coordinate: coordinate) {
+                    // S5-007: address は常に書き戻す（CalendarSync の 3 段 fallback で参照）。
+                    // placeName は POI ヒット時のみ name、それ以外は address にフォールバック
+                    // （Sprint 3 以前と同じ挙動を維持）。
                     pin.placeName = candidate.name ?? candidate.address
                     pin.placeURL = candidate.url
+                    pin.address = candidate.address
                     do {
                         try repository.savePinUpdates()
                     } catch {

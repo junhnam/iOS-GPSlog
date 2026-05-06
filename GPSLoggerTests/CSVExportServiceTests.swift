@@ -59,7 +59,8 @@ final class CSVExportServiceTests: XCTestCase {
         XCTAssertTrue(body.contains("date,totalDistanceKm,startedAt,endedAt"),
                       "メタデータ行のヘッダ")
         XCTAssertTrue(body.contains("routePoint,timestamp,latitude,longitude"))
-        XCTAssertTrue(body.contains("pin,arrivedAt,leftAt,latitude,longitude,placeName,placeURL"))
+        XCTAssertTrue(body.contains("pin,arrivedAt,leftAt,latitude,longitude,placeName,placeURL,address"),
+                      "S5-007: pin セクションヘッダに address 列を追加")
         XCTAssertTrue(body.contains("Test Cafe"))
         XCTAssertTrue(body.contains("https://example.com/cafe"))
     }
@@ -133,7 +134,8 @@ final class CSVExportServiceTests: XCTestCase {
         let body = bodyAfterBOM(try Data(contentsOf: url))
         XCTAssertTrue(body.contains("date,totalDistanceKm,startedAt,endedAt"))
         XCTAssertTrue(body.contains("routePoint,timestamp,latitude,longitude"))
-        XCTAssertTrue(body.contains("pin,arrivedAt,leftAt,latitude,longitude,placeName,placeURL"))
+        XCTAssertTrue(body.contains("pin,arrivedAt,leftAt,latitude,longitude,placeName,placeURL,address"),
+                      "S5-007: pin セクションヘッダに address 列を追加")
     }
 
     // MARK: - (f) 全期間出力のファイル名

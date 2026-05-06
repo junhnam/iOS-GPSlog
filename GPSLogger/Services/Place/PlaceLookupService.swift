@@ -137,6 +137,11 @@ protocol LocalSearchPerforming: Sendable {
 
 /// MKLocalSearch を `LocalSearchPerforming` として包む実装。
 /// `MKLocalSearch.Request` を組み立てて start() を呼び、結果を PlaceCandidate に変換する。
+///
+/// S5-007: POI ヒット時にも `MKMapItem.address?.fullAddress` を `PlaceCandidate.address` に
+/// 詰めることで、PinRecord.address に住所が書き戻される（QA-S4-002 解消）。
+/// iOS 26 で `MKMapItem.placemark` は deprecated なため `MKMapItem.address: MKAddress?` を用いる
+/// （ios26-api-changes.md #1 参照）。
 struct AppleLocalSearcher: LocalSearchPerforming {
     func searchPOI(in region: MKCoordinateRegion) async throws -> [PlaceCandidate] {
         let request = MKLocalSearch.Request()
@@ -146,7 +151,9 @@ struct AppleLocalSearcher: LocalSearchPerforming {
         let search = MKLocalSearch(request: request)
         let response = try await search.start()
         return response.mapItems.map { item in
-            PlaceCandidate(name: item.name, url: item.url, address: nil)
+            PlaceCandidate(name: item.name,
+                           url: item.url,
+                           address: item.address?.fullAddress)
         }
     }
 }

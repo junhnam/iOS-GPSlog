@@ -32,8 +32,9 @@ protocol CSVExportProviderProtocol: Sendable {
 ///      `routePoint,timestamp,latitude,longitude`
 ///      （行頭ラベル `routePoint` で経路点を識別）
 ///   3. ピンセクション（pins の件数分）
-///      `pin,arrivedAt,leftAt,latitude,longitude,placeName,placeURL`
-///      （行頭ラベル `pin`）
+///      `pin,arrivedAt,leftAt,latitude,longitude,placeName,placeURL,address`
+///      （行頭ラベル `pin`。S5-007 で `address` 列を追加。CLAUDE.md「DB に収納している
+///       データをそのまま出力」要件遵守。jun さん承認取得済 2026-05-06）
 ///
 /// 全期間出力（exportAllTrips）はメタデータ + 経路 + ピンを TripRecord ごとに繰り返す。
 @MainActor
@@ -123,7 +124,9 @@ final class CSVExportService: CSVExportProviderProtocol {
         }
 
         // 3. ピンセクション
-        lines.append(buildHeader(name: "pins", columns: ["pin", "arrivedAt", "leftAt", "latitude", "longitude", "placeName", "placeURL"]))
+        // S5-007: `address` 列を追加（PinRecord.address を出力）。
+        // CLAUDE.md「DB に収納しているデータをそのまま出力する」要件に対応。
+        lines.append(buildHeader(name: "pins", columns: ["pin", "arrivedAt", "leftAt", "latitude", "longitude", "placeName", "placeURL", "address"]))
         let sortedPins = trip.pins.sorted { $0.stayedFrom < $1.stayedFrom }
         for pin in sortedPins {
             let arrivedAt = isoFormatter.string(from: pin.stayedFrom)
@@ -135,7 +138,8 @@ final class CSVExportService: CSVExportProviderProtocol {
                 escape(String(pin.latitude)),
                 escape(String(pin.longitude)),
                 escape(pin.placeName ?? ""),
-                escape(pin.placeURL?.absoluteString ?? "")
+                escape(pin.placeURL?.absoluteString ?? ""),
+                escape(pin.address ?? "")
             ]))
         }
 

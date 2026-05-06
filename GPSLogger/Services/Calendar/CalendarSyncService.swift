@@ -214,8 +214,11 @@ final class CalendarSyncService {
             return .failure(.calendarNotFound)
         }
         // 5. イベント情報を組み立て
+        // S5-007: 3 段フォールバック「placeName → address → 座標」を素直に表現する。
+        //   - title:    placeName → 座標フォールバック（Self.eventTitle）
+        //   - location: placeName → address → nil（座標は EKStructuredLocation で別途付与）
         let title = Self.eventTitle(for: pin)
-        let location = pin.placeName ?? Self.addressFromPlaceURL(pin)
+        let location = pin.placeName ?? pin.address
         let startDate = pin.stayedFrom
         let endDate = pin.stayedFrom.addingTimeInterval(max(pin.stayedDurationSeconds, 60))
         let draft = CalendarEventDraft(
@@ -242,22 +245,17 @@ final class CalendarSyncService {
     }
 
     /// イベントタイトルの組み立て（S4-003 受け入れ条件）。
-    /// placeName → 「滞留地点 (緯度.., 経度..)」の順。address フィールドは PinRecord に
-    /// 直接無いため、placeName のみを優先し、無ければ座標を表示する。
+    /// placeName → 「滞留地点 (緯度.., 経度..)」の順。
+    /// 仕様メモ: S4-003 当初設計では title も「placeName → address → 座標」の 3 段だが、
+    /// EKEvent では `title` と `location` が分離しているため、location 側で
+    /// placeName → address の 2 段フォールバックを実施し、title は placeName と座標の
+    /// 2 段に留める。これにより address のみのピンはタイトルが座標、location が住所文字列となり、
+    /// カレンダー一覧での識別性を損なわない。
     private static func eventTitle(for pin: PinRecord) -> String {
         if let name = pin.placeName, !name.isEmpty {
             return name
         }
         // 座標フォールバック。小数点 5 桁（約 1m 精度）で表示。
         return String(format: "滞留地点 (%.5f, %.5f)", pin.latitude, pin.longitude)
-    }
-
-    /// PinRecord に address フィールドは無いため、placeURL の最終パス成分を
-    /// 簡易的に「住所っぽい文字列」として代用する（S4-003 受け入れ条件の address fallback）。
-    /// nil の場合は location も nil で渡す。
-    private static func addressFromPlaceURL(_ pin: PinRecord) -> String? {
-        // 現状の PinRecord には placeName / placeURL のみあるため、
-        // address fallback は placeName が無い場合に nil を返す素直な挙動とする。
-        return pin.placeName
     }
 }
