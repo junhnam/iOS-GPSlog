@@ -26,7 +26,7 @@
 - [x] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S（コミット `39dba0e` / 179/179 pass / CSV 失敗時 retryCount 加算ロジック + テスト 3 件 / `.gitignore` + `.example` + `oauth-setup.md` / メイン代行修正: テスト DI 漏れ 1 件）
 - [x] **S6-004** (#47): DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M（コミット `7029d2f` / 185/185 pass / `DatabaseAutoCleanupService` 新規 + AppSettings 拡張 + LocationService 連携 + Container 統合 + Settings UI / 単体テスト 5 件 + DI カバレッジ 1 件 / メイン代行修正: `ModelContainer.defaultDirectoryURL` → `FileManager` 経由に変更 + `attrs[.size]` → `attrs[FileAttributeKey.size]` 明示）
 - [x] **S6-005** (#48): バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L（コミット `bb7e7c0` / 193/193 pass / warning 0 / `BatteryAdaptiveLocationPolicy` Sendable 構造体新規 + LocationService 統合（distanceFilter 動的切替）+ pausesLocationUpdatesAutomatically=true 確認済 / 単体テスト 7 件 + DI 統合 1 件 = 計 8 件追加 / メイン代行確認済）
-- [x] **S6-006** (#49): バックグラウンド復帰時の挙動安定化（SLC 復帰 / applicationDidBecomeActive 経路） → **dev-2** / Must / M（コミット TBD / warning TBD / `AppSettings.wasTracking` 追加 + `LocationService.startTrackingFromSLC()` / `resumeTrackingAfterRelaunch()` 新規 + `RootView.onChange(scenePhase)` 追加 / 単体テスト 6 件 + DI カバレッジ 1 件 = 計 7 件追加 / メイン代行確認依頼）
+- [x] **S6-006** (#49): バックグラウンド復帰時の挙動安定化（SLC 復帰 / applicationDidBecomeActive 経路） → **dev-2** / Must / M（コミット `0bce4be` / 204/204 pass / warning 0 / `AppSettings.wasTracking` 追加 + `LocationService.startTrackingFromSLC()` / `resumeTrackingAfterRelaunch()` 新規 + `RootView.onChange(scenePhase)` 追加 / 単体テスト 6 件 + DI カバレッジ 1 件 = 計 7 件追加 / メイン代行確認依頼）
 - [x] **S6-003** (#46): DB クリア機能（指定日付のデータ削除 + 設定画面 UI） → **dev-1** / Must / M（コミット `c11516a` / TripRepository に deleteTrip / deleteAllTrips / availableDates 追加 / DBClearView.swift 新規 / SettingsView に DB クリア行追加 / RootView に tripRepository 注入 / 単体テスト 4 件追加 / DI カバレッジテスト不要（新規サービスなし）/ ビルド確認: メイン代行依頼）
 
 ---
@@ -75,7 +75,7 @@
 | S6-003 | dev-1 | c11516a | 0（メイン代行確認済）| 確認済 / 197/197 pass | 4（単体: deleteTrip cascade / deleteAll / noOp / availableDates） |
 | S6-004 | dev-2 | 7029d2f | 0（メイン代行確認済） | 確認済 / 185/185 pass | 6（単体 5 + DI カバレッジ 1） |
 | S6-005 | dev-2 | bb7e7c0 | 0（メイン代行確認済） | 確認済 / 193/193 pass | 8（単体 7 + DI 統合 1） |
-| S6-006 | dev-2 | TBD（メイン代行依頼） | TBD（メイン代行確認依頼） | 依頼中 | 7（単体 6 + DI カバレッジ 1） |
+| S6-006 | dev-2 | 0bce4be | 0（メイン代行確認済） | 依頼中 | 7（単体 6 + DI カバレッジ 1） |
 | S6-007 | designer / dev-1 | - | - | - | - |
 | S6-008 | po-sm | - | - | jun さん実機 | - |
 | S6-009 | dev-2 | 39dba0e | 0（メイン代行確認済） | 確認済 / 179/179 pass | 3（CSV 失敗時 retryCount 加算） |
