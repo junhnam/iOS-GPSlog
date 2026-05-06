@@ -26,6 +26,7 @@
 		836A082EC5A456F11E4A9C1F /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */; };
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
 		8E691B87FFCD22FA8FEB8636 /* TripRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */; };
+		8FEA8A98433FD285EFA9A860 /* RecordingToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */; };
 		96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */; };
 		9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */; };
 		A0D7447680AD23A9041981EE /* HomeLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23DFC5375D70DE8974871A5 /* HomeLocation.swift */; };
@@ -41,6 +42,8 @@
 		ED033B0D7D5002820F01D032 /* PlaceLookupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */; };
 		EE2A19120BD717FF5C324D56 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 1E9DA276A4AFB7648716131D /* GoogleMaps */; };
 		EFEB1E11D591FF76F47CA633 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26C1672AD957E9B012EADDFE /* SettingsView.swift */; };
+		FBA105A82A0CBDC0CEDBFFF9 /* RestoreErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85A4A7B99D7B66DFC094569 /* RestoreErrorTests.swift */; };
+		FD4DFBC2710E7869578E11E2 /* RecordingToggleButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,12 +58,14 @@
 
 /* Begin PBXFileReference section */
 		0771CC5514403FBA9445A68C /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingToggleButtonTests.swift; sourceTree = "<group>"; };
 		26C1672AD957E9B012EADDFE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		2E955F6ED4C6E26D78094677 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		3193D4B8A02F13BF3F5D299C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		38CEB4C730011080C237426F /* TripRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRecord.swift; sourceTree = "<group>"; };
 		3D368B348251683C3272A93A /* GPSLoggerTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = GPSLoggerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FC8CD2F54F4FE8714ABE361 /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
+		46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingToggleButton.swift; sourceTree = "<group>"; };
 		51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASprint1AdditionalTests.swift; sourceTree = "<group>"; };
 		6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepository.swift; sourceTree = "<group>"; };
 		757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupServiceTests.swift; sourceTree = "<group>"; };
@@ -88,6 +93,7 @@
 		EB3F65917DC8E542E0510F6E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerTests.swift; sourceTree = "<group>"; };
+		F85A4A7B99D7B66DFC094569 /* RestoreErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreErrorTests.swift; sourceTree = "<group>"; };
 		FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepositoryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -165,6 +171,7 @@
 			children = (
 				0771CC5514403FBA9445A68C /* MapView.swift */,
 				B469DE98253C140644E24C89 /* MapViewModel.swift */,
+				46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */,
 			);
 			path = Map;
 			sourceTree = "<group>";
@@ -191,6 +198,8 @@
 				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
 				757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */,
 				51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */,
+				1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */,
+				F85A4A7B99D7B66DFC094569 /* RestoreErrorTests.swift */,
 				92C5F95F252B8D8D514304D2 /* StayDetectorTests.swift */,
 				A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */,
 				FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */,
@@ -377,6 +386,7 @@
 				9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */,
 				784CDF377C467CBB581037FF /* PinRecord.swift in Sources */,
 				399F5B44F7E5C0D6B7A54E6A /* PlaceLookupService.swift in Sources */,
+				8FEA8A98433FD285EFA9A860 /* RecordingToggleButton.swift in Sources */,
 				310A9FC684206018CD088AFC /* RootView.swift in Sources */,
 				D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */,
 				EFEB1E11D591FF76F47CA633 /* SettingsView.swift in Sources */,
@@ -398,6 +408,8 @@
 				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
 				ED033B0D7D5002820F01D032 /* PlaceLookupServiceTests.swift in Sources */,
 				1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */,
+				FD4DFBC2710E7869578E11E2 /* RecordingToggleButtonTests.swift in Sources */,
+				FBA105A82A0CBDC0CEDBFFF9 /* RestoreErrorTests.swift in Sources */,
 				2A327260972B87620CB2944C /* StayDetectorTests.swift in Sources */,
 				B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */,
 				96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */,

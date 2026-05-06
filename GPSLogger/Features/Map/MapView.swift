@@ -26,6 +26,18 @@ struct MapView: View {
     /// 起動時の TripRecord 復元と HUD 値の保持を担う ViewModel（S2-007）。
     @StateObject private var viewModel = MapViewModel()
 
+    /// アプリ全体で共有される設定（S3-001）。RootView から `.environment` で注入される。
+    @Environment(AppSettings.self) private var settings
+
+    /// 自宅滞在中にトリガー記録開始した際の警告（S3-005）。
+    /// 1 セッションで 1 度だけ表示するためフラグで制御する。
+    @State private var didShowHomeWhileTriggerWarning: Bool = false
+    @State private var homeWarningMessage: String?
+
+    /// 起動時復元失敗の通知メッセージ（S3-008）。
+    /// `viewModel.restoreError` を購読して赤い帯を表示する。
+    @State private var dismissedRestoreError: Bool = false
+
     var body: some View {
         ZStack(alignment: .top) {
             GoogleMapContainer(locationService: locationService,
@@ -33,26 +45,116 @@ struct MapView: View {
                                restoredPins: viewModel.pins)
                 .ignoresSafeArea()
 
-            // HUD: 総移動距離（km）を画面上部に表示（S2-007）。
-            // 0km のときも表示する（受け入れ条件「総移動距離: X.XX km」）。
-            DistanceHUDLabel(kilometers: viewModel.totalDistanceKm)
-                .padding(.top, 8)
-                .padding(.horizontal, 16)
-                .accessibilityIdentifier("distance_hud")
+            VStack(spacing: 8) {
+                // HUD: 総移動距離（km）を画面上部に表示（S2-007）。
+                DistanceHUDLabel(kilometers: viewModel.totalDistanceKm)
+                    .accessibilityIdentifier("distance_hud")
+
+                // S3-008: 復元失敗時のエラー帯。
+                if let error = viewModel.restoreError, !dismissedRestoreError {
+                    RestoreErrorBanner(message: error) {
+                        dismissedRestoreError = true
+                    }
+                }
+
+                // S3-005: 自宅滞在中にトリガー記録を開始した際の警告。
+                if let warning = homeWarningMessage {
+                    Text(warning)
+                        .font(.footnote)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.orange.opacity(0.85), in: Capsule())
+                        .accessibilityIdentifier("home_recording_warning")
+                }
+            }
+            .padding(.top, 8)
+            .padding(.horizontal, 16)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if settings.recordingMode == .trigger {
+                RecordingToggleButton(isLogging: locationService.isUpdating) {
+                    handleRecordingToggle()
+                }
+                .padding(.trailing, 16)
+                .padding(.bottom, 24)
+            }
         }
         .onAppear {
             // 復元はカメラ初期化等よりも先に走らせる（onAppear で十分高速）。
             viewModel.restoreTodayTrip()
 
-            // 初回起動時に権限ダイアログを表示し、更新を開始する。
-            // Always 権限はバックグラウンド記録のために要求する（Sprint 2 以降で本番動作）。
+            // 初回起動時に権限ダイアログを表示する（権限要求は記録モードに関係なく必要）。
             locationService.requestWhenInUseAuthorization()
             locationService.requestAlwaysAuthorization()
-            locationService.startUpdatingLocation()
+
+            // S3-004 / S3-005: トリガーモードでは自動 start しない（受け入れ条件:
+            // 「アプリ再起動時、トリガーモードでは記録が自動再開されない」）。
+            if settings.recordingMode == .continuous {
+                locationService.startUpdatingLocation()
+            }
         }
         .onDisappear {
             locationService.stopUpdatingLocation()
         }
+    }
+
+    // MARK: - S3-005 Trigger handling
+
+    /// フローティングボタンタップ時のハンドラ。
+    /// 現在 isUpdating でない場合は start、そうでない場合は stop する。
+    /// 自宅滞在中の警告表示は今スプリントでは「文言を 1 度だけ出す」までに留める
+    /// （Sprint 4 以降で HomeDetector との詳細連携を実装予定）。
+    private func handleRecordingToggle() {
+        if locationService.isUpdating {
+            locationService.stopUpdatingLocation()
+        } else {
+            locationService.startUpdatingLocation()
+            // 自宅登録済みかつ最後の現在地が自宅半径内なら警告を出す。
+            // 厳密な HomeState 判定は Sprint 4 で HomeDetector が担当するため、
+            // Sprint 3 では「自宅登録済みかつ簡易距離計算で半径内」を概算判定にする。
+            if !didShowHomeWhileTriggerWarning,
+               let home = settings.homeLocation,
+               let current = locationService.currentLocation {
+                let homeLoc = CLLocation(latitude: home.latitude, longitude: home.longitude)
+                if current.distance(from: homeLoc) <= settings.homeRadiusMeters {
+                    homeWarningMessage = "自宅滞在中です。自宅を出るまで実際の経路は保存されない場合があります。"
+                    didShowHomeWhileTriggerWarning = true
+                    // 5 秒後に消す
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 5_000_000_000)
+                        homeWarningMessage = nil
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// 起動時復元失敗時に表示する赤い通知バー（S3-008）。
+private struct RestoreErrorBanner: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.white)
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(.white)
+                .lineLimit(2)
+            Spacer(minLength: 4)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+            .accessibilityLabel("通知を閉じる")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.red.opacity(0.85), in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityIdentifier("restore_error_banner")
     }
 }
 
@@ -230,4 +332,5 @@ private struct GoogleMapContainer: UIViewRepresentable {
 
 #Preview {
     MapView()
+        .environment(AppSettings())
 }
