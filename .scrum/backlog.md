@@ -1,6 +1,6 @@
 # Product Backlog: iOS GPSロガーアプリ
 
-最終更新: 2026-05-06（Sprint 4 planning 着手時点）
+最終更新: 2026-05-06（Sprint 4 review 完了時点）
 
 ## バックログ構成方針
 - CLAUDE.md の全要件を 6 スプリントに分割
@@ -62,20 +62,22 @@
 
 注: Sprint 3 では旧バックログの「設定画面 UI デザイン」独立チケットは S3-001 / S3-002 / S3-005 に内包し、S3-008（復元エラー通知）と S3-009（落とし穴ノート）を Sprint 2 retro/QA 申し送りから繰り上げて 9 件構成。Sprint 6 候補だった Significant Location Changes は S3-006 として先取り。
 
-### Sprint 4: iOS 26 API 移行 + iOSカレンダー同期 + CSV エクスポート（ローカル）
+### Sprint 4: iOS 26 API 移行 + iOSカレンダー同期 + CSV エクスポート（ローカル・完了）
 
 スプリントゴール: 移動記録を外部に持ち出せる状態を作る（カレンダー連携 + CSV 出力）
 
 | ID | タイトル | 見積 | 担当 | ステータス | スプリント |
 |---|---|---|---|---|---|
-| S4-001 | CLGeocoder → MKReverseGeocodingRequest 移行（QA-S3-002 解消・jun さん指示で冒頭に固定） | M | dev-2 | sprint | 4 |
-| S4-002 | EventKit 連携基盤（権限取得 + カレンダー選択） | M | dev-2 | sprint | 4 |
-| S4-003 | 滞留ピン → カレンダーイベント自動作成 | M | dev-2 | sprint | 4 |
-| S4-004 | カレンダー同期 ON/OFF 設定 | S | dev-1 | sprint | 4 |
-| S4-005 | CSV エクスポート機能（DBスキーマそのまま出力） | M | dev-2 | sprint | 4 |
-| S4-006 | UIDocumentPickerViewController での保存先選択 | M | dev-1 | sprint | 4 |
-| S4-007 | エクスポート UI 画面 | M | dev-1 | sprint | 4 |
-| S4-008 | MapView HUD warning ロジックを HomeDetector へ統一（Sprint 3 retro #4） | S | dev-1 | sprint | 4 |
+| S4-001 | CLGeocoder → MKReverseGeocodingRequest 移行（QA-S3-002 解消・jun さん指示で冒頭に固定） | M | dev-2 | done | 4 |
+| S4-002 | EventKit 連携基盤（権限取得 + カレンダー選択） | M | dev-2 | done | 4 |
+| S4-003 | 滞留ピン → カレンダーイベント自動作成 | M | dev-2 | done | 4 |
+| S4-004 | カレンダー同期 ON/OFF 設定 | S | dev-1 | done | 4 |
+| S4-005 | CSV エクスポート機能（DBスキーマそのまま出力） | M | dev-2 | done | 4 |
+| S4-006 | UIDocumentPickerViewController での保存先選択 | M | dev-1 | done | 4 |
+| S4-007 | エクスポート UI 画面 | M | dev-1 | done | 4 |
+| S4-008 | MapView HUD warning ロジックを HomeDetector へ統一（Sprint 3 retro #4） | S | dev-1 | done | 4 |
+
+加えて QA フェーズで Agent A が QA-S4-001（MKMapItem.placemark deprecated 解消）を 42e1b2c で修正。QA-S4-002（CalendarSyncService.addressFromPlaceURL の no-op fallback）は Low で機能影響なしのため Sprint 5 へ申し送り。
 
 注: 旧 S4-001（EventKit 連携基盤）から S4-007（CLGeocoder 移行）の番号を、jun さん指示「CLGeocoder は Sprint 4 の最初に対応」を反映して再採番。新 S4-001 を CLGeocoder 移行、メインスコープのカレンダー / CSV を S4-002〜S4-007 に詰め直し、Sprint 3 retro #4（MapView HUD 重複解消）を S4-008 として追加した。Sprint 3 申し送り 6 件のうち、残る #2 / #3（strict concurrency warning）と #7（RootView の Environment 整理）は Sprint 5 へ、#5 / #6（MKLocalSearch / SLC 実機検証）は Sprint 6（バッテリー実機検証時）へ繰越。
 
