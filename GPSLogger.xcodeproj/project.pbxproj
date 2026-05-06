@@ -25,8 +25,10 @@
 		49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */; };
 		577D6B9171C8E2221D78413B /* DocumentPickerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */; };
 		58D9707440808935F7D70087 /* HomeRegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD44FC296B085998F507FFCF /* HomeRegistrationView.swift */; };
+		61BD1C28023B04335BC0E5DC /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E89388920445382DC577EA62 /* ExportView.swift */; };
 		6AA72AAFEC8EA068AB09B114 /* CSVExportDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C12B045AB46802FCE01A468 /* CSVExportDocument.swift */; };
 		7159A8566F7036066C98F9A9 /* CalendarSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49CC275E125BDF6C7242CB9D /* CalendarSyncService.swift */; };
+		734CA4250B5B63D71A8969EA /* ExportViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD029C50DCD5065DEDA58B3 /* ExportViewTests.swift */; };
 		784CDF377C467CBB581037FF /* PinRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = C636BD1ED2E9F23F1A4EA689 /* PinRecord.swift */; };
 		7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */; };
 		815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E955F6ED4C6E26D78094677 /* LocationService.swift */; };
@@ -34,9 +36,11 @@
 		836A082EC5A456F11E4A9C1F /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */; };
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
 		8785924DDCF929C7A8383E07 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DD5C1B6C6D40D970752F6B /* DocumentPickerView.swift */; };
+		8BD0DD04858D53DE773F496D /* CSVExportServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */; };
 		8D11C36DF24045BC25978350 /* CalendarSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */; };
 		8E691B87FFCD22FA8FEB8636 /* TripRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */; };
 		8FEA8A98433FD285EFA9A860 /* RecordingToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */; };
+		916D1E6AA28EB92AD6FA4E90 /* CSVExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */; };
 		96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */; };
 		9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */; };
 		A0D7447680AD23A9041981EE /* HomeLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23DFC5375D70DE8974871A5 /* HomeLocation.swift */; };
@@ -72,6 +76,7 @@
 /* Begin PBXFileReference section */
 		0771CC5514403FBA9445A68C /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		0A6881F93CC5593380C7592D /* SignificantLocationChangesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignificantLocationChangesTests.swift; sourceTree = "<group>"; };
+		16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportServiceTests.swift; sourceTree = "<group>"; };
 		1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingToggleButtonTests.swift; sourceTree = "<group>"; };
 		23537070EBFE68FB77904B34 /* HomeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDetector.swift; sourceTree = "<group>"; };
 		26C1672AD957E9B012EADDFE /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -88,7 +93,9 @@
 		49CC275E125BDF6C7242CB9D /* CalendarSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncService.swift; sourceTree = "<group>"; };
 		49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerViewTests.swift; sourceTree = "<group>"; };
 		51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASprint1AdditionalTests.swift; sourceTree = "<group>"; };
+		5FD029C50DCD5065DEDA58B3 /* ExportViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportViewTests.swift; sourceTree = "<group>"; };
 		6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepository.swift; sourceTree = "<group>"; };
+		6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportService.swift; sourceTree = "<group>"; };
 		742A6F4CBB2E6A365A2BE85F /* CSVExportDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportDocumentTests.swift; sourceTree = "<group>"; };
 		757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupServiceTests.swift; sourceTree = "<group>"; };
 		78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
@@ -116,6 +123,7 @@
 		C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerApp.swift; sourceTree = "<group>"; };
 		D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleMaps-Info.plist"; sourceTree = "<group>"; };
+		E89388920445382DC577EA62 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportView.swift; sourceTree = "<group>"; };
 		EB3F65917DC8E542E0510F6E /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		EBD4D886A3A9DB39F936FED6 /* GPSLogger.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GPSLogger.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceControllerTests.swift; sourceTree = "<group>"; };
@@ -223,7 +231,9 @@
 				89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */,
 				2B37EF743063CED245F62C04 /* CalendarSyncSettingsTests.swift */,
 				742A6F4CBB2E6A365A2BE85F /* CSVExportDocumentTests.swift */,
+				16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */,
 				49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */,
+				5FD029C50DCD5065DEDA58B3 /* ExportViewTests.swift */,
 				BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */,
 				8B3F1ED182E80F8F3EB52399 /* HomeDetectorTests.swift */,
 				7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */,
@@ -275,6 +285,15 @@
 			children = (
 				3C12B045AB46802FCE01A468 /* CSVExportDocument.swift */,
 				79DD5C1B6C6D40D970752F6B /* DocumentPickerView.swift */,
+				E89388920445382DC577EA62 /* ExportView.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
+		9E87E2A1F42C4C5C3C3E17CD /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */,
 			);
 			path = Export;
 			sourceTree = "<group>";
@@ -327,6 +346,7 @@
 			isa = PBXGroup;
 			children = (
 				E9394F1215CBFD8610104EC3 /* Calendar */,
+				9E87E2A1F42C4C5C3C3E17CD /* Export */,
 				CA4B7078ABB7BE570B025E4F /* Home */,
 				21473425FB53612465868811 /* Location */,
 				F056D3FE128F2568530B2C43 /* Persistence */,
@@ -438,9 +458,11 @@
 			files = (
 				32F3026C3BE5428958F6CADF /* AppSettings.swift in Sources */,
 				6AA72AAFEC8EA068AB09B114 /* CSVExportDocument.swift in Sources */,
+				916D1E6AA28EB92AD6FA4E90 /* CSVExportService.swift in Sources */,
 				3FDC7AC4EBE200A29D7FA4A2 /* CalendarPickerView.swift in Sources */,
 				7159A8566F7036066C98F9A9 /* CalendarSyncService.swift in Sources */,
 				8785924DDCF929C7A8383E07 /* DocumentPickerView.swift in Sources */,
+				61BD1C28023B04335BC0E5DC /* ExportView.swift in Sources */,
 				8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */,
 				2E4073CA209AB82F8A2DC6B4 /* GoogleMapsConfiguration.swift in Sources */,
 				19EADD4A080D05C952B14949 /* HistoryDetailView.swift in Sources */,
@@ -471,10 +493,12 @@
 			files = (
 				836A082EC5A456F11E4A9C1F /* AppSettingsTests.swift in Sources */,
 				1B94FA1D9214F95B33731823 /* CSVExportDocumentTests.swift in Sources */,
+				8BD0DD04858D53DE773F496D /* CSVExportServiceTests.swift in Sources */,
 				1BC7AEDDDD1189E87EEAE6AC /* CalendarEventCreationTests.swift in Sources */,
 				8D11C36DF24045BC25978350 /* CalendarSyncServiceTests.swift in Sources */,
 				8275A3D023B2B4B26330343D /* CalendarSyncSettingsTests.swift in Sources */,
 				577D6B9171C8E2221D78413B /* DocumentPickerViewTests.swift in Sources */,
+				734CA4250B5B63D71A8969EA /* ExportViewTests.swift in Sources */,
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,
 				3A23BCAABAE933AAD3A2BBA7 /* HomeDetectorTests.swift in Sources */,
 				0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */,

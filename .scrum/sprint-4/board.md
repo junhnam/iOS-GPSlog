@@ -10,7 +10,6 @@
 
 ## Todo
 
-- [ ] S4-005: CSV エクスポート機能（DBスキーマそのまま出力） → dev-2
 - [ ] S4-007: エクスポート UI 画面 → dev-1
 
 ## In Progress
@@ -22,6 +21,7 @@
 - [x] S4-001: CLGeocoder → MKReverseGeocodingRequest 移行（QA-S3-002 解消） → dev-2（実装完了 / レビュー待ち）
 - [x] S4-002: EventKit 連携基盤（権限取得 + カレンダー選択） → dev-2（実装完了 / レビュー待ち）
 - [x] S4-003: 滞留ピン → カレンダーイベント自動作成 → dev-2（実装完了 / レビュー待ち）
+- [x] S4-005: CSV エクスポート機能（DBスキーマそのまま出力） → dev-2（実装完了 / レビュー待ち）
 - [x] S4-006: UIDocumentPickerViewController での保存先選択 → dev-1（実装完了 / レビュー待ち）
 - [x] S4-008: MapView HUD warning ロジックを HomeDetector へ統一 → dev-1（実装完了 / レビュー待ち）
 
@@ -79,3 +79,13 @@
 - `LocationService.init` のシグネチャに `calendarSync: CalendarSyncService? = nil` を追加。
   デフォルト nil なので既存呼び出し側の互換は保たれていますが、Dev-1 が RootView で
   CalendarSyncService を生成しているなら、ここから渡すと Sprint 4 のメインスコープが完成します。
+
+## Dev-2 → Dev-1 申し送り（2026-05-06 14:00）
+
+- S4-005 完了。`GPSLogger/Services/Export/CSVExportService.swift` を新規作成。
+  - `exportTripRecord(_:) throws -> URL` / `exportAllTrips(_:) throws -> URL` を提供
+  - 一時ファイル URL を返すので、Dev-1 の `CSVExportDocument(data: try Data(contentsOf: url))` で
+    `.fileExporter` に渡せる形になっています（S4-007 の統合フロー）。
+  - UTF-8 BOM、CRLF、ダブルクォートエスケープ、CSV インジェクション対策（=, +, -, @）すべて実装。
+  - テスト 9 ケース追加（CSVExportServiceTests）。エスケープ単体・出力スキーマ・BOM・空 trip など。
+- これで Dev-2 の担当 4 チケット（S4-001 / S4-002 / S4-003 / S4-005）はすべて Review に入りました。
