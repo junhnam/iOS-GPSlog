@@ -98,6 +98,39 @@ final class HomeDetectorTests: XCTestCase {
         XCTAssertEqual(stateNarrow, .away)
     }
 
+    // MARK: - (f) S4-008: HUD バナーメッセージは HomeDetector から取得される
+
+    /// S4-008 受け入れ条件: HUD のメッセージは HomeDetector が一元的に返し、
+    /// MapView 側で独自に判定/文言生成しない。
+    func test_bannerMessage_atHome_returnsWarning() {
+        let home = tokyoStationHome()
+        let cur = location(lat: home.latitude, lon: home.longitude)
+        let message = HomeDetector.bannerMessage(homeLocation: home,
+                                                 radius: 100,
+                                                 currentLocation: cur)
+        XCTAssertNotNil(message, "atHome 時は HUD 文言が返る")
+        XCTAssertTrue(message?.contains("自宅") ?? false,
+                      "HUD 文言は自宅滞在を示すメッセージである")
+    }
+
+    func test_bannerMessage_away_returnsNil() {
+        let home = tokyoStationHome()
+        // 約 1.1km 離れた点
+        let cur = location(lat: 35.691236, lon: 139.767125)
+        let message = HomeDetector.bannerMessage(homeLocation: home,
+                                                 radius: 100,
+                                                 currentLocation: cur)
+        XCTAssertNil(message, "away 時は HUD 文言を出さない")
+    }
+
+    func test_bannerMessage_unknown_returnsNil() {
+        let cur = location(lat: 35.681236, lon: 139.767125)
+        let message = HomeDetector.bannerMessage(homeLocation: nil,
+                                                 radius: 100,
+                                                 currentLocation: cur)
+        XCTAssertNil(message, "自宅未登録（unknown）時は HUD 文言を出さない")
+    }
+
     // MARK: - (e) LocationService と統合: 自宅滞在中はスキップ → 退出で再開
 
     func test_locationService_skipsRoutePersistence_whileAtHome() throws {

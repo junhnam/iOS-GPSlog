@@ -48,4 +48,32 @@ struct HomeDetector {
         // 半径ぴったり（distance == radius）は atHome に含める（受け入れ条件: distance <= radius）
         return distance <= radius ? .atHome : .away
     }
+
+    // MARK: - HUD 表示用 API（S4-008）
+
+    /// HUD（地図画面の警告バナー）に出すメッセージを HomeState から返す純粋関数。
+    /// MapView 側で個別に距離計算をするのを避け、HomeDetector を 1 経路に集約するために提供する。
+    ///
+    /// - Parameter state: HomeDetector.detect(...) の戻り値
+    /// - Returns: 表示すべきメッセージ。HUD 表示が不要な状態（.away / .unknown）では nil。
+    static func bannerMessage(for state: HomeState) -> String? {
+        switch state {
+        case .atHome:
+            return "自宅滞在中です。自宅を出るまで実際の経路は保存されない場合があります。"
+        case .away, .unknown:
+            return nil
+        }
+    }
+
+    /// 自宅判定 + HUD メッセージを 1 回で返すラッパー。
+    /// MapView の HUD 表示用に「設定 + 現在地 → 表示メッセージ」を 1 関数で済ませる。
+    /// - Returns: 表示すべきメッセージ（atHome 時のみ非 nil）
+    static func bannerMessage(homeLocation: HomeLocation?,
+                              radius: Double,
+                              currentLocation: CLLocation) -> String? {
+        let state = detect(homeLocation: homeLocation,
+                           radius: radius,
+                           currentLocation: currentLocation)
+        return bannerMessage(for: state)
+    }
 }

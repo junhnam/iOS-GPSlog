@@ -101,29 +101,28 @@ struct MapView: View {
 
     /// フローティングボタンタップ時のハンドラ。
     /// 現在 isUpdating でない場合は start、そうでない場合は stop する。
-    /// 自宅滞在中の警告表示は今スプリントでは「文言を 1 度だけ出す」までに留める
-    /// （Sprint 4 以降で HomeDetector との詳細連携を実装予定）。
+    /// 自宅滞在中かどうかの判定と HUD メッセージ生成は `HomeDetector` に集約し、
+    /// MapView 側は HomeDetector の戻り値を表示するだけにする（S4-008）。
     private func handleRecordingToggle() {
         if locationService.isUpdating {
             locationService.stopUpdatingLocation()
         } else {
             locationService.startUpdatingLocation()
-            // 自宅登録済みかつ最後の現在地が自宅半径内なら警告を出す。
-            // 厳密な HomeState 判定は Sprint 4 で HomeDetector が担当するため、
-            // Sprint 3 では「自宅登録済みかつ簡易距離計算で半径内」を概算判定にする。
-            if !didShowHomeWhileTriggerWarning,
-               let home = settings.homeLocation,
-               let current = locationService.currentLocation {
-                let homeLoc = CLLocation(latitude: home.latitude, longitude: home.longitude)
-                if current.distance(from: homeLoc) <= settings.homeRadiusMeters {
-                    homeWarningMessage = "自宅滞在中です。自宅を出るまで実際の経路は保存されない場合があります。"
-                    didShowHomeWhileTriggerWarning = true
-                    // 5 秒後に消す
-                    Task { @MainActor in
-                        try? await Task.sleep(nanoseconds: 5_000_000_000)
-                        homeWarningMessage = nil
-                    }
-                }
+            // S4-008: 自宅判定ロジックは HomeDetector に統一。MapView は判定をしない。
+            // 1 セッション 1 回だけ HUD を出す制御だけ MapView 側に残す。
+            guard !didShowHomeWhileTriggerWarning,
+                  let current = locationService.currentLocation,
+                  let message = HomeDetector.bannerMessage(homeLocation: settings.homeLocation,
+                                                           radius: settings.homeRadiusMeters,
+                                                           currentLocation: current) else {
+                return
+            }
+            homeWarningMessage = message
+            didShowHomeWhileTriggerWarning = true
+            // 5 秒後に消す
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                homeWarningMessage = nil
             }
         }
     }
