@@ -30,7 +30,8 @@ final class PersistenceController {
         let schema = Schema([
             TripRecord.self,
             RoutePoint.self,
-            PinRecord.self
+            PinRecord.self,
+            PendingUpload.self
         ])
         let config = ModelConfiguration(
             schema: schema,
@@ -62,7 +63,8 @@ final class PersistenceController {
         let schema = Schema([
             TripRecord.self,
             RoutePoint.self,
-            PinRecord.self
+            PinRecord.self,
+            PendingUpload.self
         ])
         let config = ModelConfiguration(
             schema: schema,

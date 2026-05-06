@@ -24,6 +24,7 @@
 		3A23BCAABAE933AAD3A2BBA7 /* HomeDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3F1ED182E80F8F3EB52399 /* HomeDetectorTests.swift */; };
 		3FDC7AC4EBE200A29D7FA4A2 /* CalendarPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B25A5CBD33C6E06195D0C35 /* CalendarPickerView.swift */; };
 		49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */; };
+		4E83C83B29CF121E2B1181B1 /* PendingUpload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5697116473933AB9EF54B85B /* PendingUpload.swift */; };
 		577D6B9171C8E2221D78413B /* DocumentPickerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */; };
 		58D9707440808935F7D70087 /* HomeRegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD44FC296B085998F507FFCF /* HomeRegistrationView.swift */; };
 		61BD1C28023B04335BC0E5DC /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E89388920445382DC577EA62 /* ExportView.swift */; };
@@ -35,6 +36,7 @@
 		815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E955F6ED4C6E26D78094677 /* LocationService.swift */; };
 		8275A3D023B2B4B26330343D /* CalendarSyncSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B37EF743063CED245F62C04 /* CalendarSyncSettingsTests.swift */; };
 		836A082EC5A456F11E4A9C1F /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */; };
+		84AEC36BBA7B194B79EDB1D2 /* CloudUploadRetryQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */; };
 		8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */; };
 		8785924DDCF929C7A8383E07 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79DD5C1B6C6D40D970752F6B /* DocumentPickerView.swift */; };
 		8BD0DD04858D53DE773F496D /* CSVExportServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */; };
@@ -44,6 +46,8 @@
 		916D1E6AA28EB92AD6FA4E90 /* CSVExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */; };
 		96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */; };
 		9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */; };
+		9E0FCAE07D3493E4BFFA4A45 /* CloudUploadCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20450C6BAD2D86CCDBD9F05 /* CloudUploadCoordinator.swift */; };
+		A066B652F4BC498CAFE0C87F /* CloudUploadCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA1500FED5E52CD71916C89 /* CloudUploadCoordinatorTests.swift */; };
 		A0D7447680AD23A9041981EE /* HomeLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23DFC5375D70DE8974871A5 /* HomeLocation.swift */; };
 		AE27F46968F6EC770DE7756B /* GoogleMaps-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */; };
 		AF70A7A59D5720314956BCDB /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CEB4C730011080C237426F /* TripRecord.swift */; };
@@ -55,6 +59,7 @@
 		BE25912257AE2CF0AB1CAB1B /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC8CD2F54F4FE8714ABE361 /* HistoryListView.swift */; };
 		C31C0D5EA2F6242A5B33FB6C /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B469DE98253C140644E24C89 /* MapViewModel.swift */; };
 		C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */; };
+		D5297EEC0C7DDB2EC872298C /* CloudUploadRetryQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC52EBDDC16E791A59801574 /* CloudUploadRetryQueue.swift */; };
 		D9C8CB26ADEAA73BF9E2F253 /* RoutePoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89566F273738C6565096CEC1 /* RoutePoint.swift */; };
 		DD761802C2D5F898D463A9F6 /* PinRecordTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */; };
 		E2D87646EFED4E373E53E2FD /* GoogleDriveSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F750F9ACD94DC3F5E406A01 /* GoogleDriveSyncService.swift */; };
@@ -99,6 +104,7 @@
 		49CC275E125BDF6C7242CB9D /* CalendarSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarSyncService.swift; sourceTree = "<group>"; };
 		49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerViewTests.swift; sourceTree = "<group>"; };
 		51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QASprint1AdditionalTests.swift; sourceTree = "<group>"; };
+		5697116473933AB9EF54B85B /* PendingUpload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PendingUpload.swift; sourceTree = "<group>"; };
 		5FD029C50DCD5065DEDA58B3 /* ExportViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportViewTests.swift; sourceTree = "<group>"; };
 		6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepository.swift; sourceTree = "<group>"; };
 		6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportService.swift; sourceTree = "<group>"; };
@@ -117,10 +123,14 @@
 		975470EA32C831B3AC3AC8F2 /* TripRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRestoreTests.swift; sourceTree = "<group>"; };
 		9CFBBBCC65BC1A7E54445466 /* StayDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayDetector.swift; sourceTree = "<group>"; };
 		A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTests.swift; sourceTree = "<group>"; };
+		A20450C6BAD2D86CCDBD9F05 /* CloudUploadCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadCoordinator.swift; sourceTree = "<group>"; };
 		A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDistanceCalculatorTests.swift; sourceTree = "<group>"; };
 		AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMapsConfiguration.swift; sourceTree = "<group>"; };
+		AC52EBDDC16E791A59801574 /* CloudUploadRetryQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadRetryQueue.swift; sourceTree = "<group>"; };
 		B37FB6243B593D1536828AB0 /* PlaceLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupService.swift; sourceTree = "<group>"; };
 		B469DE98253C140644E24C89 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
+		B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadRetryQueueTests.swift; sourceTree = "<group>"; };
+		BBA1500FED5E52CD71916C89 /* CloudUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadCoordinatorTests.swift; sourceTree = "<group>"; };
 		BBC544193EF55BDEDE9C0D57 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		BD44FC296B085998F507FFCF /* HomeRegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeRegistrationView.swift; sourceTree = "<group>"; };
 		BF22B0296FC8C77D3D3DACF4 /* GPSLoggerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPSLoggerTests.swift; sourceTree = "<group>"; };
@@ -167,6 +177,7 @@
 			children = (
 				BBC544193EF55BDEDE9C0D57 /* AppSettings.swift */,
 				C23DFC5375D70DE8974871A5 /* HomeLocation.swift */,
+				5697116473933AB9EF54B85B /* PendingUpload.swift */,
 				C636BD1ED2E9F23F1A4EA689 /* PinRecord.swift */,
 				89566F273738C6565096CEC1 /* RoutePoint.swift */,
 				38CEB4C730011080C237426F /* TripRecord.swift */,
@@ -238,6 +249,8 @@
 				40A74F94B451AE4BD207C26F /* CalendarEventCreationTests.swift */,
 				89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */,
 				2B37EF743063CED245F62C04 /* CalendarSyncSettingsTests.swift */,
+				BBA1500FED5E52CD71916C89 /* CloudUploadCoordinatorTests.swift */,
+				B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */,
 				742A6F4CBB2E6A365A2BE85F /* CSVExportDocumentTests.swift */,
 				16A1134B1C074A546C47F371 /* CSVExportServiceTests.swift */,
 				49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */,
@@ -312,6 +325,8 @@
 			isa = PBXGroup;
 			children = (
 				4687368FA960C567C58DDCA9 /* CloudStorageProvider.swift */,
+				A20450C6BAD2D86CCDBD9F05 /* CloudUploadCoordinator.swift */,
+				AC52EBDDC16E791A59801574 /* CloudUploadRetryQueue.swift */,
 				7F750F9ACD94DC3F5E406A01 /* GoogleDriveSyncService.swift */,
 			);
 			path = Cloud;
@@ -482,6 +497,8 @@
 				3FDC7AC4EBE200A29D7FA4A2 /* CalendarPickerView.swift in Sources */,
 				7159A8566F7036066C98F9A9 /* CalendarSyncService.swift in Sources */,
 				2B9DC0DA23D447336A7B6557 /* CloudStorageProvider.swift in Sources */,
+				9E0FCAE07D3493E4BFFA4A45 /* CloudUploadCoordinator.swift in Sources */,
+				D5297EEC0C7DDB2EC872298C /* CloudUploadRetryQueue.swift in Sources */,
 				8785924DDCF929C7A8383E07 /* DocumentPickerView.swift in Sources */,
 				61BD1C28023B04335BC0E5DC /* ExportView.swift in Sources */,
 				8681D5490C0C37A5F33A617B /* GPSLoggerApp.swift in Sources */,
@@ -495,6 +512,7 @@
 				815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */,
 				B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */,
 				C31C0D5EA2F6242A5B33FB6C /* MapViewModel.swift in Sources */,
+				4E83C83B29CF121E2B1181B1 /* PendingUpload.swift in Sources */,
 				9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */,
 				784CDF377C467CBB581037FF /* PinRecord.swift in Sources */,
 				399F5B44F7E5C0D6B7A54E6A /* PlaceLookupService.swift in Sources */,
@@ -519,6 +537,8 @@
 				1BC7AEDDDD1189E87EEAE6AC /* CalendarEventCreationTests.swift in Sources */,
 				8D11C36DF24045BC25978350 /* CalendarSyncServiceTests.swift in Sources */,
 				8275A3D023B2B4B26330343D /* CalendarSyncSettingsTests.swift in Sources */,
+				A066B652F4BC498CAFE0C87F /* CloudUploadCoordinatorTests.swift in Sources */,
+				84AEC36BBA7B194B79EDB1D2 /* CloudUploadRetryQueueTests.swift in Sources */,
 				577D6B9171C8E2221D78413B /* DocumentPickerViewTests.swift in Sources */,
 				734CA4250B5B63D71A8969EA /* ExportViewTests.swift in Sources */,
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,

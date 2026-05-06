@@ -108,6 +108,11 @@ final class LocationService: NSObject, ObservableObject {
     /// nil のときはカレンダー連携を無効化（後方互換）。
     private let calendarSync: CalendarSyncService?
 
+    /// クラウドアップロード Coordinator（S5-005）。
+    /// 記録停止時に CSV をクラウドへ自動アップロードする。
+    /// nil のときはクラウド連携を無効化（後方互換）。
+    private let cloudUploadCoordinator: CloudUploadCoordinator?
+
     /// 直近の自宅判定状態（S3-003）。状態遷移時のみログを出すため保持。
     /// 初期値は `.unknown`（自宅未登録または最初の点が未到着）。
     private var lastHomeState: HomeState = .unknown
@@ -128,13 +133,15 @@ final class LocationService: NSObject, ObservableObject {
          stayDetector: StayDetector = StayDetector(),
          placeProvider: (any PlaceProviderProtocol)? = nil,
          appSettings: AppSettings? = nil,
-         calendarSync: CalendarSyncService? = nil) {
+         calendarSync: CalendarSyncService? = nil,
+         cloudUploadCoordinator: CloudUploadCoordinator? = nil) {
         self.manager = manager
         self.repository = repository
         self.stayDetector = stayDetector
         self.placeProvider = placeProvider
         self.appSettings = appSettings
         self.calendarSync = calendarSync
+        self.cloudUploadCoordinator = cloudUploadCoordinator
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         configureManager()
@@ -178,6 +185,22 @@ final class LocationService: NSObject, ObservableObject {
         guard isUpdating else { return }
         manager.stopUpdatingLocation()
         isUpdating = false
+        // S5-005: 記録停止時にクラウド自動アップロードをトリガー。
+        // 自動同期 OFF / プロバイダ未選択時は CloudUploadCoordinator が no-op に倒すため
+        // ここでは設定をチェックせず、Coordinator に判断を委ねる。
+        triggerCloudUploadIfNeeded()
+    }
+
+    /// 現在の TripRecord に対してクラウド自動アップロードを試みる（S5-005）。
+    /// CloudUploadCoordinator 未注入 / currentTrip 未確定時は no-op。
+    /// 失敗してもログのみで UI は止めない。
+    private func triggerCloudUploadIfNeeded() {
+        guard let coordinator = cloudUploadCoordinator else { return }
+        guard let trip = currentTrip else { return }
+        Task { [weak self] in
+            _ = await coordinator.uploadIfEnabled(for: trip)
+            _ = self // weak 警告抑止
+        }
     }
 
     // MARK: - Significant Location Changes（S3-006）
