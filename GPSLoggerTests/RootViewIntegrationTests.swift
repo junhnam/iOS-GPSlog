@@ -73,4 +73,111 @@ final class RootViewIntegrationTests: XCTestCase {
         XCTAssertEqual(unwrapped.routePoints.count, 1,
                        "away 遷移後の点が永続化されている（自宅滞在中の点はスキップ）")
     }
+
+    // MARK: - QA-S5-001 / QA-S5-002 回帰防止: CloudUploadCoordinator の DI
+
+    /// QA-S5-001 で検出された「RootView が CloudUploadCoordinator を生成・注入していない」
+    /// 統合バグの回帰防止テスト。
+    ///
+    /// Sprint 5 のスプリントゴール検証条件 #2 を満たすには:
+    /// - RootView で CloudUploadCoordinator を生成し、LocationService に注入する
+    /// - LocationService.stopUpdatingLocation が triggerCloudUploadIfNeeded を呼び、
+    ///   Coordinator.uploadIfEnabled が actor 越しに走る
+    ///
+    /// 本テストでは RootView と同じ生成順序で各依存を組み立て、
+    /// stopUpdatingLocation を起動した結果 CloudUploadCoordinator が呼ばれることを検証する。
+    func test_locationService_stopRecording_invokesCloudUploadCoordinator_QA_S5_001() async throws {
+        let container = try PersistenceController.makeInMemoryContainer()
+        retainedContainers.append(container)
+        let context = container.mainContext
+        let repo = TripRepository(modelContext: context)
+
+        let suiteName = "gpslogger.tests.rootview.qa-s5-001.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let settings = AppSettings(defaults: defaults)
+        settings.cloudProviderKind = .googleDrive
+        settings.cloudAutoSyncEnabled = true
+
+        // RootView と同パターンの DI（QA-S5-001 修正後の生成順序）
+        let stubProvider = SpyCloudProvider()
+        let providers: [CloudProviderKind: any CloudStorageProvider] = [.googleDrive: stubProvider]
+        let coordinator = CloudUploadCoordinator(
+            providers: providers,
+            appSettings: settings,
+            csvExporter: SpyCSVExporter()
+        )
+        let manager = SpyLocationManager()
+        let sut = LocationService(manager: manager,
+                                  repository: repo,
+                                  placeProvider: nil,
+                                  appSettings: settings,
+                                  cloudUploadCoordinator: coordinator)
+
+        // 当日の TripRecord を確保し、LocationService 内部の currentTrip を確定させる
+        _ = try repo.todayTrip()
+        let loc = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 35.6, longitude: 139.7),
+                             altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+                             timestamp: Date())
+        sut._ingestForTesting([loc])
+
+        // 記録を開始（@isUpdating を true に倒す） → 停止して triggerCloudUploadIfNeeded を発火
+        // SpyLocationManager.startUpdatingLocation は no-op だが LocationService 内部で
+        // isUpdating = true になる（stopUpdatingLocation で false に戻り、その時点で発火）
+        sut.startUpdatingLocation()
+        sut.stopUpdatingLocation()
+
+        // Task @MainActor 越しの非同期実行を待つ
+        for _ in 0..<40 {
+            if await stubProvider.uploadCount > 0 { break }
+            await Task.yield()
+            try? await Task.sleep(nanoseconds: 20_000_000)
+        }
+
+        let count = await stubProvider.uploadCount
+        XCTAssertGreaterThanOrEqual(count, 1,
+            "RootView 経路で DI された CloudUploadCoordinator が記録停止時にアップロードを発火する（QA-S5-001 回帰防止）")
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+}
+
+// MARK: - Spy doubles (QA-S5-001 回帰防止用)
+
+private actor SpyCloudProvider: CloudStorageProvider {
+    nonisolated var kind: CloudProviderKind { .googleDrive }
+    private(set) var uploadCount: Int = 0
+
+    @MainActor func isAuthenticated() async -> Bool { true }
+    @MainActor func authenticate() async throws {}
+    @MainActor func signOut() {}
+
+    func uploadCSV(_ data: Data, toPath path: String) async throws -> CloudUploadResult {
+        uploadCount += 1
+        return CloudUploadResult(fileID: "spy", path: path, webViewLink: nil)
+    }
+}
+
+@MainActor
+private struct SpyCSVExporter: CSVExporting {
+    func csvData(for trip: TripRecord) throws -> Data {
+        Data("spy".utf8)
+    }
+}
+
+private final class SpyLocationManager: NSObject, LocationProviderProtocol, @unchecked Sendable {
+    weak var delegate: CLLocationManagerDelegate?
+    var distanceFilter: CLLocationDistance = 10
+    var desiredAccuracy: CLLocationAccuracy = kCLLocationAccuracyBest
+    var activityType: CLActivityType = .other
+    var pausesLocationUpdatesAutomatically: Bool = true
+    var allowsBackgroundLocationUpdates: Bool = false
+    var showsBackgroundLocationIndicator: Bool = false
+    var authorizationStatus: CLAuthorizationStatus = .authorizedAlways
+
+    func requestWhenInUseAuthorization() {}
+    func requestAlwaysAuthorization() {}
+    func startUpdatingLocation() {}
+    func stopUpdatingLocation() {}
+    func startMonitoringSignificantLocationChanges() {}
+    func stopMonitoringSignificantLocationChanges() {}
 }

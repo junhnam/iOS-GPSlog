@@ -38,6 +38,16 @@ struct RootView: View {
     /// actor ベースのため @State ではなく let で保持（再生成不要）。
     private let googleDriveService: GoogleDriveSyncService
 
+    /// クラウドアップロードのリトライキュー（S5-006）。
+    /// 起動時 / ネットワーク回復時にキューを処理する。
+    /// QA-S5-001 で本番経路の DI 漏れが検出されたため、RootView で生成して LocationService に注入する。
+    private let cloudUploadRetryQueue: CloudUploadRetryQueue
+
+    /// クラウドアップロード Coordinator（S5-005）。
+    /// 記録停止時に CSV をクラウドへ自動アップロードする。
+    /// QA-S5-001 で本番経路の DI 漏れが検出されたため、RootView で生成して LocationService に注入する。
+    private let cloudUploadCoordinator: CloudUploadCoordinator
+
     init() {
         let context = PersistenceController.shared.container.mainContext
         let repository = TripRepository(modelContext: context)
@@ -47,14 +57,31 @@ struct RootView: View {
         let settings = AppSettings()
         let calendar = CalendarSyncService(appSettings: settings)
         let driveService = GoogleDriveSyncService()
+        // QA-S5-001: CloudUploadCoordinator / CloudUploadRetryQueue を本番経路で生成し
+        // LocationService に注入する。Sprint 5 リリース直前に検出された DI 漏れの解消。
+        let providers: [CloudProviderKind: any CloudStorageProvider] = [.googleDrive: driveService]
+        let retryQueue = CloudUploadRetryQueue(
+            modelContext: context,
+            tripRepository: repository,
+            providers: providers,
+            appSettings: settings
+        )
+        let coordinator = CloudUploadCoordinator(
+            providers: providers,
+            appSettings: settings,
+            retryQueue: retryQueue
+        )
         self._appSettings = State(initialValue: settings)
         self._calendarService = State(initialValue: calendar)
         self.googleDriveService = driveService
+        self.cloudUploadRetryQueue = retryQueue
+        self.cloudUploadCoordinator = coordinator
         self._locationService = StateObject(wrappedValue: LocationService(
             repository: repository,
             placeProvider: PlaceLookupService(),
             appSettings: settings,
-            calendarSync: calendar
+            calendarSync: calendar,
+            cloudUploadCoordinator: coordinator
         ))
     }
 
@@ -107,6 +134,14 @@ struct RootView: View {
             .accessibilityLabel("設定タブ")
         }
         .environment(appSettings)
+        // QA-S5-001: クラウドリトライキューの自動処理 + ネットワーク回復監視を起動。
+        // - 起動時に未送信分（前回起動時に失敗したもの）を 1 度処理
+        // - ネットワーク回復イベントで自動再試行
+        // task は MainActor で実行されるため、CloudUploadRetryQueue の MainActor 隔離と整合する。
+        .task {
+            _ = try? await cloudUploadRetryQueue.processOnAppLaunch()
+            cloudUploadRetryQueue.startObservingNetwork()
+        }
     }
 
     /// タブ識別子。`@State` での選択状態保持と将来のディープリンク用。
