@@ -5,7 +5,9 @@
 > **移動記録をクラウドストレージに自動同期し、機器を変えても残せる状態にする**
 
 期間: 2026-05-06 開始
-フェーズ: **development → review 移行直前**（jun さん承認取得済 / Google Drive のみ・Dropbox は Sprint 6 繰越）
+フェーズ: **QA 完了 / review 移行直前**（jun さん承認取得済 / Google Drive のみ・Dropbox は Sprint 6 繰越）
+
+QA 結果: **【条件付き合格】→ ビルド確認済で正式合格**（QA-S5-001/002 を Single-Agent モードで即時修正 → `0f17622` で commit、`xcodebuild clean test` で 173/173 pass / TEST SUCCEEDED）
 
 ---
 
@@ -39,6 +41,7 @@
 | `f2cc406` | Cloud 系コードを internal で統一 + iOS 26 deprecated 解消 + 復旧時バックオフ無視 |
 | `a45a2f3` | テストの async-safe ロックと FakeHTTPClient 引数順序 |
 | `1ae29e9` | テスト群 setUp/tearDown を async 版に統一（S5-009 として） |
+| `0f17622` | **QA-S5-001/002 修正**: RootView で CloudUploadCoordinator/RetryQueue を生成・LocationService に注入。`.task` で起動時 RetryQueue 処理 + ネットワーク監視を発火。回帰テスト 1 件追加。Sprint 5 リリースブロッカー解消 |
 
 ---
 
@@ -91,6 +94,8 @@
 
 ## 最終テスト結果
 
-- ユニットテスト: **172/172 pass**（Sprint 4 末 121 → Sprint 5 末 172、+51 件）
+- ユニットテスト: **173/173 pass**（Sprint 4 末 121 → Sprint 5 末 172 → QA 修正で +1 → 173 件）
 - ビルド: warning 0 / error 0（Swift コード由来）
 - 既存 121 ユニットテストの回帰: なし
+- QA Single-Agent モード: 130 観点 / Critical 4（実態 1 つの統合バグ）+ High 1 を検出 → **修正済 + ビルド確認済**
+- 残存バグ: Critical/High 0、Medium 1（QA-S5-003: Info.plist プレースホルダー / jun さん側オペレーション）、Low 1（QA-S5-004: CSV 出力失敗時 retryCount / Sprint 6 改善候補）
