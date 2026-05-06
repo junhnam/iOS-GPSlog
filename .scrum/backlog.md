@@ -1,6 +1,6 @@
 # Product Backlog: iOS GPSロガーアプリ
 
-最終更新: 2026-05-06（Sprint 4 review 完了時点）
+最終更新: 2026-05-06（Sprint 5 planning_review 時点）
 
 ## バックログ構成方針
 - CLAUDE.md の全要件を 6 スプリントに分割
@@ -85,16 +85,29 @@
 
 ## 優先度: Should（MVP 後でも可）
 
-### Sprint 5: クラウドストレージ同期
+### Sprint 5: クラウドストレージ同期 + 申し送り解消（planning_review）
 
-| ID | タイトル | 見積 | 担当 | ステータス | スプリント |
-|---|---|---|---|---|---|
-| S5-001 | Google Drive SDK 導入 + OAuth 認証 | L→分割 | - | backlog | 5 |
-| S5-002 | Dropbox SDK 導入 + OAuth 認証 | L→分割 | - | backlog | 5 |
-| S5-003 | クラウド保存先選択 UI | M | - | backlog | 5 |
-| S5-004 | 自動同期 ON/OFF 設定 | S | - | backlog | 5 |
-| S5-005 | 「GPSログ/{日付}/data.csv」階層での自動アップロード | M | - | backlog | 5 |
-| S5-006 | 同期失敗時のリトライ + 通知 | M | - | backlog | 5 |
+スプリントゴール: **移動記録をクラウドストレージに自動同期し、機器を変えても残せる状態にする**
+
+| ID | タイトル | 見積 | 担当 | 優先度 | ステータス | スプリント |
+|---|---|---|---|---|---|---|
+| S5-001 | Google Drive SDK 導入 + OAuth 認証 | L→分割可 | dev-2 | must | sprint | 5 |
+| S5-002 | Dropbox SDK 導入 + OAuth 認証 | L→分割可 | dev-2 | should | sprint | 5 |
+| S5-003 | クラウド保存先選択 UI | M | dev-1 | must | sprint | 5 |
+| S5-004 | 自動同期 ON/OFF 設定 | S | dev-1 | must | sprint | 5 |
+| S5-005 | 「GPSログ/{日付}/data.csv」階層での自動アップロード | M | dev-2 | must | sprint | 5 |
+| S5-006 | 同期失敗時のリトライ + 通知 | M | dev-2 | must | sprint | 5 |
+| S5-007 | PinRecord.address 追加 + addressFromPlaceURL 実体化（QA-S4-002 解消） | M | dev-2 | must | sprint | 5 |
+| S5-008 | MapView Coordinator strict concurrency warning 解消（Sprint 4 申し送り #1） | S | dev-1 | should | sprint | 5 |
+| S5-009 | テスト群の @MainActor strict concurrency warning 解消（Sprint 4 申し送り #2） | M | dev-1 | could | sprint | 5 |
+
+注:
+
+- S5-007 は jun さん指示「PinRecord に address を追加」を反映した Sprint 4 申し送り #3 のチケット化
+- S5-008 / S5-009 は Sprint 4 申し送り #1 / #2 を取り込み（concurrency warning。クラウド連携と独立で吸収可能）
+- S5-002 は jun さんの「Sprint 5 で Dropbox を入れるか / Sprint 6 へ繰越か」の判断次第。Sprint 6 へ繰越時は Sprint 5 を 8 チケット構成（Must 5 / Should 1 / Could 1）にする
+- パッケージ追加（Google Drive / Dropbox SDK）は development 開始**前**に jun さん承認を取得
+- 運用変更: Dev フェーズ完了基準に「`xcodebuild clean build` warning 0 確認」を追加（`.scrum/process/dev-completion-checklist.md` 新規作成）。Sonnet サブエージェントの xcodebuild は引き続きメインエージェント（Opus）が代行
 
 ### Sprint 6: 運用機能 + リリース準備
 
@@ -138,6 +151,6 @@
 | 2 | DB＋総移動距離＋滞留＋復元＋履歴 | 8 | 閉じても復元できる状態を作る |
 | 3 | 設定／自宅／記録モード／お店情報／復元通知／ノート | 9 | バッテリー懸念のベース対策＋ピン情報拡充＋retro 反映 |
 | 4 | iOS 26 API 移行＋カレンダー同期＋CSV出力＋HUD 統一 | 8 | データの外部化 + 申し送り解消 |
-| 5 | クラウド同期 | 6 | Drive/Dropbox 連携 |
-| 6 | 運用＋リリース準備 | 7 | App Store 申請可能状態 |
-| 合計 | | **47** | |
+| 5 | クラウド同期＋申し送り解消 | 9（Dropbox 繰越時 8） | Drive/Dropbox 連携 + concurrency warning 解消 + PinRecord.address |
+| 6 | 運用＋リリース準備 | 7（+α Dropbox 繰越時） | App Store 申請可能状態 |
+| 合計 | | **約 50** | |
