@@ -193,10 +193,11 @@ struct HomeRegistrationView: View {
         geocodingTask = Task { @MainActor in
             defer { isGeocoding = false }
             do {
-                guard let request = MKReverseGeocodingRequest(
-                    location: location,
-                    preferredLocale: Locale(identifier: "ja_JP")
-                ) else {
+                // iOS 26 の MKReverseGeocodingRequest は init?(location:) のみで
+                // preferredLocale 引数を受け取らない。CLPlacemark 由来の表記は
+                // 端末のロケール（jun さんの環境では ja_JP）に従うため、
+                // 旧 CLGeocoder で渡していた Locale(identifier: "ja_JP") は省略する。
+                guard let request = MKReverseGeocodingRequest(location: location) else {
                     geocodeErrorMessage = "住所取得に失敗しました（位置のみ保存します）"
                     return
                 }
