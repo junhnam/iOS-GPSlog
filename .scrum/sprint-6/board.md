@@ -1,0 +1,116 @@
+# Sprint 6 Board
+
+## Sprint Goal
+
+> **個人利用版として jun さんの iPhone 16 Pro に Xcode から実機インストールでき、CLAUDE.md 記載の全機能（DB クリア / DB 自動消去 / バッテリー最適化を含む）が実機で動作する状態に到達する**
+
+期間: 2026-05-07 開始（最終スプリント）
+フェーズ: **development**（jun さん 5 項目回答取得済 2026-05-06）
+方針: A 案採用（1-sprint 完結 / 個人利用版リリース）
+
+---
+
+## Todo
+
+- [ ] **S6-001**: DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + 雛形コメント追加） → **po-sm** / Must / S
+- [ ] **S6-002**: `AppDependencyContainer` 導入（`RootView.init` の DI 集約） → **dev-1** / Must / M
+- [ ] **S6-003**: DB クリア機能（指定日付のデータ削除 + 設定画面 UI） → **dev-1** / Must / M
+- [ ] **S6-004**: DB 自動消去（1GB 超で古い順削除 + 設定 ON/OFF Toggle） → **dev-2** / Must / M
+- [ ] **S6-005**: バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L
+- [ ] **S6-006**: バックグラウンド復帰時の挙動安定化（SLC 復帰 / applicationDidBecomeActive 経路） → **dev-2** / Must / M
+- [ ] **S6-007**: アプリアイコン（全サイズ）+ ローンチスクリーン → **designer / dev-1** / Must / M
+- [ ] **S6-008**: 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M
+- [ ] **S6-009**: QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S
+
+## In Progress
+
+（なし）
+
+## Done
+
+（なし）
+
+---
+
+## 着手順序メモ
+
+### Phase 0（PO/SM 主導 / Dev 着手前）
+
+1. **S6-001** DI 経路カバレッジテスト定型化（po-sm）
+
+### Phase 1（Dev-1 主導 / 構造改善）
+
+1. **S6-002** `AppDependencyContainer` 導入（dev-1 / S6-001 完了後）
+
+### Phase 2（Dev-2 並行開始 / プロダクト機能）
+
+1. **S6-009** QA-S5-003/004 解消（依存なし軽量・ウォームアップ）
+2. **S6-004** DB 自動消去（AppSettings 拡張 → DB サービス容量計測 → 自動消去サービス）
+3. **S6-005** バッテリー最適化（LocationService 動的精度切替）
+
+### Phase 3（Dev-1 / Dev-2 並行）
+
+- Dev-1: **S6-003** DB クリア機能（S6-002 完了後 / S6-004 AppSettings 拡張コミット後）
+- Dev-2: **S6-006** バックグラウンド復帰（S6-005 完了後）
+
+### Phase 4（デザイン取り込み）
+
+1. メインから scrum-designer 起動 → アイコン + ローンチスクリーン素材生成
+2. **S6-007** Dev-1 が Designer 成果物を Assets.xcassets に反映
+
+### Phase 5（Sprint 6 末 / 実機検証）
+
+1. メイン代行が `xcodebuild clean build` / `clean test` で warning 0 確認
+2. **S6-008** PO/SM が jun さん iPhone 16 Pro で実機検証 7 観点を実施
+
+---
+
+## ビルド状態スタンプ
+
+`.scrum/process/dev-completion-checklist.md` の運用に従い、各チケット Done 時に以下を記入:
+
+| チケット | 担当 | コミット | フル再ビルド warning | メイン代行確認 | 追加テスト数 |
+|---|---|---|---|---|---|
+| S6-001 | po-sm | - | - | - | - |
+| S6-002 | dev-1 | - | - | - | - |
+| S6-003 | dev-1 | - | - | - | - |
+| S6-004 | dev-2 | - | - | - | - |
+| S6-005 | dev-2 | - | - | - | - |
+| S6-006 | dev-2 | - | - | - | - |
+| S6-007 | designer / dev-1 | - | - | - | - |
+| S6-008 | po-sm | - | - | jun さん実機 | - |
+| S6-009 | dev-2 | - | - | - | - |
+
+---
+
+## ステータスサマリ
+
+| 状態 | 件数 |
+|---|---|
+| Todo | 9 |
+| In Progress | 0 |
+| Done | 0 |
+| **Sprint 6 完了** | **0/9** |
+
+---
+
+## メイン代行修正欄（Dev エージェントの sandbox 制約により Opus メインが代行）
+
+| コミット | 内容 |
+|---|---|
+| - | - |
+
+---
+
+## 完了基準（再掲）
+
+- [ ] 全 9 チケット Done
+- [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
+- [ ] フル再ビルド warning 0 / error 0
+- [ ] ユニットテスト pass 100%（約 200 件想定）
+- [ ] Sprint 1〜5 のテスト 173 件の回帰なし
+- [ ] API キー漏洩スキャン 0 件
+- [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
+- [ ] S6-008 実機検証 7 観点すべて jun さん側で OK 判定
+- [ ] レビュー / レトロ文書を作成
+- [ ] ユーザー承認 + git push 承認

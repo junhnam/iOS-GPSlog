@@ -1,4 +1,12 @@
-# Sprint 6 Plan（ドラフト）
+# Sprint 6 Plan（ドラフト / 履歴用）
+
+> **このファイルは jun さん回答前のドラフト案です。最終版は [`plan.md`](./plan.md) を参照してください。**
+>
+> **採用案: A 案（1-sprint 完結 / 個人利用版リリース）**
+>
+> jun さんから 5 項目（配布タイミング / Apple Developer Program / 実機 / アイコン / Dropbox）の回答が揃い、A 案ベースでスコープを再評価して 9 チケット構成（Must 7 / Should 2 / Could 0）に確定しました。プライバシーマニフェスト / App Store 申請メタデータ / TestFlight / Dropbox SDK は jun さん指示で Sprint 6 スコープから除外しています。
+>
+> ドラフト時点での A 案 / B 案併記の検討プロセスを履歴として残すため、本ファイルは削除せず保管します。
 
 > **これはドラフトです。** jun さん承認後に正式 `plan.md` に昇格 + GitHub Issue 起票 + `.scrum/config.md` の `current_sprint` / `sprint_phase` 更新がメインセッションで実施されます。本ファイルだけが先行コミットされます。
 
