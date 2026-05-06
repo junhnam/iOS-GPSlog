@@ -139,12 +139,15 @@ private final class FakeCalendarProvider: CalendarProviderProtocol, @unchecked S
         return []
     }
 
-    func calendar(withIdentifier identifier: String) -> EKCalendar? {
-        return nil
+    func calendarExists(identifier: String) -> Bool {
+        // S4-002 のテストではカレンダー存在確認は呼ばないため常に false。
+        // 確認パスは S4-003 / S4-004 のテストで別途検証する。
+        return false
     }
 
-    func save(_ event: EKEvent) throws {
+    func saveEvent(_ draft: CalendarEventDraft) throws -> String? {
         // S4-002 のテストでは保存処理は呼ばないため no-op。
         // 保存パスのテストは S4-003 で別途実装する。
+        return nil
     }
 }

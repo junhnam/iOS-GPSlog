@@ -10,19 +10,18 @@
 
 ## Todo
 
-- [ ] S4-003: 滞留ピン → カレンダーイベント自動作成 → dev-2
-- [ ] S4-004: カレンダー同期 ON/OFF 設定 → dev-1
 - [ ] S4-005: CSV エクスポート機能（DBスキーマそのまま出力） → dev-2
 - [ ] S4-007: エクスポート UI 画面 → dev-1
 
 ## In Progress
 
-（Dev-2: 次は S4-003 に着手）
+- [~] S4-004: カレンダー同期 ON/OFF 設定 → dev-1
 
 ## Review
 
 - [x] S4-001: CLGeocoder → MKReverseGeocodingRequest 移行（QA-S3-002 解消） → dev-2（実装完了 / レビュー待ち）
 - [x] S4-002: EventKit 連携基盤（権限取得 + カレンダー選択） → dev-2（実装完了 / レビュー待ち）
+- [x] S4-003: 滞留ピン → カレンダーイベント自動作成 → dev-2（実装完了 / レビュー待ち）
 - [x] S4-006: UIDocumentPickerViewController での保存先選択 → dev-1（実装完了 / レビュー待ち）
 - [x] S4-008: MapView HUD warning ロジックを HomeDetector へ統一 → dev-1（実装完了 / レビュー待ち）
 
@@ -58,3 +57,25 @@
   - `var calendarSyncEnabled: Bool`（既定 false） / Keys: `gpslogger.settings.v1.calendarSyncEnabled`
   - `var calendarIdentifier: String?`（既定 nil） / Keys: `gpslogger.settings.v1.calendarIdentifier`
   - 後方互換: 既存テスト 8 ケースは破らない（読み込み時に値が無ければデフォルトに fallback）
+
+## Dev-1 → Dev-2 申し送り（2026-05-06 13:00）
+
+- S4-004 のソースは完成（SettingsView にカレンダー同期セクション追加 + CalendarPickerView 新規）。
+  RootView も calendarService を init で生成して SettingsView に渡す形に更新済。
+- 自分側のテスト `CalendarSyncSettingsTests` は新 protocol（calendarExists / saveEvent）に
+  合わせて書いた。
+- ただし `GPSLoggerTests/CalendarSyncServiceTests.swift:113` の Dev-2 側 FakeCalendarProvider が
+  S4-003 の protocol 拡張（calendarExists / saveEvent）に未対応で、ビルドが落ちている。
+  Dev-2 に修正をお願いし、修正後に Dev-1 側のフルテスト → S4-004 コミットを行う。
+
+## Dev-2 → Dev-1 申し送り（2026-05-06 13:30）
+
+- 上記 `CalendarSyncServiceTests.FakeCalendarProvider` を新 protocol（calendarExists /
+  saveEvent）に対応させる修正を **S4-003 コミットに同梱** で対応します。
+- S4-003 の本筋では `CalendarSyncService.createEvent(for: PinRecord)` を新規追加（5 ケースのテスト
+  + calendarNotFound の 1 ケースで合計 6 ケース）。`PinRecord.calendarEventIdentifier` を Optional
+  で追加してマイグレーション互換を保ち、`LocationService.enrichPinWithPlaceInfo` で PlaceLookup の
+  あとに `createEvent` を呼ぶよう連携。
+- `LocationService.init` のシグネチャに `calendarSync: CalendarSyncService? = nil` を追加。
+  デフォルト nil なので既存呼び出し側の互換は保たれていますが、Dev-1 が RootView で
+  CalendarSyncService を生成しているなら、ここから渡すと Sprint 4 のメインスコープが完成します。

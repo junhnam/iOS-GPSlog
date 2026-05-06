@@ -102,6 +102,12 @@ final class LocationService: NSObject, ObservableObject {
     /// nil のときは自宅機能を無効化（後方互換）。
     private let appSettings: AppSettings?
 
+    /// カレンダー同期サービス（S4-003）。
+    /// PinRecord 作成後（PlaceLookupService の placeName 書き戻し完了後）に
+    /// `createEvent(for:)` を呼んでカレンダーイベントを作成する。
+    /// nil のときはカレンダー連携を無効化（後方互換）。
+    private let calendarSync: CalendarSyncService?
+
     /// 直近の自宅判定状態（S3-003）。状態遷移時のみログを出すため保持。
     /// 初期値は `.unknown`（自宅未登録または最初の点が未到着）。
     private var lastHomeState: HomeState = .unknown
@@ -121,12 +127,14 @@ final class LocationService: NSObject, ObservableObject {
          repository: TripRepository? = nil,
          stayDetector: StayDetector = StayDetector(),
          placeProvider: (any PlaceProviderProtocol)? = nil,
-         appSettings: AppSettings? = nil) {
+         appSettings: AppSettings? = nil,
+         calendarSync: CalendarSyncService? = nil) {
         self.manager = manager
         self.repository = repository
         self.stayDetector = stayDetector
         self.placeProvider = placeProvider
         self.appSettings = appSettings
+        self.calendarSync = calendarSync
         self.authorizationStatus = manager.authorizationStatus
         super.init()
         configureManager()
@@ -414,20 +422,42 @@ final class LocationService: NSObject, ObservableObject {
     /// S3-007: 永続化済みの PinRecord に対し、PlaceLookupService を呼んで
     /// placeName / placeURL を埋める。ネットワーク失敗・レート制限・provider 未注入時は
     /// 何もせず PinRecord は元のまま（placeName/URL は nil のまま）。
+    /// S4-003: PlaceLookup 完了後、CalendarSyncService が注入されていれば
+    /// `createEvent(for:)` を呼び出してカレンダーイベントを作成する。失敗しても
+    /// UI は止めず PinRecord 自体は維持される。
     private func enrichPinWithPlaceInfo(_ pin: PinRecord, repository: TripRepository) {
-        guard let provider = placeProvider else { return }
+        let provider = placeProvider
+        let calendarSync = self.calendarSync
         let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let candidate = await provider.lookup(coordinate: coordinate)
-            guard let candidate else { return }
-            // POI ヒットがあれば name / url を、なければ住所のみ書く。
-            pin.placeName = candidate.name ?? candidate.address
-            pin.placeURL = candidate.url
-            do {
-                try repository.savePinUpdates()
-            } catch {
-                Self.logger.warning("PinRecord お店情報の保存失敗: \(error.localizedDescription)")
+            // 1. PlaceLookup（注入されていれば）
+            if let provider {
+                if let candidate = await provider.lookup(coordinate: coordinate) {
+                    pin.placeName = candidate.name ?? candidate.address
+                    pin.placeURL = candidate.url
+                    do {
+                        try repository.savePinUpdates()
+                    } catch {
+                        Self.logger.warning("PinRecord お店情報の保存失敗: \(error.localizedDescription)")
+                    }
+                }
+            }
+            // 2. カレンダーイベント作成（S4-003 / 注入されていれば）
+            if let calendarSync {
+                let result = await calendarSync.createEvent(for: pin)
+                switch result {
+                case .success:
+                    do {
+                        try repository.savePinUpdates()
+                    } catch {
+                        Self.logger.warning("PinRecord calendarEventIdentifier 保存失敗: \(error.localizedDescription)")
+                    }
+                case .failure(let error):
+                    // disabled / permissionDenied / calendarNotFound / saveFailed のいずれも
+                    // ログのみ出して PinRecord は保持する（UI は停止しない）。
+                    Self.logger.info("カレンダー同期スキップ: \(String(describing: error))")
+                }
             }
             _ = self // 警告抑制（この行で MainActor を保持）
         }

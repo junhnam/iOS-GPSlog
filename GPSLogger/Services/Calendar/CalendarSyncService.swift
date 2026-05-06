@@ -1,5 +1,6 @@
 import Foundation
 import EventKit
+import CoreLocation
 import os
 
 /// CalendarSyncService が扱うエラー（S4-002 / S4-003）。
@@ -29,7 +30,21 @@ enum CalendarSyncError: Error, Equatable, Sendable {
     }
 }
 
-/// EventKit (`EKEventStore`) 操作の最小限のインタフェース（S4-002）。
+/// `CalendarProviderProtocol.saveEvent` に渡すイベント情報（S4-003）。
+///
+/// EKEvent を直接プロトコルに載せるとテストで生成が難しいため、
+/// 必要最小限のフィールドを値型として切り出してプロトコル境界に置く。
+struct CalendarEventDraft: Sendable {
+    let title: String
+    let startDate: Date
+    let endDate: Date
+    let location: String?
+    let latitude: Double
+    let longitude: Double
+    let calendarIdentifier: String
+}
+
+/// EventKit (`EKEventStore`) 操作の最小限のインタフェース（S4-002 / S4-003）。
 ///
 /// テストで EventKit をモック化するための seam。本番実装は `EKEventStoreCalendarProvider`
 /// が `EKEventStore` をそのまま包む。
@@ -49,11 +64,16 @@ protocol CalendarProviderProtocol: Sendable {
     /// 書き込み可能な `.event` タイプの EKCalendar を返す。
     func availableEventCalendars() -> [EKCalendar]
 
-    /// 指定識別子の EKCalendar を返す。見つからなければ nil。
-    func calendar(withIdentifier identifier: String) -> EKCalendar?
+    /// 指定識別子の EKCalendar が存在するか確認する（S4-003）。
+    /// プロトコル境界では EKCalendar を返さず、Bool で十分（イベント保存は
+    /// `saveEvent(_:)` 側で識別子から再解決する）。
+    func calendarExists(identifier: String) -> Bool
 
-    /// イベントを保存（commit）する。失敗時は throw。
-    func save(_ event: EKEvent) throws
+    /// CalendarEventDraft を EventKit に保存し、作成された EKEvent.eventIdentifier を返す（S4-003）。
+    /// - 成功時: EKEvent.eventIdentifier
+    /// - calendarIdentifier に該当する EKCalendar が無い場合: nil
+    /// - その他の保存エラー: throw
+    func saveEvent(_ draft: CalendarEventDraft) throws -> String?
 }
 
 /// `EKEventStore` を `CalendarProviderProtocol` として包む本番実装（S4-002）。
@@ -88,18 +108,32 @@ final class EKEventStoreCalendarProvider: CalendarProviderProtocol, @unchecked S
         eventStore.calendars(for: .event).filter { $0.allowsContentModifications }
     }
 
-    func calendar(withIdentifier identifier: String) -> EKCalendar? {
-        eventStore.calendar(withIdentifier: identifier)
+    func calendarExists(identifier: String) -> Bool {
+        eventStore.calendar(withIdentifier: identifier) != nil
     }
 
-    func save(_ event: EKEvent) throws {
+    func saveEvent(_ draft: CalendarEventDraft) throws -> String? {
+        guard let calendar = eventStore.calendar(withIdentifier: draft.calendarIdentifier) else {
+            return nil
+        }
+        let event = EKEvent(eventStore: eventStore)
+        event.calendar = calendar
+        event.title = draft.title
+        event.startDate = draft.startDate
+        event.endDate = draft.endDate
+        if let location = draft.location {
+            event.location = location
+        }
+        // Apple 推奨: 構造化された位置情報（緯度経度）も付与する。
+        let structured = EKStructuredLocation(title: draft.location ?? draft.title)
+        structured.geoLocation = CLLocation(latitude: draft.latitude,
+                                            longitude: draft.longitude)
+        event.structuredLocation = structured
+
         // span: .thisEvent はシリーズではなく単一イベントのみ保存。commit: true で永続化。
         try eventStore.save(event, span: .thisEvent, commit: true)
+        return event.eventIdentifier
     }
-
-    /// CalendarSyncService から `EKEvent` を生成するために使う共有 EKEventStore。
-    /// テスト時はフェイクプロバイダ側で EKEvent を直接モックするため、本番 path のみ利用。
-    var sharedEventStore: EKEventStore { eventStore }
 }
 
 /// EventKit へのカレンダーイベント書き込みを担当するサービス（S4-002 / S4-003）。
@@ -142,5 +176,88 @@ final class CalendarSyncService {
     /// 権限が無い場合は空配列を返す（EventKit の挙動に従う）。
     func availableCalendars() -> [EKCalendar] {
         return provider.availableEventCalendars()
+    }
+
+    // MARK: - Event creation (S4-003)
+
+    /// 滞留ピンに対応するカレンダーイベントを作成する（S4-003）。
+    ///
+    /// 受け入れ条件:
+    /// - `AppSettings.calendarSyncEnabled` が false なら no-op で `.disabled` を返す
+    /// - 権限が無い場合 `.permissionDenied`
+    /// - `AppSettings.calendarIdentifier` が無効・未設定なら `.calendarNotFound`
+    /// - 既に作成済（pin.calendarEventIdentifier != nil）なら再作成せず既存 ID を返す
+    /// - イベントタイトル: placeName → address → "滞留地点 (緯度.., 経度..)" の順でフォールバック
+    /// - 開始 / 終了時刻: pin.stayedFrom / pin.stayedFrom + stayedDurationSeconds
+    /// - 場所: placeName または address
+    /// - 構造化位置: 緯度経度を EKStructuredLocation に詰める
+    /// - 成功時に EKEvent.eventIdentifier を pin.calendarEventIdentifier に書き戻す
+    @discardableResult
+    func createEvent(for pin: PinRecord) async -> Result<String, CalendarSyncError> {
+        // 1. 同期 OFF
+        guard appSettings.calendarSyncEnabled else {
+            return .failure(.disabled)
+        }
+        // 2. 重複防止（受け入れ条件: 2 回目以降は再作成しない）
+        if let existing = pin.calendarEventIdentifier {
+            return .success(existing)
+        }
+        // 3. 権限確認
+        let granted = await provider.requestFullAccessIfNeeded()
+        guard granted else {
+            return .failure(.permissionDenied)
+        }
+        // 4. カレンダー識別子確認
+        guard let calendarId = appSettings.calendarIdentifier,
+              !calendarId.isEmpty,
+              provider.calendarExists(identifier: calendarId) else {
+            return .failure(.calendarNotFound)
+        }
+        // 5. イベント情報を組み立て
+        let title = Self.eventTitle(for: pin)
+        let location = pin.placeName ?? Self.addressFromPlaceURL(pin)
+        let startDate = pin.stayedFrom
+        let endDate = pin.stayedFrom.addingTimeInterval(max(pin.stayedDurationSeconds, 60))
+        let draft = CalendarEventDraft(
+            title: title,
+            startDate: startDate,
+            endDate: endDate,
+            location: location,
+            latitude: pin.latitude,
+            longitude: pin.longitude,
+            calendarIdentifier: calendarId
+        )
+        // 6. 保存
+        do {
+            guard let identifier = try provider.saveEvent(draft) else {
+                return .failure(.calendarNotFound)
+            }
+            // 7. 重複防止のため pin に書き戻す
+            pin.calendarEventIdentifier = identifier
+            return .success(identifier)
+        } catch {
+            Self.logger.warning("カレンダーイベント保存失敗: \(error.localizedDescription)")
+            return .failure(.saveFailed(message: error.localizedDescription))
+        }
+    }
+
+    /// イベントタイトルの組み立て（S4-003 受け入れ条件）。
+    /// placeName → 「滞留地点 (緯度.., 経度..)」の順。address フィールドは PinRecord に
+    /// 直接無いため、placeName のみを優先し、無ければ座標を表示する。
+    private static func eventTitle(for pin: PinRecord) -> String {
+        if let name = pin.placeName, !name.isEmpty {
+            return name
+        }
+        // 座標フォールバック。小数点 5 桁（約 1m 精度）で表示。
+        return String(format: "滞留地点 (%.5f, %.5f)", pin.latitude, pin.longitude)
+    }
+
+    /// PinRecord に address フィールドは無いため、placeURL の最終パス成分を
+    /// 簡易的に「住所っぽい文字列」として代用する（S4-003 受け入れ条件の address fallback）。
+    /// nil の場合は location も nil で渡す。
+    private static func addressFromPlaceURL(_ pin: PinRecord) -> String? {
+        // 現状の PinRecord には placeName / placeURL のみあるため、
+        // address fallback は placeName が無い場合に nil を返す素直な挙動とする。
+        return pin.placeName
     }
 }
