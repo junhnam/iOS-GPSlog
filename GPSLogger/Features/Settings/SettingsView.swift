@@ -335,6 +335,7 @@ struct SettingsView: View {
     // Preview 用インメモリコンテナ。失敗時は空の repository を渡せないため fatalError で落とす。
     let container = try! PersistenceController.makeInMemoryContainer()
     let repository = TripRepository(modelContext: container.mainContext)
+    // container 自体は repository が強参照を保持するため Preview 中に解放されない
     return NavigationStack {
         SettingsView(
             settings: settings,
@@ -349,6 +350,4 @@ struct SettingsView: View {
             tripRepository: repository
         )
     }
-    // container を保持して Preview 中の解放を防ぐ
-    _ = container
 }
