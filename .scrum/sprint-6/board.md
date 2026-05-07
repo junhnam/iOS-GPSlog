@@ -27,7 +27,7 @@
 - [x] **S6-005** (#48): バッテリー最適化（精度動的 / distanceFilter / pausesLocationUpdatesAutomatically 検証） → **dev-2** / Must / L（コミット `bb7e7c0` / 193/193 pass / warning 0 / `BatteryAdaptiveLocationPolicy` Sendable 構造体新規 + LocationService 統合（distanceFilter 動的切替）+ pausesLocationUpdatesAutomatically=true 確認済 / 単体テスト 7 件 + DI 統合 1 件 = 計 8 件追加 / メイン代行確認済）
 - [x] **S6-006** (#49): バックグラウンド復帰時の挙動安定化（SLC 復帰 / applicationDidBecomeActive 経路） → **dev-2** / Must / M（コミット `0bce4be` / 204/204 pass / warning 0 / `AppSettings.wasTracking` 追加 + `LocationService.startTrackingFromSLC()` / `resumeTrackingAfterRelaunch()` 新規 + `RootView.onChange(scenePhase)` 追加 / 単体テスト 6 件 + DI カバレッジ 1 件 = 計 7 件追加 / メイン代行確認依頼）
 - [x] **S6-003** (#46): DB クリア機能（指定日付のデータ削除 + 設定画面 UI） → **dev-1** / Must / M（コミット `c11516a` / TripRepository に deleteTrip / deleteAllTrips / availableDates 追加 / DBClearView.swift 新規 / SettingsView に DB クリア行追加 / RootView に tripRepository 注入 / 単体テスト 4 件追加 / DI カバレッジテスト不要（新規サービスなし）/ ビルド確認: メイン代行依頼）
-- [x] **S6-007** (#50): アプリアイコン（全サイズ）+ ローンチスクリーン → **designer + メイン代行** / Must / M（コミット TBD / 204/204 pass / warning 0 / IconDesignPreview.swift 新規（SwiftUI ベース、jun さんが Xcode Preview から本番 PNG 書き出し可）/ AppIcon-1024.png placeholder（Designer 配色のグラデーション + 簡易ピン、Swift CLI で生成）/ LaunchBackground.colorset 新規 / Info.plist UILaunchScreen 設定 / 副次対応: SettingsView Preview の dead code warning 解消）
+- [x] **S6-007** (#50): アプリアイコン（全サイズ）+ ローンチスクリーン → **designer + メイン代行** / Must / M（コミット `7b77d28` / 204/204 pass / warning 0 / IconDesignPreview.swift 新規（SwiftUI ベース、jun さんが Xcode Preview から本番 PNG 書き出し可）/ AppIcon-1024.png placeholder（Designer 配色のグラデーション + 簡易ピン、Swift CLI で生成）/ LaunchBackground.colorset 新規 / Info.plist UILaunchScreen 設定 / 副次対応: SettingsView Preview の dead code warning 解消）
 
 ---
 
@@ -76,7 +76,7 @@
 | S6-004 | dev-2 | 7029d2f | 0（メイン代行確認済） | 確認済 / 185/185 pass | 6（単体 5 + DI カバレッジ 1） |
 | S6-005 | dev-2 | bb7e7c0 | 0（メイン代行確認済） | 確認済 / 193/193 pass | 8（単体 7 + DI 統合 1） |
 | S6-006 | dev-2 | 0bce4be | 0（メイン代行確認済） | 依頼中 | 7（単体 6 + DI カバレッジ 1） |
-| S6-007 | designer + メイン代行 | TBD | 0（メイン代行確認済） | 確認済 / 204/204 pass | 0（UI/デザイン変更のみ） |
+| S6-007 | designer + メイン代行 | 7b77d28 | 0（メイン代行確認済） | 確認済 / 204/204 pass | 0（UI/デザイン変更のみ） |
 | S6-008 | po-sm | - | - | jun さん実機 | - |
 | S6-009 | dev-2 | 39dba0e | 0（メイン代行確認済） | 確認済 / 179/179 pass | 3（CSV 失敗時 retryCount 加算） |
 
@@ -99,7 +99,7 @@
 |---|---|
 | `39dba0e` | `CloudUploadRetryQueueTests.swift` の `test_successAfterCsvFailure_removesEntry_S6_009` で `stubProvider` を `makeQueue` に渡しておらず内部 default が `.failure` を返してしまうテスト DI 漏れを修正（S6-001 で導入した DI カバレッジ運用がテストコード側にも適用されるべきという学び） |
 | `7029d2f` | `DatabaseAutoCleanupService.swift` の DB ファイル URL 取得を `ModelContainer.defaultDirectoryURL`（iOS 26 で存在せず）から `FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)` 経由に変更。`attrs[.size]` の型推論エラーを `attrs[FileAttributeKey.size]` 明示で解消 |
-| TBD（S6-007 同梱） | `AppIcon-1024.png` placeholder を Swift CLI（AppKit/CoreGraphics）で生成して配置（Designer は画像生成不可のため）。Designer 配色（深藍 #1A3A5C → 青 #2E7FC0 グラデーション）+ 中央に簡易ピン。jun さんは `IconDesignPreview.swift` から書き出した本番 PNG にいつでも差し替え可能。`SettingsView.swift` の `#Preview` で `return` 文後の `_ = container` が dead code warning を出していた件も同時解消（`return` の前に移動） |
+| `7b77d28` | `AppIcon-1024.png` placeholder を Swift CLI（AppKit/CoreGraphics）で生成して配置（Designer は画像生成不可のため）。Designer 配色（深藍 #1A3A5C → 青 #2E7FC0 グラデーション）+ 中央に簡易ピン。jun さんは `IconDesignPreview.swift` から書き出した本番 PNG にいつでも差し替え可能。`SettingsView.swift` の `#Preview` で `return` 文後の `_ = container` が dead code warning を出していた件も同時解消（`return` の前に移動） |
 
 ---
 
