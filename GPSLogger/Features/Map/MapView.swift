@@ -270,7 +270,7 @@ private struct GoogleMapContainer: UIViewRepresentable {
     ///
     /// S6-011: `selectedPin` binding を受け取り、マーカータップで詳細シートを開く。
     @MainActor
-    final class Coordinator: NSObject, GMSMapViewDelegate {
+    final class Coordinator: NSObject, @preconcurrency GMSMapViewDelegate {
         var didCenterOnFirstFix: Bool = false
 
         private weak var mapView: GMSMapView?
