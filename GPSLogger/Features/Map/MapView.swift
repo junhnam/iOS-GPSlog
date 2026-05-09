@@ -14,6 +14,9 @@ import CoreLocation
 /// Sprint 2 拡張（S2-007）:
 ///   - `MapViewModel` を介して当日の TripRecord を起動時に読み込み、
 ///     経路 / ピン / 総移動距離を地図に復元表示する
+/// Sprint 6 拡張（S6-011）:
+///   - ピンタップ → 詳細シート表示（`Coordinator.mapView(_:didTap marker:)` 実装）
+///   - Apple Maps / Google Maps 起動ボタン
 struct MapView: View {
     /// アプリ全体で共有される LocationService。RootView 側で生成し、
     /// AppSettings / placeProvider を含めて DI 済みの状態で受け取る（QA-S3-001 修正）。
@@ -36,11 +39,15 @@ struct MapView: View {
     /// `viewModel.restoreError` を購読して赤い帯を表示する。
     @State private var dismissedRestoreError: Bool = false
 
+    /// タップされた滞留ピン（S6-011）。nil → シート非表示、値あり → シート表示。
+    @State private var selectedPin: RestoredPin?
+
     var body: some View {
         ZStack(alignment: .top) {
             GoogleMapContainer(locationService: locationService,
                                restoredRoute: viewModel.route,
-                               restoredPins: viewModel.pins)
+                               restoredPins: viewModel.pins,
+                               selectedPin: $selectedPin)
                 .ignoresSafeArea()
 
             VStack(spacing: 8) {
@@ -76,6 +83,12 @@ struct MapView: View {
                 }
                 .padding(.trailing, 16)
                 .padding(.bottom, 24)
+            }
+        }
+        // S6-011: ピンタップ時に詳細シートを表示する。
+        .sheet(item: $selectedPin) { pin in
+            PinDetailView(model: PinDetailModel(pin: pin)) {
+                selectedPin = nil
             }
         }
         .onAppear {
@@ -175,6 +188,7 @@ private struct DistanceHUDLabel: View {
 /// `GMSMapView` を SwiftUI に統合する `UIViewRepresentable`。
 /// 現在地表示（S1-006）と Polyline 経路描画（S1-007）の責務を持つ。
 /// S2-007 で復元データ（route / pins）を初期投入する受け口を追加。
+/// S6-011 でピンタップ → 詳細シート表示の binding を追加。
 private struct GoogleMapContainer: UIViewRepresentable {
     @ObservedObject var locationService: LocationService
 
@@ -184,6 +198,9 @@ private struct GoogleMapContainer: UIViewRepresentable {
 
     /// 起動時に SwiftData から復元された当日ピン（S2-007）。
     let restoredPins: [RestoredPin]
+
+    /// タップされたピンを親 View に伝える binding（S6-011）。
+    @Binding var selectedPin: RestoredPin?
 
     /// 経路ラインの色（チケット S1-007: 青系 #1E88E5）
     private static let routeStrokeColor = UIColor(red: 0x1E / 255.0,
@@ -199,7 +216,7 @@ private struct GoogleMapContainer: UIViewRepresentable {
     private static let defaultZoom: Float = 12
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(selectedPin: $selectedPin)
     }
 
     func makeUIView(context: Context) -> GMSMapView {
@@ -250,6 +267,8 @@ private struct GoogleMapContainer: UIViewRepresentable {
     /// クラス全体を MainActor に閉じることで GMSMapView/GMSMutablePath/GMSPolyline 等の
     /// 非 Sendable プロパティアクセスが安全になる。GMSMapViewDelegate メソッドも UIKit
     /// 由来のため MainActor 上で呼ばれる前提と矛盾しない。
+    ///
+    /// S6-011: `selectedPin` binding を受け取り、マーカータップで詳細シートを開く。
     @MainActor
     final class Coordinator: NSObject, GMSMapViewDelegate {
         var didCenterOnFirstFix: Bool = false
@@ -263,6 +282,13 @@ private struct GoogleMapContainer: UIViewRepresentable {
         private var didApplyRestoredRoute: Bool = false
         /// 既に地図に置いたピンの重複判定キー（座標 + stayedFrom の組）。
         private var placedPinKeys: Set<String> = []
+
+        /// タップされたピンを親 View に伝える binding（S6-011）。
+        private var selectedPin: Binding<RestoredPin?>
+
+        init(selectedPin: Binding<RestoredPin?>) {
+            self.selectedPin = selectedPin
+        }
 
         func attach(to mapView: GMSMapView,
                     strokeColor: UIColor,
@@ -294,6 +320,7 @@ private struct GoogleMapContainer: UIViewRepresentable {
 
         /// 起動時に復元されたピンを地図上に GMSMarker として配置する（S2-007）。
         /// 重複（同座標 + 同 stayedFrom）は再生成しない。
+        /// S6-011: marker.userData に RestoredPin を格納し、タップ時に取り出せるようにする。
         func applyRestoredPinsIfNeeded(_ pins: [RestoredPin], on mapView: GMSMapView) {
             guard !pins.isEmpty else { return }
             for pin in pins {
@@ -307,6 +334,8 @@ private struct GoogleMapContainer: UIViewRepresentable {
                 if let placeName = pin.placeName {
                     marker.snippet = placeName
                 }
+                // S6-011: userData に RestoredPin を格納。タップ時に mapView(_:didTap:) で取り出す。
+                marker.userData = pin
                 marker.map = mapView
             }
         }
@@ -330,6 +359,23 @@ private struct GoogleMapContainer: UIViewRepresentable {
             }
             appliedCount = route.count
             polyline?.path = path
+        }
+
+        // MARK: - GMSMapViewDelegate (S6-011)
+
+        /// マーカータップ時に詳細シートを表示する（S6-011）。
+        ///
+        /// - Returns: `true` を返すことで GMSMapView 標準の InfoWindow 表示を抑制し、
+        ///   カスタムシート（PinDetailView）に統一する。
+        func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
+            handleMarkerTap(marker: marker)
+            return true
+        }
+
+        /// マーカータップのロジック部分。テストから直接呼び出せるよう internal メソッドとして分離（S6-011）。
+        func handleMarkerTap(marker: GMSMarker) {
+            guard let pin = marker.userData as? RestoredPin else { return }
+            selectedPin.wrappedValue = pin
         }
     }
 }

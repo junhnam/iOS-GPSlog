@@ -82,7 +82,8 @@ final class MapViewModel: ObservableObject {
                             longitude: $0.longitude,
                             stayedFrom: $0.stayedFrom,
                             stayedDurationSeconds: $0.stayedDurationSeconds,
-                            placeName: $0.placeName)
+                            placeName: $0.placeName,
+                            address: $0.address)
             }
 
             // 表示用 km 値（モデル側で四捨五入済み）。
@@ -99,12 +100,32 @@ final class MapViewModel: ObservableObject {
 /// 復元したピンを View 層へ受け渡すための値型。
 /// SwiftData の `@Model` を直接 View に渡すと再描画コスト・スレッド境界面で扱いにくいため、
 /// 必要なフィールドだけを持つ Sendable な struct に変換する。
-struct RestoredPin: Hashable, Sendable {
+struct RestoredPin: Hashable, Sendable, Identifiable {
+    /// `.sheet(item:)` で使用する一意 ID（stayedFrom ベース）。
+    var id: TimeInterval { stayedFrom.timeIntervalSince1970 }
+
     let latitude: Double
     let longitude: Double
     let stayedFrom: Date
     let stayedDurationSeconds: Double
     let placeName: String?
+    /// 住所文字列（S5-007 / S6-011）。nil = 取得失敗または未取得。
+    /// デフォルト値 nil により、既存コードの `RestoredPin(... placeName:)` を変更せず使い続けられる。
+    let address: String?
+
+    init(latitude: Double,
+         longitude: Double,
+         stayedFrom: Date,
+         stayedDurationSeconds: Double,
+         placeName: String? = nil,
+         address: String? = nil) {
+        self.latitude = latitude
+        self.longitude = longitude
+        self.stayedFrom = stayedFrom
+        self.stayedDurationSeconds = stayedDurationSeconds
+        self.placeName = placeName
+        self.address = address
+    }
 
     /// 表示用に「約 N 分」を返す。N は秒数を 60 で割って整数化。
     var stayedMinutesText: String {

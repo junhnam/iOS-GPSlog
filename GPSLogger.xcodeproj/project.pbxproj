@@ -51,6 +51,9 @@
 		8D11C36DF24045BC25978350 /* CalendarSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */; };
 		8E691B87FFCD22FA8FEB8636 /* TripRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CCF1D511C77C674A48D2EA3 /* TripRepository.swift */; };
 		8FEA8A98433FD285EFA9A860 /* RecordingToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* PinDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A69788796A5B4C /* PinDetailModel.swift */; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* PinDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* PinDetailView.swift */; };
+		D4E5F6A7B8C9D0E1F2A3B4C5 /* PinDetailModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* PinDetailModelTests.swift */; };
 		916D1E6AA28EB92AD6FA4E90 /* CSVExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */; };
 		96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */; };
 		9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04A663F9874E0FC5CCA2229 /* PersistenceController.swift */; };
@@ -150,6 +153,9 @@
 		AC52EBDDC16E791A59801574 /* CloudUploadRetryQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadRetryQueue.swift; sourceTree = "<group>"; };
 		B37FB6243B593D1536828AB0 /* PlaceLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupService.swift; sourceTree = "<group>"; };
 		B469DE98253C140644E24C89 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
+		F1E2D3C4B5A69788796A5B4C /* PinDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailModel.swift; sourceTree = "<group>"; };
+		C3D4E5F6A7B8C9D0E1F2A3B4 /* PinDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailView.swift; sourceTree = "<group>"; };
+		E5F6A7B8C9D0E1F2A3B4C5D6 /* PinDetailModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailModelTests.swift; sourceTree = "<group>"; };
 		B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadRetryQueueTests.swift; sourceTree = "<group>"; };
 		BBA1500FED5E52CD71916C89 /* CloudUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadCoordinatorTests.swift; sourceTree = "<group>"; };
 		BBC544193EF55BDEDE9C0D57 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -261,6 +267,8 @@
 			children = (
 				0771CC5514403FBA9445A68C /* MapView.swift */,
 				B469DE98253C140644E24C89 /* MapViewModel.swift */,
+				F1E2D3C4B5A69788796A5B4C /* PinDetailModel.swift */,
+				C3D4E5F6A7B8C9D0E1F2A3B4 /* PinDetailView.swift */,
 				46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */,
 			);
 			path = Map;
@@ -302,6 +310,7 @@
 				943030606759EE61661DD07F /* LocationServiceBackgroundResumeTests.swift */,
 				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
 				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
+				E5F6A7B8C9D0E1F2A3B4C5D6 /* PinDetailModelTests.swift */,
 				DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */,
 				757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */,
 				51FF00C6BDAA0F59B0555A37 /* QASprint1AdditionalTests.swift */,
@@ -564,6 +573,8 @@
 				815840A6B17A8F34BC86D7F3 /* LocationService.swift in Sources */,
 				B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */,
 				C31C0D5EA2F6242A5B33FB6C /* MapViewModel.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* PinDetailModel.swift in Sources */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* PinDetailView.swift in Sources */,
 				4E83C83B29CF121E2B1181B1 /* PendingUpload.swift in Sources */,
 				9880F114F947B2EBBBE6203D /* PersistenceController.swift in Sources */,
 				784CDF377C467CBB581037FF /* PinRecord.swift in Sources */,
@@ -605,6 +616,7 @@
 				B0317E9F9847157C30D28369 /* LocationServiceBackgroundResumeTests.swift in Sources */,
 				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
 				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
+				D4E5F6A7B8C9D0E1F2A3B4C5 /* PinDetailModelTests.swift in Sources */,
 				DD761802C2D5F898D463A9F6 /* PinRecordTests.swift in Sources */,
 				ED033B0D7D5002820F01D032 /* PlaceLookupServiceTests.swift in Sources */,
 				1F25F0027A20912E96334367 /* QASprint1AdditionalTests.swift in Sources */,
