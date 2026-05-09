@@ -14,15 +14,14 @@
 
 - [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M（**S6-011 / S6-012 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰した上で、観点 2 を再判定する）
 - [ ] **S6-011** (TBD): ピンタップ詳細表示 + 外部マップ起動導線 → **dev-1** / Must / M（実機検証 1 回目フィードバック / `MapView.Coordinator` に `mapView(_:didTap marker:)` 実装 + `PinDetailView` 新規 + `Info.plist` に `LSApplicationQueriesSchemes` 追加 / ユニットテスト 4 件以上）
-- [ ] **S6-012** (TBD): StayDetector 半径を 30m → 100m に拡大（大型店対応） → **dev-2** / Must / S（実機検証 1 回目フィードバック / `StayDetectionConfig.radiusMeters` デフォルト 30→100 / `RetroactiveStayDetector` も共有 config 経由で追従 / 冪等性ガードも 100m に揃える / 既存テスト全件 pass + 100m 境界値テスト追加）
 
 ## In Progress
 
 - [ ] **S6-011** (TBD): ピンタップ詳細表示 + 外部マップ起動導線 → **dev-1** / Must / M（実装中）
-- [ ] **S6-012** (TBD): StayDetector 半径を 30m → 100m に拡大（大型店対応） → **dev-2** / Must / S
 
 ## Done
 
+- [x] **S6-012** (TBD): StayDetector 半径を 30m → 100m に拡大（大型店対応） → **dev-2** / Must / S（コミット `9d0676e` / `StayDetectionConfig.radiusMeters` デフォルト 30→100（1 行変更）/ RetroactiveStayDetector 共有 config 自動追従 + コメント追加 / 冪等性ガード 100m 追従（config 共有）/ DI テストアサーション更新 / 100m 境界値テスト 4 件追加 / メイン代行ビルド確認依頼）
 - [x] **S6-010** (TBD): 滞留検知の堅牢化（B: RoutePoint 後追い検知 + A: StayDetector 状態永続化） → **dev-2** / Must / L（コミット `5d6ef29` + メイン代行修正 `1dc0386` / RetroactiveStayDetector 新規 + StayDetector UserDefaults 永続化 + TripRepository 拡張 + LocationService DI + RootView 発火 / テスト 13 件 / メイン代行確認済）
 - [x] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + `RootViewIntegrationTests.swift` 末尾雛形コメント追加） → **po-sm（メイン代行）** / Must / S（コミット `954f23d` / 既存 173 テスト pass / 回帰なし）
 - [x] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約 / `@MainActor final class`） → **dev-1** / Must / M（コミット `8853972` / 176/176 pass / DI 検証ケース 3 件追加 / Swift 6 strict concurrency 整合）
@@ -104,7 +103,7 @@
 | S6-009 | dev-2 | 39dba0e | 0（メイン代行確認済） | 確認済 / 179/179 pass | 3（CSV 失敗時 retryCount 加算） |
 | S6-010 | dev-2 | 5d6ef29 + メイン代行修正 1dc0386 | 0（メイン代行確認済） | 確認済 / 全 pass | 13（B 5+境界値 2+haversine 2+A 3+DI 1） |
 | S6-011 | dev-1 | TBD | TBD | 未確認 | 想定 4+（マーカータップ DI / URL スキーム生成 / placeName あり/なし表示） |
-| S6-012 | dev-2 | TBD | TBD | 未確認 | 想定 1〜2（100m 境界値）+ 既存テスト追従 |
+| S6-012 | dev-2 | 9d0676e | TBD（メイン代行確認依頼） | 未確認 | 4（100m 境界値: StayDetector 2 件 + RetroactiveStayDetector 2 件）+ DI テスト更新 1 件 |
 
 ---
 
@@ -112,10 +111,10 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 3（S6-008 / S6-011 / S6-012） |
-| In Progress | 0 |
-| Done | 9 |
-| **Sprint 6 完了** | **9/12** |
+| Todo | 2（S6-008 / S6-011） |
+| In Progress | 1（S6-011 / dev-1 実装中） |
+| Done | 10（S6-012 含む） |
+| **Sprint 6 完了** | **10/12** |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
