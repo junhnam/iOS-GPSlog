@@ -12,7 +12,7 @@
 
 ## Todo
 
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰した上で、観点 2 を再判定する）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰した上で、既存 7 観点 + 自宅設定の保存反映 を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 を順次実施）
 
 ## In Progress
 
@@ -20,6 +20,7 @@
 
 ## Done
 
+- [x] **S6-014** (TBD): 自宅登録画面で保存値が破棄される問題の修正 → **po-sm（メイン代行 / 緊急対応）** / Must / S（コミット `5bc9145` / 実機検証 3 回目で発覚した致命バグ 2 件（自宅ピン位置修正→保存後に元に戻る / 自宅削除→再登録すると東京駅で固定）を修正 / 根本原因: `HomeRegistrationView` の `@State` を `init` 内で `State(initialValue: settings.homeLocation)` で外部値から初期化していたため、save() による親 SettingsView 再描画で initialValue が再適用される SwiftUI 既知アンチパターン / 修正: `@State` をリテラル既定値で宣言（`selectedCoordinate=defaultCenter` / `radius=defaultHomeRadiusMeters` / `selectedAddress=nil`）+ `init` からの State 初期化を全廃 + `.onAppear` 内で `didLoadFromSettings` フラグで初回ガード付き復元 / 実コード変更 22+/-8 行 / 検証: xcodebuild clean test 242/242 pass / warning 0 / 実機検証は jun さん依頼中）
 - [x] **S6-013** (TBD): 履歴画面のピンタップ詳細表示 + placeName 住所混入修正 → **dev-1** / Must / S（コミット `25bd2c4` / A: `HistoryDetailMapContainer.Coordinator` を `NSObject` + `@preconcurrency GMSMapViewDelegate` + `@MainActor` に拡張 / `makeUIView` で `mapView.delegate = context.coordinator` 設定 / `marker.userData` を `RestoredPin` に変更 / `mapView(_:didTap marker:)` + `handleMarkerTap(pin:)` 実装 / `HistoryDetailView` に `selectedPin` State + `.sheet(item:)` 追加 / B: `LocationService.swift` の `?? candidate.address` fallback 削除（メイン代行実装済を取り込み）/ `PlaceLookupServiceTests` のアサーション更新 / ユニットテスト 4 件追加（T-1 × 2 + T-2 × 3）/ メイン代行ビルド確認依頼）
 - [x] **S6-011** (TBD): ピンタップ詳細表示 + 外部マップ起動導線 → **dev-1** / Must / M（コミット `df3d076` / `MapView.Coordinator` に `mapView(_:didTap marker:)` + `handleMarkerTap(marker:)` 実装 / `marker.userData = pin` 設定 / `PinDetailModel.swift` 新規（URL 生成 / 文字列整形）/ `PinDetailView.swift` 新規（SwiftUI シート）/ `Info.plist` に `LSApplicationQueriesSchemes: comgooglemaps` 追加 / `RestoredPin` に `Identifiable` + `address` 追加 / ユニットテスト 10 件 / メイン代行ビルド確認依頼）
 - [x] **S6-012** (TBD): StayDetector 半径を 30m → 100m に拡大（大型店対応） → **dev-2** / Must / S（コミット `9d0676e` / `StayDetectionConfig.radiusMeters` デフォルト 30→100（1 行変更）/ RetroactiveStayDetector 共有 config 自動追従 + コメント追加 / 冪等性ガード 100m 追従（config 共有）/ DI テストアサーション更新 / 100m 境界値テスト 4 件追加 / メイン代行ビルド確認依頼）
@@ -90,6 +91,20 @@
    - 全 7 観点 OK → Sprint 6 完了 → 個人利用版リリース可能
    - 一部 NG → Sprint 6 完了後の追加コミットで対応 or Sprint 7 切出（jun さんと合意）
 
+### Phase 8（実機フィードバック対応 第 3 ラウンド / 2026-05-09 22:30 追加）
+
+1. **S6-014** メイン代行が `HomeRegistrationView.swift` の `@State` 初期化アンチパターンを修正（**Done**: `5bc9145`）
+   - `@State` をリテラル既定値で宣言（`selectedCoordinate` / `radius` / `selectedAddress`）
+   - `init` からの State 初期化を全廃
+   - `.onAppear` で `didLoadFromSettings` フラグ付き復元
+   - 22+/-8 行 / 242/242 pass / warning 0 / 緊急対応のため po-sm 経由ではなくメイン代行直
+2. po-sm が S6-014 を遡及起票 + board.md / 完了基準を 13 → 14 チケットに更新（**Done**: 本コミット）
+3. **S6-008（最終判定 / 観点拡張）** jun さんが iPhone 16 Pro で再検証
+   - 既存 7 観点 + **観点 8: 自宅設定の保存反映**（自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存）
+   - 順次実施: 買い物検証 → 自宅設定確認 → 履歴ピンタップ確認
+   - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
+   - 一部 NG → Sprint 6 完了後の追加コミットで対応 or Sprint 7 切出（jun さんと合意）
+
 ---
 
 ## ビルド状態スタンプ
@@ -111,6 +126,7 @@
 | S6-011 | dev-1 | df3d076 | TBD（メイン代行確認依頼） | 未確認 | 10（T-1: Identifiable/userData 2 件 / T-2: Apple Maps URL 2 件 / T-3: Google Maps URL 2 件 / T-4: 表示文字列 4 件） |
 | S6-012 | dev-2 | 9d0676e | TBD（メイン代行確認依頼） | 未確認 | 4（100m 境界値: StayDetector 2 件 + RetroactiveStayDetector 2 件）+ DI テスト更新 1 件 |
 | S6-013 | dev-1 | 25bd2c4 | TBD（メイン代行確認依頼） | 未確認 | 4 件追加（T-1: handleMarkerTap → callback 呼び出し 2 件 / T-2: RestoredPin 変換 3 件）+ 既存 PlaceLookupServiceTests 1 件更新（メイン代行作業済） |
+| S6-014 | po-sm（メイン代行 / 緊急対応） | 5bc9145 | 0（メイン代行確認済） | 確認済 / 242/242 pass | 0（既存テスト回帰なしを確認 / SwiftUI `@State` の挙動修正のため新規ユニットテスト追加は対象外 / 実機検証で確認） |
 
 ---
 
@@ -120,8 +136,8 @@
 |---|---|
 | Todo | 2（S6-008 / S6-013） |
 | In Progress | 0 |
-| Done | 11（S6-011 / S6-012 含む） |
-| **Sprint 6 完了** | **11/13** |
+| Done | 12（S6-011 / S6-012 / S6-013 / S6-014 含む） |
+| **Sprint 6 完了** | **12/14** |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -136,6 +152,14 @@
 > - **PinRecord.placeName に住所が混入**（`LocationService.swift:739` の `?? candidate.address` fallback が原因 → **S6-013 B / メイン代行が手元で修正済 / コミット未**）
 >
 > Sprint 6 スコープを **11/13** に拡張。S6-008 は **S6-013 完了後** に再実行する。
+>
+> 2026-05-09 更新（22:30 頃）: S6-013 完了後、jun さんの実機検証 3 回目で **自宅設定の致命バグ 2 件** を検出 → **S6-014** を Must で遡及起票（メイン代行が緊急対応で実装済 / コミット `5bc9145`）:
+> - **自宅でピン位置を修正して保存しても、保存前の値に戻る**
+> - **自宅を削除して再登録すると、地図上では修正できるが保存すると東京駅で固定される**
+>
+> 根本原因: `HomeRegistrationView` の `@State` を `init` 内で `State(initialValue: settings.homeLocation)` で外部値から初期化していたため、`save()` による親 SettingsView 再描画で initialValue が再適用される SwiftUI 既知アンチパターン。修正は `@State` をリテラル既定値で宣言し、設定値の復元は `.onAppear` で `didLoadFromSettings` ガード付きで実行する形に変更（22+/-8 行）。242/242 pass / warning 0 確認済。
+>
+> Sprint 6 スコープを **12/14** に拡張。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映** を確認する流れ。再発防止のため SwiftUI `@State` init アンチパターンの技術メモを `.scrum/notes/swiftui-state-init-pitfall.md` に追加。
 
 ---
 
@@ -146,15 +170,16 @@
 | `39dba0e` | `CloudUploadRetryQueueTests.swift` の `test_successAfterCsvFailure_removesEntry_S6_009` で `stubProvider` を `makeQueue` に渡しておらず内部 default が `.failure` を返してしまうテスト DI 漏れを修正（S6-001 で導入した DI カバレッジ運用がテストコード側にも適用されるべきという学び） |
 | `7029d2f` | `DatabaseAutoCleanupService.swift` の DB ファイル URL 取得を `ModelContainer.defaultDirectoryURL`（iOS 26 で存在せず）から `FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)` 経由に変更。`attrs[.size]` の型推論エラーを `attrs[FileAttributeKey.size]` 明示で解消 |
 | `7b77d28` | `AppIcon-1024.png` placeholder を Swift CLI（AppKit/CoreGraphics）で生成して配置（Designer は画像生成不可のため）。Designer 配色（深藍 #1A3A5C → 青 #2E7FC0 グラデーション）+ 中央に簡易ピン。jun さんは `IconDesignPreview.swift` から書き出した本番 PNG にいつでも差し替え可能。`SettingsView.swift` の `#Preview` で `return` 文後の `_ = container` が dead code warning を出していた件も同時解消（`return` の前に移動） |
+| `5bc9145` | **S6-014 緊急対応**: `HomeRegistrationView.swift` の `@State` を `init` 内で `State(initialValue: settings.homeLocation)` で外部値から初期化していたため、`save()` の親 `SettingsView` 再描画 → sheet content closure 経由の init 再評価で initialValue が再適用され、ユーザー入力値（ピン位置 / 半径 / 住所）が「保存前の値」または「東京駅の defaultCenter」に戻ってしまう SwiftUI 既知アンチパターン。修正: `@State` をリテラル既定値で宣言（`selectedCoordinate=defaultCenter` / `radius=defaultHomeRadiusMeters` / `selectedAddress=nil`）、`init` からの State 初期化を全廃、`.onAppear` 内で `didLoadFromSettings` フラグで初回ガード付きで settings から復元。実コード変更 22+/-8 行 / `xcodebuild clean test` 242/242 pass / warning 0 / 同類の罠を Sprint 7 以降の他画面で踏まないよう `.scrum/notes/swiftui-state-init-pitfall.md` に技術メモを残した |
 
 ---
 
 ## 完了基準（再掲）
 
-- [ ] 全 13 チケット Done（S6-001〜S6-007 / S6-009 / S6-010 / S6-011 / S6-012 完了済 / S6-008 / S6-013 残）
+- [ ] 全 14 チケット Done（S6-001〜S6-007 / S6-009 / S6-010 / S6-011 / S6-012 / S6-014 完了済 / S6-008 / S6-013 残）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
 - [ ] フル再ビルド warning 0 / error 0
-- [ ] ユニットテスト pass 100%（約 240 件以上想定 / S6-013 で +2 件以上 + 既存 1 件更新）
+- [ ] ユニットテスト pass 100%（242 件 / S6-014 完了時点で確認済 / S6-013 まで含めて 242/242 pass）
 - [ ] Sprint 1〜5 のテスト 173 件の回帰なし
 - [ ] API キー漏洩スキャン 0 件
 - [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
@@ -162,6 +187,7 @@
 - [x] **S6-011 完了**: ピンタップ詳細表示 + 外部マップ起動導線（実機検証 1 回目フィードバック対応 / 地図タブ）
 - [x] **S6-012 完了**: StayDetector 半径 30m → 100m 拡大（実機検証 1 回目フィードバック対応 / jun さん「大型店優先」判断）
 - [x] **S6-013 完了**: 履歴画面のピンタップ詳細表示 + placeName 住所混入修正（実機検証 2 回目フィードバック対応）
-- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし）
+- [x] **S6-014 完了**: 自宅登録画面で保存値が破棄される問題の修正（実機検証 3 回目フィードバック対応 / メイン代行緊急対応 / `5bc9145`）
+- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認
