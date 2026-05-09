@@ -12,11 +12,11 @@
 
 ## Todo
 
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M（**S6-011 / S6-012 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰した上で、観点 2 を再判定する）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰した上で、観点 2 を再判定する）
 
 ## In Progress
 
-（なし）
+- [ ] **S6-013** (TBD): 履歴画面のピンタップ詳細表示 + placeName 住所混入修正 → **dev-1** / Must / S（実機検証 2 回目フィードバック / A: `HistoryDetailMapContainer.Coordinator` を `GMSMapViewDelegate` 準拠（`@preconcurrency` 必須） + didTap で既存 `PinDetailView` シート表示 / B: `LocationService.swift:739` の `?? candidate.address` fallback 削除（**メイン代行が実装済 / コミット未** → 1 コミットにまとめる）/ ユニットテスト 2 件以上追加 / **S6-008 の前に実施**）
 
 ## Done
 
@@ -79,8 +79,13 @@
 1. **S6-011** dev-1 が `MapView.Coordinator` にピンタップ → 詳細シート → Apple/Google Maps 起動導線を実装（並行可）
 2. **S6-012** dev-2 が `StayDetectionConfig.radiusMeters` のデフォルトを 30 → 100 に拡大（並行可 / S6-011 とファイル競合なし）
 3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認
-4. **S6-008（最終判定）** jun さんが iPhone 16 Pro で再々検証
-   - 観点 2「MKLocalSearch / ピン化」: 4 店舗滞在 → 4 件ピン化 + ピンタップで詳細表示 + 店舗情報が見える
+4. **S6-013（実機検証 2 回目フィードバック対応 / 2026-05-09 21:30 追加）** dev-1 が以下を 1 コミットで実装:
+   - A: `HistoryDetailMapContainer.Coordinator` を `GMSMapViewDelegate` 準拠（`@preconcurrency` 必須）+ didTap で既存 `PinDetailView` シート表示
+   - B: `LocationService.swift:739` の `pin.placeName = candidate.name ?? candidate.address` を `?? candidate.address` 削除（**メイン代行が実装済 / コミット未** → S6-013 のコミットに含める）
+   - ユニットテスト 2 件以上追加 / 既存 237 件 pass / warning 0
+   - **S6-008 の前に実施**
+5. **S6-008（最終判定）** jun さんが iPhone 16 Pro で再々検証
+   - 観点 2「MKLocalSearch / ピン化」: 4 店舗滞在 → 4 件ピン化 + 地図タブ・履歴タブ両方でピンタップ詳細表示 + 店舗情報が見える（住所混入なし）
    - 全 7 観点 OK → Sprint 6 完了 → 個人利用版リリース可能
    - 一部 NG → Sprint 6 完了後の追加コミットで対応 or Sprint 7 切出（jun さんと合意）
 
@@ -104,6 +109,7 @@
 | S6-010 | dev-2 | 5d6ef29 + メイン代行修正 1dc0386 | 0（メイン代行確認済） | 確認済 / 全 pass | 13（B 5+境界値 2+haversine 2+A 3+DI 1） |
 | S6-011 | dev-1 | df3d076 | TBD（メイン代行確認依頼） | 未確認 | 10（T-1: Identifiable/userData 2 件 / T-2: Apple Maps URL 2 件 / T-3: Google Maps URL 2 件 / T-4: 表示文字列 4 件） |
 | S6-012 | dev-2 | 9d0676e | TBD（メイン代行確認依頼） | 未確認 | 4（100m 境界値: StayDetector 2 件 + RetroactiveStayDetector 2 件）+ DI テスト更新 1 件 |
+| S6-013 | dev-1 | TBD | TBD | 未着手 | 2 件以上（T-1: Coordinator didTap → PinDetailView / T-2: PinRecord → RestoredPin 変換）+ 既存 PlaceLookupServiceTests 1 件更新（メイン代行作業済） |
 
 ---
 
@@ -111,10 +117,10 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 1（S6-008） |
+| Todo | 2（S6-008 / S6-013） |
 | In Progress | 0 |
 | Done | 11（S6-011 / S6-012 含む） |
-| **Sprint 6 完了** | **11/12** |
+| **Sprint 6 完了** | **11/13** |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -123,6 +129,12 @@
 > - **ピンに店舗情報が出ない / タップしても何も起こらない**（`MapView.Coordinator` に `didTap marker` 未実装 → **S6-011**）
 >
 > jun さん判断: S6-011 起票 OK / 半径は 100m に拡大 / 設定可変化は不要。8/10 → **8/12** に拡張。S6-008 は **S6-011 / S6-012 完了後** に再実行する。
+>
+> 2026-05-09 更新（21:30 頃）: S6-011 / S6-012 完了後の jun さん実機再検証 2 回目で残バグ 2 件検出 → **S6-013** を Must で追加:
+> - **履歴タブの地図でピンタップしても詳細シートが出ない**（S6-011 は地図タブの `MapView` のみ対応 / 履歴タブの `HistoryDetailMapContainer` は未対応 → **S6-013 A**）
+> - **PinRecord.placeName に住所が混入**（`LocationService.swift:739` の `?? candidate.address` fallback が原因 → **S6-013 B / メイン代行が手元で修正済 / コミット未**）
+>
+> Sprint 6 スコープを **11/13** に拡張。S6-008 は **S6-013 完了後** に再実行する。
 
 ---
 
@@ -138,16 +150,17 @@
 
 ## 完了基準（再掲）
 
-- [ ] 全 12 チケット Done（S6-001〜S6-007 / S6-009 / S6-010 完了済 / S6-008 / S6-011 / S6-012 残）
+- [ ] 全 13 チケット Done（S6-001〜S6-007 / S6-009 / S6-010 / S6-011 / S6-012 完了済 / S6-008 / S6-013 残）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
 - [ ] フル再ビルド warning 0 / error 0
-- [ ] ユニットテスト pass 100%（約 220 件以上想定 / S6-011 で +4 件 / S6-012 で +1〜2 件）
+- [ ] ユニットテスト pass 100%（約 240 件以上想定 / S6-013 で +2 件以上 + 既存 1 件更新）
 - [ ] Sprint 1〜5 のテスト 173 件の回帰なし
 - [ ] API キー漏洩スキャン 0 件
 - [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
 - [x] **S6-010 完了**: 滞留検知の堅牢化（B 案 + A 案）が pass
-- [ ] **S6-011 完了**: ピンタップ詳細表示 + 外部マップ起動導線（実機検証 1 回目フィードバック対応）
-- [ ] **S6-012 完了**: StayDetector 半径 30m → 100m 拡大（実機検証 1 回目フィードバック対応 / jun さん「大型店優先」判断）
-- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 詳細シート確認）
+- [x] **S6-011 完了**: ピンタップ詳細表示 + 外部マップ起動導線（実機検証 1 回目フィードバック対応 / 地図タブ）
+- [x] **S6-012 完了**: StayDetector 半径 30m → 100m 拡大（実機検証 1 回目フィードバック対応 / jun さん「大型店優先」判断）
+- [ ] **S6-013 完了**: 履歴画面のピンタップ詳細表示 + placeName 住所混入修正（実機検証 2 回目フィードバック対応）
+- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認

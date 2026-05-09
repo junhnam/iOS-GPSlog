@@ -53,6 +53,7 @@
 		8FEA8A98433FD285EFA9A860 /* RecordingToggleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F0CA2E57DB8C75382AACBA /* RecordingToggleButton.swift */; };
 		A1B2C3D4E5F6A7B8C9D0E1F2 /* PinDetailModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A69788796A5B4C /* PinDetailModel.swift */; };
 		B2C3D4E5F6A7B8C9D0E1F2A3 /* PinDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F6A7B8C9D0E1F2A3B4 /* PinDetailView.swift */; };
+		96BCB251501C4196ACA404AB /* HistoryDetailMapContainerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F785305C79046318950B122 /* HistoryDetailMapContainerTests.swift */; };
 		D4E5F6A7B8C9D0E1F2A3B4C5 /* PinDetailModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6A7B8C9D0E1F2A3B4C5D6 /* PinDetailModelTests.swift */; };
 		916D1E6AA28EB92AD6FA4E90 /* CSVExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F59FE8A80FDBCF7E82B6B08 /* CSVExportService.swift */; };
 		96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */; };
@@ -155,6 +156,7 @@
 		B469DE98253C140644E24C89 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
 		F1E2D3C4B5A69788796A5B4C /* PinDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailModel.swift; sourceTree = "<group>"; };
 		C3D4E5F6A7B8C9D0E1F2A3B4 /* PinDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailView.swift; sourceTree = "<group>"; };
+		1F785305C79046318950B122 /* HistoryDetailMapContainerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailMapContainerTests.swift; sourceTree = "<group>"; };
 		E5F6A7B8C9D0E1F2A3B4C5D6 /* PinDetailModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailModelTests.swift; sourceTree = "<group>"; };
 		B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadRetryQueueTests.swift; sourceTree = "<group>"; };
 		BBA1500FED5E52CD71916C89 /* CloudUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadCoordinatorTests.swift; sourceTree = "<group>"; };
@@ -291,6 +293,7 @@
 			children = (
 				78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */,
 				FDD0C1AA312B81A6A6F32FB1 /* BatteryAdaptiveLocationPolicyTests.swift */,
+				1F785305C79046318950B122 /* HistoryDetailMapContainerTests.swift */,
 				40A74F94B451AE4BD207C26F /* CalendarEventCreationTests.swift */,
 				89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */,
 				2B37EF743063CED245F62C04 /* CalendarSyncSettingsTests.swift */,
@@ -611,6 +614,7 @@
 				734CA4250B5B63D71A8969EA /* ExportViewTests.swift in Sources */,
 				C862872A4FC5D2544D8D2326 /* GPSLoggerTests.swift in Sources */,
 				F54222DBF285B9B10F8DA7A3 /* GoogleDriveSyncServiceTests.swift in Sources */,
+				96BCB251501C4196ACA404AB /* HistoryDetailMapContainerTests.swift in Sources */,
 				3A23BCAABAE933AAD3A2BBA7 /* HomeDetectorTests.swift in Sources */,
 				0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */,
 				B0317E9F9847157C30D28369 /* LocationServiceBackgroundResumeTests.swift in Sources */,

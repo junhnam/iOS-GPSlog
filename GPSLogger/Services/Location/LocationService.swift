@@ -734,9 +734,12 @@ final class LocationService: NSObject, ObservableObject {
             if let provider {
                 if let candidate = await provider.lookup(coordinate: coordinate) {
                     // S5-007: address は常に書き戻す（CalendarSync の 3 段 fallback で参照）。
-                    // placeName は POI ヒット時のみ name、それ以外は address にフォールバック
-                    // （Sprint 3 以前と同じ挙動を維持）。
-                    pin.placeName = candidate.name ?? candidate.address
+                    // S6-013: placeName は POI ヒット時のみ name を入れる。
+                    //   Sprint 3 以前は address に fallback していたが、UI（PinDetailView /
+                    //   HistoryDetailPlaceList / マーカー InfoWindow）が「お店情報」として
+                    //   placeName を表示するため、住所が混ざると「お店名のはずが住所」になる。
+                    //   address 単独表示は UI 側に address フィールドがあるのでそちらに任せる。
+                    pin.placeName = candidate.name
                     pin.placeURL = candidate.url
                     pin.address = candidate.address
                     do {

@@ -10,8 +10,14 @@ import CoreLocation
 ///
 /// 地図初期表示は経路全体が収まる範囲（fitBounds 相当）。
 /// データが空のときは中央付近のダミーカメラ位置のまま、何も描かない。
+///
+/// S6-013: ピンタップ → 詳細シート（PinDetailView）を表示するように拡張。
+/// 地図タブ（MapView）と同一の UX を履歴タブでも提供する。
 struct HistoryDetailView: View {
     let trip: TripRecord
+
+    /// タップされた滞留ピン（S6-013）。nil → シート非表示、値あり → シート表示。
+    @State private var selectedPin: RestoredPin?
 
     private static let titleFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -22,9 +28,11 @@ struct HistoryDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HistoryDetailMapContainer(trip: trip)
-                .frame(maxHeight: .infinity)
-                .accessibilityIdentifier("history_detail_map")
+            HistoryDetailMapContainer(trip: trip) { pin in
+                selectedPin = pin
+            }
+            .frame(maxHeight: .infinity)
+            .accessibilityIdentifier("history_detail_map")
 
             VStack(spacing: 8) {
                 HistoryDetailSummary(trip: trip)
@@ -40,6 +48,12 @@ struct HistoryDetailView: View {
         }
         .navigationTitle(Self.titleFormatter.string(from: trip.date))
         .navigationBarTitleDisplayMode(.inline)
+        // S6-013: ピンタップ時に詳細シートを表示する（地図タブと同じ UX）。
+        .sheet(item: $selectedPin) { pin in
+            PinDetailView(model: PinDetailModel(pin: pin)) {
+                selectedPin = nil
+            }
+        }
     }
 }
 
@@ -125,14 +139,26 @@ private struct HistoryDetailSummary: View {
 
 /// 詳細画面の地図部。GMSMapView を SwiftUI に統合し、経路と滞留ピンを 1 度だけ描画する。
 /// 読み取り専用なので、座標更新の購読は不要。
-private struct HistoryDetailMapContainer: UIViewRepresentable {
+///
+/// S6-013: `onPinTap` closure を受け取り、Coordinator が GMSMapViewDelegate を実装して
+/// ピンタップイベントを SwiftUI 側に通知する。テストから Coordinator にアクセスできるよう
+/// `internal` アクセスレベルに変更（`private struct` から `struct` に変更）。
+struct HistoryDetailMapContainer: UIViewRepresentable {
     let trip: TripRecord
+
+    /// ピンタップ時に呼び出されるコールバック（S6-013）。
+    /// 地図タブと同じ UX: タップされた RestoredPin を引数として渡す。
+    let onPinTap: (RestoredPin) -> Void
 
     /// 経路ラインの色（メイン地図と統一: 青系 #1E88E5）。
     private static let routeStrokeColor = UIColor(red: 0x1E / 255.0,
                                                   green: 0x88 / 255.0,
                                                   blue: 0xE5 / 255.0,
                                                   alpha: 1.0)
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onPinTap: onPinTap)
+    }
 
     func makeUIView(context: Context) -> GMSMapView {
         // 初期カメラ: データが空でも見栄えが崩れないよう、東京駅近辺をデフォルトに。
@@ -145,6 +171,8 @@ private struct HistoryDetailMapContainer: UIViewRepresentable {
         let mapView = GMSMapView(options: options)
         // 詳細画面では現在地ボタンは不要（読み取り専用なので）。
         mapView.isMyLocationEnabled = false
+        // S6-013: デリゲートを設定してピンタップイベントを受け取る。
+        mapView.delegate = context.coordinator
         return mapView
     }
 
@@ -174,23 +202,34 @@ private struct HistoryDetailMapContainer: UIViewRepresentable {
         }
 
         // 滞留ピンを GMSMarker として配置。
-        // タイトル: お店名があればお店名、なければ「滞留 約 N 分」（S3-007）。
-        // Snippet: お店名がある場合は「滞留 約 N 分」を Snippet に回し、両方見えるようにする。
+        // S6-013: marker.userData を RestoredPin インスタンスに変更し、
+        //   タップ時に mapView(_:didTap marker:) で取り出せるようにする。
+        //   （旧実装: marker.userData = pin.placeURL → 未使用だったため完全置き換え）
         for pin in trip.pins.sorted(by: { $0.stayedFrom < $1.stayedFrom }) {
             let coord = CLLocationCoordinate2D(latitude: pin.latitude,
                                                longitude: pin.longitude)
             let marker = GMSMarker(position: coord)
             let minutes = max(1, Int(pin.stayedDurationSeconds / 60))
             let stayLabel = "滞留 約\(minutes)分"
+            // マーカーのタイトル/スニペット（InfoWindow は didTap で return true して抑制するが、
+            // ユーザーが標準ビューに触れた際の見栄えとして念のため設定する）。
             if let placeName = pin.placeName, !placeName.isEmpty {
                 marker.title = placeName
                 marker.snippet = stayLabel
-                // S3-007: タップ時に Apple Maps URL を開けるよう、userData に URL を保持。
-                // 実際の openURL は Sprint 4 のカレンダー連携と合わせて UI から扱う。
-                marker.userData = pin.placeURL
             } else {
                 marker.title = stayLabel
             }
+            // S6-013: PinRecord → RestoredPin に変換して userData に格納。
+            // RestoredPin は Sendable な値型なので Sendable 境界を越えても安全。
+            let restoredPin = RestoredPin(
+                latitude: pin.latitude,
+                longitude: pin.longitude,
+                stayedFrom: pin.stayedFrom,
+                stayedDurationSeconds: pin.stayedDurationSeconds,
+                placeName: pin.placeName,
+                address: pin.address
+            )
+            marker.userData = restoredPin
             marker.map = mapView
             bounds = bounds.includingCoordinate(coord)
             hasAnyCoordinate = true
@@ -204,14 +243,42 @@ private struct HistoryDetailMapContainer: UIViewRepresentable {
         }
     }
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-
-    /// 多重描画防止のためのフラグ保持。
-    /// SwiftUI の updateUIView は条件次第で複数回呼ばれる可能性があるため、
-    /// 1 度だけ描画させる。
-    final class Coordinator {
+    /// 多重描画防止 + GMSMapViewDelegate 実装を担う Coordinator（S6-013 拡張）。
+    ///
+    /// Swift 6 strict concurrency 対応:
+    ///   - `@MainActor` でクラス全体を MainActor に隔離する。
+    ///   - `@preconcurrency GMSMapViewDelegate` により、GMSMapViewDelegate のアイソレーション
+    ///     境界チェックを緩和する（S6-011 の MapView.Coordinator と同じパターン）。
+    @MainActor
+    final class Coordinator: NSObject, @preconcurrency GMSMapViewDelegate {
+        /// 多重描画防止フラグ。
         var didRender: Bool = false
+
+        /// ピンタップ時に呼び出すコールバック。
+        private let onPinTap: (RestoredPin) -> Void
+
+        init(onPinTap: @escaping (RestoredPin) -> Void) {
+            self.onPinTap = onPinTap
+        }
+
+        // MARK: - GMSMapViewDelegate (S6-013)
+
+        /// マーカータップ時に詳細シートを表示する（S6-013）。
+        ///
+        /// - Returns: `true` を返すことで GMSMapView 標準の InfoWindow 表示を抑制し、
+        ///   カスタムシート（PinDetailView）に統一する（地図タブと同じ UX）。
+        func mapView(_ mapView: GMSMapView, didTap marker: GMSMarker) -> Bool {
+            handleMarkerTap(pin: marker.userData as? RestoredPin)
+            return true
+        }
+
+        /// マーカータップのロジック部分。テストから直接呼び出せるよう internal メソッドとして分離（S6-013）。
+        ///
+        /// - Parameter pin: `marker.userData` から取り出した `RestoredPin`。
+        ///   nil の場合（userData 未設定 / 型ミスマッチ）は何もしない。
+        func handleMarkerTap(pin: RestoredPin?) {
+            guard let pin else { return }
+            onPinTap(pin)
+        }
     }
 }

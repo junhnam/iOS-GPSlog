@@ -264,8 +264,11 @@ final class PlaceLookupServiceTests: XCTestCase {
 
         let trip = try repo.todayTrip(creatingIfMissing: false)
         let pin = try XCTUnwrap(try XCTUnwrap(trip).pins.first)
-        // POI なしのため placeName は address に fallback して書き込まれる（既存挙動）。
-        XCTAssertEqual(pin.placeName, "東京都 千代田区 丸の内 1-9-1")
+        // S6-013: POI ヒット 0 件時は placeName は nil のまま（住所に fallback しない）。
+        // 住所は address フィールドに別途保存されるので、UI 側で「お店情報」と「住所」を
+        // それぞれ別表示できる（PinDetailView / HistoryDetailPlaceList）。
+        XCTAssertNil(pin.placeName,
+                     "S6-013: POI なしのとき placeName は nil（住所は address に分離保存）")
         XCTAssertEqual(pin.address, "東京都 千代田区 丸の内 1-9-1",
                        "S5-007: 逆ジオコーディング fallback でも address が書き戻される")
         XCTAssertNil(pin.placeURL)
