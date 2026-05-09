@@ -16,10 +16,11 @@
 
 ## In Progress
 
-- [ ] **S6-013** (TBD): 履歴画面のピンタップ詳細表示 + placeName 住所混入修正 → **dev-1** / Must / S（実機検証 2 回目フィードバック / A: `HistoryDetailMapContainer.Coordinator` を `GMSMapViewDelegate` 準拠（`@preconcurrency` 必須） + didTap で既存 `PinDetailView` シート表示 / B: `LocationService.swift:739` の `?? candidate.address` fallback 削除（**メイン代行が実装済 / コミット未** → 1 コミットにまとめる）/ ユニットテスト 2 件以上追加 / **S6-008 の前に実施**）
+（なし）
 
 ## Done
 
+- [x] **S6-013** (TBD): 履歴画面のピンタップ詳細表示 + placeName 住所混入修正 → **dev-1** / Must / S（コミット `25bd2c4` / A: `HistoryDetailMapContainer.Coordinator` を `NSObject` + `@preconcurrency GMSMapViewDelegate` + `@MainActor` に拡張 / `makeUIView` で `mapView.delegate = context.coordinator` 設定 / `marker.userData` を `RestoredPin` に変更 / `mapView(_:didTap marker:)` + `handleMarkerTap(pin:)` 実装 / `HistoryDetailView` に `selectedPin` State + `.sheet(item:)` 追加 / B: `LocationService.swift` の `?? candidate.address` fallback 削除（メイン代行実装済を取り込み）/ `PlaceLookupServiceTests` のアサーション更新 / ユニットテスト 4 件追加（T-1 × 2 + T-2 × 3）/ メイン代行ビルド確認依頼）
 - [x] **S6-011** (TBD): ピンタップ詳細表示 + 外部マップ起動導線 → **dev-1** / Must / M（コミット `df3d076` / `MapView.Coordinator` に `mapView(_:didTap marker:)` + `handleMarkerTap(marker:)` 実装 / `marker.userData = pin` 設定 / `PinDetailModel.swift` 新規（URL 生成 / 文字列整形）/ `PinDetailView.swift` 新規（SwiftUI シート）/ `Info.plist` に `LSApplicationQueriesSchemes: comgooglemaps` 追加 / `RestoredPin` に `Identifiable` + `address` 追加 / ユニットテスト 10 件 / メイン代行ビルド確認依頼）
 - [x] **S6-012** (TBD): StayDetector 半径を 30m → 100m に拡大（大型店対応） → **dev-2** / Must / S（コミット `9d0676e` / `StayDetectionConfig.radiusMeters` デフォルト 30→100（1 行変更）/ RetroactiveStayDetector 共有 config 自動追従 + コメント追加 / 冪等性ガード 100m 追従（config 共有）/ DI テストアサーション更新 / 100m 境界値テスト 4 件追加 / メイン代行ビルド確認依頼）
 - [x] **S6-010** (TBD): 滞留検知の堅牢化（B: RoutePoint 後追い検知 + A: StayDetector 状態永続化） → **dev-2** / Must / L（コミット `5d6ef29` + メイン代行修正 `1dc0386` / RetroactiveStayDetector 新規 + StayDetector UserDefaults 永続化 + TripRepository 拡張 + LocationService DI + RootView 発火 / テスト 13 件 / メイン代行確認済）
@@ -109,7 +110,7 @@
 | S6-010 | dev-2 | 5d6ef29 + メイン代行修正 1dc0386 | 0（メイン代行確認済） | 確認済 / 全 pass | 13（B 5+境界値 2+haversine 2+A 3+DI 1） |
 | S6-011 | dev-1 | df3d076 | TBD（メイン代行確認依頼） | 未確認 | 10（T-1: Identifiable/userData 2 件 / T-2: Apple Maps URL 2 件 / T-3: Google Maps URL 2 件 / T-4: 表示文字列 4 件） |
 | S6-012 | dev-2 | 9d0676e | TBD（メイン代行確認依頼） | 未確認 | 4（100m 境界値: StayDetector 2 件 + RetroactiveStayDetector 2 件）+ DI テスト更新 1 件 |
-| S6-013 | dev-1 | TBD | TBD | 未着手 | 2 件以上（T-1: Coordinator didTap → PinDetailView / T-2: PinRecord → RestoredPin 変換）+ 既存 PlaceLookupServiceTests 1 件更新（メイン代行作業済） |
+| S6-013 | dev-1 | 25bd2c4 | TBD（メイン代行確認依頼） | 未確認 | 4 件追加（T-1: handleMarkerTap → callback 呼び出し 2 件 / T-2: RestoredPin 変換 3 件）+ 既存 PlaceLookupServiceTests 1 件更新（メイン代行作業済） |
 
 ---
 
@@ -160,7 +161,7 @@
 - [x] **S6-010 完了**: 滞留検知の堅牢化（B 案 + A 案）が pass
 - [x] **S6-011 完了**: ピンタップ詳細表示 + 外部マップ起動導線（実機検証 1 回目フィードバック対応 / 地図タブ）
 - [x] **S6-012 完了**: StayDetector 半径 30m → 100m 拡大（実機検証 1 回目フィードバック対応 / jun さん「大型店優先」判断）
-- [ ] **S6-013 完了**: 履歴画面のピンタップ詳細表示 + placeName 住所混入修正（実機検証 2 回目フィードバック対応）
+- [x] **S6-013 完了**: 履歴画面のピンタップ詳細表示 + placeName 住所混入修正（実機検証 2 回目フィードバック対応）
 - [ ] **S6-008 再実行（最終）**: 実機検証 7 観点すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認
