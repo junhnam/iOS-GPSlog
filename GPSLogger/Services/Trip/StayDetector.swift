@@ -57,6 +57,12 @@ enum StayEvent: Equatable {
 ///     - そうでなければ「短期停止」として無視
 ///   - 中心点は滞留が始まった最初の点の座標をそのまま使う（簡易実装、Sprint 6 で重心へ精緻化）
 ///
+/// S6-010 A 案: 内部状態を UserDefaults に永続化し、タスクキル後の再起動時に復元する。
+///   - 永続化キー名前空間: `gpslogger.staydetector.v1.*`
+///   - `anchorLocation`（緯度・経度）/ `stayStartedAt` / `lastInsideAt` を保存
+///   - init 時に復元。ただし `lastInsideAt` から `minDuration * 2` 以上経過した
+///     古い状態は「失効」とみなして破棄する（古い滞留判定の引きずり防止）
+///
 /// LocationService から `ingest(location:) -> StayEvent` を呼び、戻り値で挙動を分岐する。
 @MainActor
 final class StayDetector {
@@ -71,9 +77,104 @@ final class StayDetector {
     /// 直近の滞留候補内の点の timestamp。半径外への離脱検知時に「滞留終了時刻」として使う。
     private var lastInsideAt: Date?
 
-    init(config: StayDetectionConfig = StayDetectionConfig()) {
-        self.config = config
+    // MARK: - A 案: UserDefaults 永続化
+
+    /// 永続化に使用する UserDefaults。テストでは独立スイートを差し込める。
+    private let defaults: UserDefaults
+
+    /// UserDefaults キーの名前空間（S6-010 A 案）。
+    enum PersistenceKeys {
+        static let anchorLatitude  = "gpslogger.staydetector.v1.anchorLatitude"
+        static let anchorLongitude = "gpslogger.staydetector.v1.anchorLongitude"
+        static let stayStartedAt   = "gpslogger.staydetector.v1.stayStartedAt"
+        static let lastInsideAt    = "gpslogger.staydetector.v1.lastInsideAt"
     }
+
+    /// 状態が「失効」とみなされるまでの時間 = minDuration * 2。
+    /// `lastInsideAt` からこの時間以上経過した状態は init 時に破棄する。
+    private var expirationInterval: TimeInterval { config.minDuration * 2 }
+
+    // MARK: - Init
+
+    init(config: StayDetectionConfig = StayDetectionConfig(),
+         defaults: UserDefaults = .standard) {
+        self.config = config
+        self.defaults = defaults
+        // A 案: UserDefaults から前回の状態を復元する
+        restoreStateFromDefaults()
+    }
+
+    // MARK: - A 案: 状態復元
+
+    /// UserDefaults から内部状態を復元する。
+    ///
+    /// 復元条件:
+    ///   - anchorLatitude / anchorLongitude / stayStartedAt / lastInsideAt がすべて保存済み
+    ///   - `lastInsideAt` から現在時刻まで `minDuration * 2` 未満（失効していない）
+    ///
+    /// 条件を満たさない場合は状態を nil のまま保持し、anchorLocation を新たに作り直す。
+    private func restoreStateFromDefaults() {
+        // anchorLocation の復元
+        guard defaults.object(forKey: PersistenceKeys.anchorLatitude) != nil,
+              defaults.object(forKey: PersistenceKeys.anchorLongitude) != nil else {
+            return
+        }
+        let lat = defaults.double(forKey: PersistenceKeys.anchorLatitude)
+        let lon = defaults.double(forKey: PersistenceKeys.anchorLongitude)
+
+        // stayStartedAt / lastInsideAt の復元
+        guard let startedData = defaults.object(forKey: PersistenceKeys.stayStartedAt) as? Date,
+              let lastData = defaults.object(forKey: PersistenceKeys.lastInsideAt) as? Date else {
+            return
+        }
+
+        // 失効チェック: lastInsideAt から minDuration * 2 以上経過していたら破棄
+        let elapsed = Date().timeIntervalSince(lastData)
+        if elapsed >= expirationInterval {
+            // 失効した状態は UserDefaults からも削除して clean にする
+            clearPersistedState()
+            return
+        }
+
+        // 復元成功: 内部状態を設定
+        let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        anchorLocation = CLLocation(coordinate: coordinate,
+                                    altitude: 0,
+                                    horizontalAccuracy: 30,
+                                    verticalAccuracy: -1,
+                                    timestamp: startedData)
+        stayStartedAt = startedData
+        lastInsideAt = lastData
+    }
+
+    // MARK: - A 案: 状態永続化
+
+    /// 現在の内部状態を UserDefaults に書き込む。
+    /// `ingest(location:)` で状態が更新されるたびに呼ばれる。
+    /// 数分に 1 回程度の呼び出しなので、パフォーマンス影響は無視できる。
+    private func persistCurrentState() {
+        guard let anchor = anchorLocation,
+              let started = stayStartedAt,
+              let lastInside = lastInsideAt else {
+            // anchorLocation が nil の場合は保存データをクリアする
+            clearPersistedState()
+            return
+        }
+        defaults.set(anchor.coordinate.latitude, forKey: PersistenceKeys.anchorLatitude)
+        defaults.set(anchor.coordinate.longitude, forKey: PersistenceKeys.anchorLongitude)
+        defaults.set(started, forKey: PersistenceKeys.stayStartedAt)
+        defaults.set(lastInside, forKey: PersistenceKeys.lastInsideAt)
+    }
+
+    /// UserDefaults の永続化データを削除する。
+    private func clearPersistedState() {
+        defaults.removeObject(forKey: PersistenceKeys.anchorLatitude)
+        defaults.removeObject(forKey: PersistenceKeys.anchorLongitude)
+        defaults.removeObject(forKey: PersistenceKeys.stayStartedAt)
+        defaults.removeObject(forKey: PersistenceKeys.lastInsideAt)
+    }
+
+    // MARK: - Core Logic
 
     /// 1 点取り込み、現在の滞留状態に応じてイベントを返す。
     /// - 戻り値 `.moving`: 滞留候補なし。LocationService は通常通り経路保存。
@@ -87,6 +188,7 @@ final class StayDetector {
             anchorLocation = location
             stayStartedAt = location.timestamp
             lastInsideAt = location.timestamp
+            persistCurrentState()
             return .moving
         }
 
@@ -94,6 +196,7 @@ final class StayDetector {
         if distance <= config.radiusMeters {
             // 半径内: 滞留候補を更新。
             lastInsideAt = location.timestamp
+            persistCurrentState()
             // 既に minDuration を超えているなら「滞留中」状態。
             // 最初の minDuration 経過前の点は、滞留としても通常としても扱える。
             // ここでは「一度でも minDuration を超えたら staying、以降はその場の点を skipped」する仕様。
@@ -124,6 +227,7 @@ final class StayDetector {
         anchorLocation = location
         stayStartedAt = location.timestamp
         lastInsideAt = location.timestamp
+        persistCurrentState()
 
         if let pin {
             return .stayEnded(pin)
@@ -131,10 +235,11 @@ final class StayDetector {
         return .moving
     }
 
-    /// テスト用: 内部状態をリセット。
+    /// テスト用: 内部状態をリセット。UserDefaults の永続化データも同時にクリアする（S6-010 A 案）。
     func _resetForTesting() {
         anchorLocation = nil
         stayStartedAt = nil
         lastInsideAt = nil
+        clearPersistedState()
     }
 }

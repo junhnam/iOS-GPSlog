@@ -154,9 +154,16 @@ final class LocationService: NSObject, ObservableObject {
     /// 受け入れ条件: 「5m 以上なら appendRoutePoint で永続化」。
     private static let dbWriteThresholdMeters: Double = 5.0
 
+    /// 後追い滞留検知サービス（S6-010 B 案）。
+    /// アプリ起動時 / SLC 起床時 / scenePhase 復帰時に過去の RoutePoint を走査して
+    /// 滞留区間を後追いで検知し、PinRecord を生成する。
+    /// nil のときは後追い検知を無効化（テスト・後方互換）。
+    private let retroactiveStayDetector: RetroactiveStayDetector?
+
     init(manager: any LocationProviderProtocol = CLLocationManager(),
          repository: TripRepository? = nil,
          stayDetector: StayDetector = StayDetector(),
+         retroactiveStayDetector: RetroactiveStayDetector? = RetroactiveStayDetector(),
          placeProvider: (any PlaceProviderProtocol)? = nil,
          appSettings: AppSettings? = nil,
          calendarSync: CalendarSyncService? = nil,
@@ -165,6 +172,7 @@ final class LocationService: NSObject, ObservableObject {
         self.manager = manager
         self.repository = repository
         self.stayDetector = stayDetector
+        self.retroactiveStayDetector = retroactiveStayDetector
         self.placeProvider = placeProvider
         self.appSettings = appSettings
         self.calendarSync = calendarSync
@@ -358,6 +366,9 @@ final class LocationService: NSObject, ObservableObject {
         // 4. 記録再開
         Self.logger.info("resumeTrackingAfterRelaunch: wasTracking=true かつ自宅外 → 記録再開")
         startUpdatingLocation()
+
+        // 5. S6-010 B 案: 後追い滞留検知を実行（タスクキル / iOS 自動停止で抜け落ちたピンを救う）
+        runRetroactiveStayDetectionIfNeeded()
     }
 
     // MARK: - Test hooks
@@ -630,6 +641,81 @@ final class LocationService: NSObject, ObservableObject {
     /// テスト用: 直近のバッテリーポリシー決定を読む（S6-005）。
     var _lastBatteryPolicyDecisionForTesting: BatteryAdaptiveLocationPolicy.Decision {
         lastBatteryPolicyDecision
+    }
+
+    // MARK: - S6-010 B 案: 後追い滞留検知
+
+    /// 後追い滞留検知を実行し、新たに検知されたピンを永続化する（S6-010 B 案）。
+    ///
+    /// 発火タイミング:
+    ///   - `resumeTrackingAfterRelaunch()` 末尾（SLC 起床 / scenePhase 復帰）
+    ///   - `runRetroactiveStayDetectionOnLaunch()` 経由でアプリ起動時（手動 kill → 再起動）
+    ///
+    /// 処理内容:
+    ///   1. 直近 2 日分の RoutePoint を取得
+    ///   2. RetroactiveStayDetector で滞留候補を検出
+    ///   3. 既存ピンと重複しないものだけ appendPin で永続化
+    ///   4. enrichPinWithPlaceInfo でお店情報も取得
+    ///
+    /// 冪等性: RetroactiveStayDetector.isDuplicate() で重複チェック済みのため、
+    /// 複数回発火しても同じピンが二重作成されない。
+    func runRetroactiveStayDetectionIfNeeded() {
+        guard let repository, let detector = retroactiveStayDetector else { return }
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            do {
+                // 1. 直近 2 日分の RoutePoint を取得（日付またぎシナリオを救うため 2 日）
+                let points = try repository.recentRoutePoints(days: 2)
+                guard points.count >= 2 else { return }
+
+                // 2. 既存ピンを取得（冪等性チェック用）
+                let existingPins = try repository.recentPins(days: 2)
+
+                // 3. 後追い検知を実行（純粋関数: 副作用なし）
+                let newPins = detector.detectStays(from: points, excluding: existingPins)
+                guard !newPins.isEmpty else {
+                    Self.logger.info("RetroactiveStayDetector: 新規ピンなし（点数=\(points.count)）")
+                    return
+                }
+
+                Self.logger.info("RetroactiveStayDetector: \(newPins.count) 件の新規ピンを検出")
+
+                // 4. 新規ピンを currentTrip に紐付けて永続化
+                // 各ピンの stayedFrom 日付に対応する TripRecord に紐付ける
+                for pin in newPins {
+                    do {
+                        let pinDate = pin.stayedFrom
+                        // 日付に対応する TripRecord を探す（見つからなければスキップ）
+                        if let trip = try? repository.trip(on: pinDate) {
+                            try repository.appendPin(pin, to: trip)
+                            Self.logger.info("RetroactiveStayDetector: ピン永続化成功 lat=\(pin.latitude) lon=\(pin.longitude)")
+                            // お店情報取得もトリガー（既存リアルタイム検知ルートと同じ経路）
+                            enrichPinWithPlaceInfo(pin, repository: repository)
+                        } else {
+                            Self.logger.info("RetroactiveStayDetector: TripRecord 未存在のためスキップ date=\(pinDate)")
+                        }
+                    } catch {
+                        Self.logger.warning("RetroactiveStayDetector: ピン永続化失敗 \(error.localizedDescription)")
+                    }
+                }
+            } catch {
+                Self.logger.warning("RetroactiveStayDetector: データ取得失敗 \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// アプリ起動時に後追い滞留検知を一度実行するエントリポイント（S6-010 B 案）。
+    ///
+    /// `RootView.task` または `AppDependencyContainer` 初期化直後に呼ぶ。
+    /// タスクキル → 手動再起動のシナリオで、SLC 起床を経ずに起動した場合の救済経路。
+    ///
+    /// `resumeTrackingAfterRelaunch()` とは独立して呼ばれるが、
+    /// 冪等性ガード（RetroactiveStayDetector.isDuplicate）により重複ピンは作られない。
+    func runRetroactiveStayDetectionOnLaunch() {
+        // 同期経路は resumeTrackingAfterRelaunch と共通
+        runRetroactiveStayDetectionIfNeeded()
     }
 
     /// S3-007: 永続化済みの PinRecord に対し、PlaceLookupService を呼んで

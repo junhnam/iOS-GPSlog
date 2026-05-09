@@ -107,6 +107,13 @@ struct RootView: View {
             _ = try? await retryQueue.processOnAppLaunch()
             retryQueue.startObservingNetwork()
         }
+        // S6-010 B 案: アプリ起動時に後追い滞留検知を一度実行する。
+        // タスクキル → 手動再起動のシナリオで、SLC 起床を経ずに起動した場合でも
+        // DB に記録済みの RoutePoint からピン化漏れを救える。
+        // resumeTrackingAfterRelaunch でも発火するが、冪等性ガードにより重複ピンは作られない。
+        .task { [locationService] in
+            locationService.runRetroactiveStayDetectionOnLaunch()
+        }
         // S6-006: scenePhase が .active になったとき（フォアグラウンド復帰 /
         // SLC 起床後の applicationDidBecomeActive 相当）に前回の記録状態を復元する。
         // kill 後の SLC 起床でも ScenePhase.active が発火するため、

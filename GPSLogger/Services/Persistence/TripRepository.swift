@@ -220,4 +220,32 @@ final class TripRepository {
             throw TripRepositoryError.fetchFailed(underlying: error)
         }
     }
+
+    // MARK: - S6-010: 後追い滞留検知サポート
+
+    /// 直近 N 日分の RoutePoint を時系列昇順で返す（S6-010 B 案）。
+    ///
+    /// `RetroactiveStayDetector` が後追い検知のために読む入力データとして使う。
+    /// デフォルト 2 日分（当日 + 前日）。日付またぎ運転シナリオを救うため 2 日分取得する。
+    /// 大量読み込みを避けるため limit で日数を絞ること（CLAUDE.md バッテリー懸念）。
+    ///
+    /// - Parameter days: 遡る日数（デフォルト 2）
+    /// - Returns: 時系列昇順にソートされた RoutePoint 配列
+    func recentRoutePoints(days: Int = 2) throws -> [RoutePoint] {
+        let trips = try recentTrips(limit: days)
+        // trips は日付降順で来るため、RoutePoint を連結してから timestamp で昇順ソートする
+        let points = trips.flatMap { $0.routePoints }
+        return points.sorted { $0.timestamp < $1.timestamp }
+    }
+
+    /// 直近 N 日分の PinRecord を返す（S6-010 冪等性チェック用）。
+    ///
+    /// `RetroactiveStayDetector.isDuplicate(_:against:)` の比較対象として使う。
+    ///
+    /// - Parameter days: 遡る日数（デフォルト 2）
+    /// - Returns: 該当日数分の TripRecord に紐付いた PinRecord の配列
+    func recentPins(days: Int = 2) throws -> [PinRecord] {
+        let trips = try recentTrips(limit: days)
+        return trips.flatMap { $0.pins }
+    }
 }

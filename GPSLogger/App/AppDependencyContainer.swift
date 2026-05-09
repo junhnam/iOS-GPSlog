@@ -37,6 +37,8 @@ final class AppDependencyContainer {
     let cloudUploadRetryQueue: CloudUploadRetryQueue
     let cloudUploadCoordinator: CloudUploadCoordinator
     let databaseAutoCleanupService: DatabaseAutoCleanupService
+    /// 後追い滞留検知サービス（S6-010 B 案）。
+    let retroactiveStayDetector: RetroactiveStayDetector
     let locationService: LocationService
 
     // MARK: - Providers (for SettingsView closures)
@@ -92,8 +94,11 @@ final class AppDependencyContainer {
         // なければデフォルト実装（FileManager 計測）を生成する。
         let cleanupService = databaseAutoCleanupService
             ?? DatabaseAutoCleanupService(appSettings: settings, modelContext: context)
+        // S6-010: RetroactiveStayDetector。デフォルト config（radius=30m / minDuration=600s）で生成。
+        let retroactiveDetector = RetroactiveStayDetector()
         let locationService = LocationService(
             repository: repository,
+            retroactiveStayDetector: retroactiveDetector,
             placeProvider: placeLookupService,
             appSettings: settings,
             calendarSync: calendarService,
@@ -109,6 +114,7 @@ final class AppDependencyContainer {
         self.cloudUploadRetryQueue = retryQueue
         self.cloudUploadCoordinator = coordinator
         self.databaseAutoCleanupService = cleanupService
+        self.retroactiveStayDetector = retroactiveDetector
         self.locationService = locationService
         self.providers = providers
     }
