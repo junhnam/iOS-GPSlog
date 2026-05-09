@@ -29,13 +29,22 @@ struct HomeRegistrationView: View {
     @State private var selectedCoordinate: CLLocationCoordinate2D = HomeRegistrationView.defaultCenter
 
     /// 編集中の半径（保存ボタンを押すまで AppSettings に反映しない）。
-    @State private var radius: Double
+    /// S6-014: 旧実装は init で `_radius = State(initialValue: settings.homeRadiusMeters)` していたが、
+    ///   save() で settings.homeLocation を書いた瞬間に親 SettingsView が再描画され、
+    ///   sheet content closure 経由で HomeRegistrationView の init が再評価されると
+    ///   initialValue が再適用される SwiftUI 既知問題があり、ドラッグ後の値が
+    ///   保存前の値（または東京駅の defaultCenter）に戻るバグがあった。
+    ///   解消のため、@State はリテラル既定値で初期化し、settings からの復元は .onAppear で行う。
+    @State private var radius: Double = AppSettings.defaultHomeRadiusMeters
 
     /// 逆ジオコーディング結果の候補（最大 3 件）。
     @State private var addressCandidates: [String] = []
 
     /// 選択中の住所候補。nil の場合は座標のみ保存される。
     @State private var selectedAddress: String?
+
+    /// settings からの初回ロード済みフラグ（S6-014 / 二重ロード防止）。
+    @State private var didLoadFromSettings: Bool = false
 
     /// 逆ジオコーディング失敗時のエラーメッセージ（UI 上の警告表示用）。
     @State private var geocodeErrorMessage: String?
@@ -58,13 +67,8 @@ struct HomeRegistrationView: View {
     init(settings: AppSettings, onDismiss: @escaping () -> Void) {
         self.settings = settings
         self.onDismiss = onDismiss
-
-        // 既存の自宅位置があればそれを初期値に。
-        if let existing = settings.homeLocation {
-            _selectedCoordinate = State(initialValue: existing.coordinate)
-            _selectedAddress = State(initialValue: existing.address)
-        }
-        _radius = State(initialValue: settings.homeRadiusMeters)
+        // S6-014: @State の初期値は宣言時のリテラルに固定（init での外部値設定は廃止）。
+        // settings からの復元は .onAppear で `didLoadFromSettings` ガード付きで行う。
     }
 
     var body: some View {
@@ -176,6 +180,16 @@ struct HomeRegistrationView: View {
             }
         }
         .onAppear {
+            // S6-014: 初回 onAppear のみ settings から既存値を復元する。
+            // 二回目以降（再描画後の onAppear）は復元しない（ドラッグ後の値を破壊しないため）。
+            if !didLoadFromSettings {
+                didLoadFromSettings = true
+                if let existing = settings.homeLocation {
+                    selectedCoordinate = existing.coordinate
+                    selectedAddress = existing.address
+                }
+                radius = settings.homeRadiusMeters
+            }
             triggerReverseGeocode(coordinate: selectedCoordinate)
         }
     }
