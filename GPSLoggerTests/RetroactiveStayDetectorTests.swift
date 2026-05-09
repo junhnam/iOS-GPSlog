@@ -313,11 +313,16 @@ final class StayDetectorPersistenceTests: XCTestCase {
     }
 
     /// 座標 + timestamp から CLLocation を作るヘルパー。
+    /// 基準時刻は「現在時刻 - 1000 秒」。固定時刻（数年前）を使うと StayDetector の
+    /// 失効チェック（lastInsideAt から minDuration*2 = 1200s 経過で破棄）に引っかかるため、
+    /// テスト中は常に「失効しない」範囲のタイムスタンプを生成する。
+    private let baseTime = Date().addingTimeInterval(-1000)
+
     private func loc(lat: Double = 35.681236, lon: Double = 139.767125,
                      at offset: TimeInterval) -> CLLocation {
         CLLocation(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon),
                    altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
-                   timestamp: Date(timeIntervalSince1970: 1_700_000_000 + offset))
+                   timestamp: baseTime.addingTimeInterval(offset))
     }
 
     // MARK: - A-1: 状態保存 → 復元 → 継続判定
@@ -404,6 +409,11 @@ final class StayDetectorPersistenceTests: XCTestCase {
         // 新インスタンスを生成 → 失効状態を破棄するはず
         let sut = StayDetector(config: StayDetectionConfig(), defaults: testDefaults)
 
+        // init 直後に UserDefaults からも削除されていることを確認
+        // （ingest 後は新 anchor が再保存されるので、ingest 前にチェックする必要がある）
+        XCTAssertNil(testDefaults.object(forKey: StayDetector.PersistenceKeys.anchorLatitude),
+                     "失効した状態は UserDefaults からも削除される（init 時点）")
+
         // 半径外の点を ingest しても stayEnded にならない（anchor がリセットされているため）
         let locFar = CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: 35.682236, longitude: 139.767125),
@@ -414,10 +424,6 @@ final class StayDetectorPersistenceTests: XCTestCase {
         // 失効状態を破棄していれば、locFar が新 anchor になるので .moving が返る
         XCTAssertEqual(event, .moving,
                        "失効した状態（lastInsideAt が minDuration*2 以上前）は init で破棄される（A-2）")
-
-        // UserDefaults に失効チェックで削除されていることを確認
-        XCTAssertNil(testDefaults.object(forKey: StayDetector.PersistenceKeys.anchorLatitude),
-                     "失効した状態は UserDefaults からも削除される")
     }
 
     // MARK: - A-3: _resetForTesting で UserDefaults もクリアされる

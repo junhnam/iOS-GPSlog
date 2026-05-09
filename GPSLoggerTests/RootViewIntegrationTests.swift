@@ -16,7 +16,7 @@ import SwiftData
 @MainActor
 final class RootViewIntegrationTests: XCTestCase {
 
-    private var retainedContainers: [ModelContainer] = []
+    var retainedContainers: [ModelContainer] = []
 
     override func tearDown() async throws {
         await MainActor.run { retainedContainers.removeAll() }
