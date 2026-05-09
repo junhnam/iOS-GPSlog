@@ -266,6 +266,57 @@ final class RetroactiveStayDetectorTests: XCTestCase {
         XCTAssertEqual(result.count, 1, "radius ちょうど内側（~30m）は同一アンカーとして滞留検知する")
     }
 
+    // MARK: - S6-012: 100m 境界値テスト
+
+    /// S6-012: デフォルト半径 100m ちょうど内側（約 99.9m）→ 同一アンカーとして滞留検知する。
+    ///
+    /// `StayDetectionConfig` のデフォルト `radiusMeters` が 100m になったことを確認（S6-012）。
+    /// 緯度 0.000899 度 ≒ 99.9m（1 度 ≒ 111,194m）。`<=` 比較なので半径内として扱われる。
+    func test_s6012_defaultRadius100m_pointAtExactRadius_isDetected() {
+        // デフォルト config（radiusMeters = 100）で初期化
+        let sut = RetroactiveStayDetector()
+        XCTAssertEqual(sut.config.radiusMeters, 100,
+                       "S6-012 後のデフォルト radiusMeters は 100m であること")
+
+        // 緯度 0.000899 度 ≒ 99.9m（100m 内）の座標
+        let latOffset = 0.000899  // 約 99.9m
+
+        let points = [
+            point(lat: 35.681236, offset: 0),
+            point(lat: 35.681236 + latOffset, offset: 601),  // 100m 内 + minDuration 超
+            point(lat: 35.690000, offset: 900)               // 明確に半径外（約 960m）
+        ]
+
+        let result = sut.detectStays(from: points)
+
+        XCTAssertEqual(result.count, 1,
+                       "100m 内側（~99.9m）は同一アンカーとして扱われ、PinRecord が生成される（S6-012）")
+    }
+
+    /// S6-012: デフォルト半径 100m 外側（約 111m）→ 滞留区間が分断され、短期停止としてスキップされる。
+    ///
+    /// 緯度 0.001 度 ≒ 111m。デフォルト半径 100m を超えるのでアンカーが切り替わる。
+    func test_s6012_defaultRadius100m_pointOutsideRadius_splitsAnchor() {
+        let sut = RetroactiveStayDetector()
+
+        // 緯度 0.001 度 ≒ 111m（デフォルト半径 100m 外）
+        let points = [
+            point(lat: 35.681236, offset: 0),       // anchor A
+            point(lat: 35.682236, offset: 300),      // 100m 外 → anchor B に移動（A の区間 300s < minDuration）
+            point(lat: 35.682236, offset: 901),      // B の範囲で 601s 経過
+            point(lat: 35.690000, offset: 1100)      // B から離脱 → B 区間確定（601s >= minDuration）
+        ]
+
+        let result = sut.detectStays(from: points)
+
+        // A の区間（0〜300 = 300s < minDuration）はピン化されない
+        // B の区間（300〜901 = 601s >= minDuration）はピン化される
+        XCTAssertEqual(result.count, 1,
+                       "100m 外の移動でアンカーが切り替わり、B 区間のみ PinRecord が生成される（S6-012）")
+        XCTAssertEqual(result.first?.latitude ?? 0, 35.682236, accuracy: 0.0001,
+                       "ピン座標は anchor B（S6-012）")
+    }
+
     // MARK: - haversineDistance テスト
 
     /// haversineDistance が同一座標で 0m を返すことを確認。
@@ -494,8 +545,8 @@ extension RootViewIntegrationTests {
         // 1. RetroactiveStayDetector が保持されている
         // AppDependencyContainer の retroactiveStayDetector は let プロパティなので nil になり得ない
         // コンパイルが通る = 型が存在し生成されていることの証明
-        XCTAssertEqual(sut.retroactiveStayDetector.config.radiusMeters, 30,
-                       "RetroactiveStayDetector のデフォルト radius は 30m（S6-010）")
+        XCTAssertEqual(sut.retroactiveStayDetector.config.radiusMeters, 100,
+                       "RetroactiveStayDetector のデフォルト radius は 100m（S6-012: 大型店対応のため 30m から拡大）")
         XCTAssertEqual(sut.retroactiveStayDetector.config.minDuration, 600,
                        "RetroactiveStayDetector のデフォルト minDuration は 600s（S6-010）")
 

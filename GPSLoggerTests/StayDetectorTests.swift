@@ -80,6 +80,48 @@ final class StayDetectorTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(skippedCount, 2)
     }
 
+    // MARK: - S6-012: 100m 境界値テスト
+
+    /// S6-012: デフォルト半径 100m ちょうどの距離 → 同一アンカーとして扱われる（<= 比較）。
+    ///
+    /// 緯度 0.000899 度 ≒ 99.9m（1 度 ≒ 111,194m）。半径 100m 内なので滞留候補として継続。
+    func test_s6012_radius100m_pointAtExactRadius_treatedAsSameAnchor() {
+        let sut = StayDetector()
+        // t=0: anchor 設定
+        _ = sut.ingest(location: loc(at: 0))
+        // t=60〜600: 同一座標で 10 分間滞留確定
+        for i in 1...10 {
+            _ = sut.ingest(location: loc(at: TimeInterval(i * 60)))
+        }
+        // t=700: 半径 100m ちょうど内側（約 99.9m）の点 → アンカー継続、.skipped が返る
+        // 緯度 0.000899 度 ≒ 99.9m（100m をわずかに下回る）
+        let insidePoint = loc(lat: 35.681236 + 0.000899, at: 700)
+        let event = sut.ingest(location: insidePoint)
+        XCTAssertEqual(event, .skipped,
+                       "半径 100m 内側（~99.9m）の点は同一アンカーとして扱われ .skipped が返る（S6-012）")
+    }
+
+    /// S6-012: デフォルト半径 100m 外側の距離 → 滞留終了として検出される。
+    ///
+    /// 緯度 0.001 度 ≒ 111m（100m を超える）。半径外なので stayEnded が返る。
+    func test_s6012_radius100m_pointOutsideRadius_returnsStayEnded() {
+        let sut = StayDetector()
+        // t=0〜600: 同一座標で 10 分間滞留確定
+        for i in 0...10 {
+            _ = sut.ingest(location: loc(at: TimeInterval(i * 60)))
+        }
+        // t=700: 半径 100m 外側（約 111m）の点 → stayEnded が返る
+        let outsidePoint = loc(lat: 35.682236, at: 700)  // 緯度 0.001 度 ≒ 111m
+        let event = sut.ingest(location: outsidePoint)
+
+        guard case .stayEnded(let pin) = event else {
+            XCTFail("期待値: .stayEnded, 実測: \(event)（S6-012 半径 100m 外なら stayEnded）")
+            return
+        }
+        XCTAssertEqual(pin.latitude, 35.681236, accuracy: 0.0001)
+        XCTAssertEqual(pin.stayedDurationSeconds, 600, accuracy: 1.0)
+    }
+
     // MARK: - 設定テスト
 
     func test_customConfig_isApplied() {

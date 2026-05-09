@@ -4,13 +4,20 @@ import CoreLocation
 /// 滞留検出のしきい値設定（S2-006）。
 /// CLAUDE.md 要件「10分以上同じ位置に留まっていればピン化」に対応。
 /// `radiusMeters` は GPS 精度（kCLLocationAccuracyBest = 約 5〜10m）に揺らぎマージンを足した値。
+///
+/// ## S6-012: 半径 30m → 100m 拡大（大型店対応）
+/// jun さんの実機検証（2026-05-09）で「4 店舗で各 20 分滞在 → ピン 1 件」問題を確認。
+/// 原因: 大型店舗内の回遊（30m 以上歩く）でアンカーが切り替わり、累積滞留時間が minDuration に
+/// 届かないまま破棄されていた。100m に拡大することで店内回遊を「同一滞留」として扱う。
+/// じゅんさん判断: 大型店対応優先 / 設定画面での可変化は不要（固定値）。
+/// `RetroactiveStayDetector` の冪等性ガードも同 config を共有するため、自動的に 100m に追従する。
 struct StayDetectionConfig {
     /// 滞留と見なす最小継続時間（秒）。デフォルト 10 分 = 600 秒。
     let minDuration: TimeInterval
-    /// 滞留と見なす半径（メートル）。デフォルト 30m。
+    /// 滞留と見なす半径（メートル）。デフォルト 100m（S6-012: 大型店対応のため 30m から拡大）。
     let radiusMeters: Double
 
-    init(minDuration: TimeInterval = 600, radiusMeters: Double = 30) {
+    init(minDuration: TimeInterval = 600, radiusMeters: Double = 100) {
         self.minDuration = minDuration
         self.radiusMeters = radiusMeters
     }

@@ -12,15 +12,18 @@
 
 ## Todo
 
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M（**S6-010 完了後に再実行**）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン） → **po-sm** / Must / M（**S6-011 / S6-012 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰した上で、観点 2 を再判定する）
+- [ ] **S6-011** (TBD): ピンタップ詳細表示 + 外部マップ起動導線 → **dev-1** / Must / M（実機検証 1 回目フィードバック / `MapView.Coordinator` に `mapView(_:didTap marker:)` 実装 + `PinDetailView` 新規 + `Info.plist` に `LSApplicationQueriesSchemes` 追加 / ユニットテスト 4 件以上）
+- [ ] **S6-012** (TBD): StayDetector 半径を 30m → 100m に拡大（大型店対応） → **dev-2** / Must / S（実機検証 1 回目フィードバック / `StayDetectionConfig.radiusMeters` デフォルト 30→100 / `RetroactiveStayDetector` も共有 config 経由で追従 / 冪等性ガードも 100m に揃える / 既存テスト全件 pass + 100m 境界値テスト追加）
 
 ## In Progress
 
-（なし）
+- [ ] **S6-011** (TBD): ピンタップ詳細表示 + 外部マップ起動導線 → **dev-1** / Must / M（実装中）
+- [ ] **S6-012** (TBD): StayDetector 半径を 30m → 100m に拡大（大型店対応） → **dev-2** / Must / S
 
 ## Done
 
-- [x] **S6-010** (TBD): 滞留検知の堅牢化（B: RoutePoint 後追い検知 + A: StayDetector 状態永続化） → **dev-2** / Must / L（コミット `5d6ef29` / RetroactiveStayDetector 新規 + StayDetector UserDefaults 永続化 + TripRepository 拡張 + LocationService DI + RootView 発火 / テスト 13 件 / メイン代行確認依頼）
+- [x] **S6-010** (TBD): 滞留検知の堅牢化（B: RoutePoint 後追い検知 + A: StayDetector 状態永続化） → **dev-2** / Must / L（コミット `5d6ef29` + メイン代行修正 `1dc0386` / RetroactiveStayDetector 新規 + StayDetector UserDefaults 永続化 + TripRepository 拡張 + LocationService DI + RootView 発火 / テスト 13 件 / メイン代行確認済）
 - [x] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + `RootViewIntegrationTests.swift` 末尾雛形コメント追加） → **po-sm（メイン代行）** / Must / S（コミット `954f23d` / 既存 173 テスト pass / 回帰なし）
 - [x] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約 / `@MainActor final class`） → **dev-1** / Must / M（コミット `8853972` / 176/176 pass / DI 検証ケース 3 件追加 / Swift 6 strict concurrency 整合）
 - [x] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S（コミット `39dba0e` / 179/179 pass / CSV 失敗時 retryCount 加算ロジック + テスト 3 件 / `.gitignore` + `.example` + `oauth-setup.md` / メイン代行修正: テスト DI 漏れ 1 件）
@@ -65,14 +68,22 @@
 
 ### Phase 6（実機フィードバック対応 / 2026-05-09 追加）
 
-1. **S6-010** dev-2 が滞留検知の堅牢化を実装
+1. **S6-010** dev-2 が滞留検知の堅牢化を実装（**Done**: `5d6ef29` + メイン代行修正 `1dc0386`）
    - B: `RetroactiveStayDetector` 新規 + `LocationService.resumeTrackingAfterRelaunch` から発火
    - A: `StayDetector` の anchor / 開始時刻を UserDefaults に永続化
-   - ユニットテスト 8 ケース以上 + DI カバレッジテスト 1 件追加
-2. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認
-3. **S6-008（再実行）** jun さんが iPhone 16 Pro で再度「喫茶店 1 時間滞在」シナリオを試す
-   - ピン履歴に該当滞在のピンが残っていれば S6-010 完了 → Sprint 6 完了 → 個人利用版リリース可能
-   - まだ残らない場合は dev-2 に追加調査依頼（Sprint 内で 1 周まで対応 / それでもダメなら Sprint 7 切出）
+   - ユニットテスト 13 件 + DI カバレッジテスト 1 件
+2. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**Done**）
+3. **S6-008（中間判定 / 2026-05-09 夕方）**: jun さんが実機で再検証 → 滞留ピンは記録されたが UX バグ 2 件検出 → S6-011 / S6-012 起票
+
+### Phase 7（実機フィードバック対応 第 2 ラウンド / 2026-05-09 夕方追加）
+
+1. **S6-011** dev-1 が `MapView.Coordinator` にピンタップ → 詳細シート → Apple/Google Maps 起動導線を実装（並行可）
+2. **S6-012** dev-2 が `StayDetectionConfig.radiusMeters` のデフォルトを 30 → 100 に拡大（並行可 / S6-011 とファイル競合なし）
+3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認
+4. **S6-008（最終判定）** jun さんが iPhone 16 Pro で再々検証
+   - 観点 2「MKLocalSearch / ピン化」: 4 店舗滞在 → 4 件ピン化 + ピンタップで詳細表示 + 店舗情報が見える
+   - 全 7 観点 OK → Sprint 6 完了 → 個人利用版リリース可能
+   - 一部 NG → Sprint 6 完了後の追加コミットで対応 or Sprint 7 切出（jun さんと合意）
 
 ---
 
@@ -91,7 +102,9 @@
 | S6-007 | designer + メイン代行 | 7b77d28 | 0（メイン代行確認済） | 確認済 / 204/204 pass | 0（UI/デザイン変更のみ） |
 | S6-008 | po-sm | - | - | jun さん実機（1 回目: 2026-05-09 ピン化バグ検出 → S6-010 起票 / 2 回目: S6-010 完了後に再実行） | - |
 | S6-009 | dev-2 | 39dba0e | 0（メイン代行確認済） | 確認済 / 179/179 pass | 3（CSV 失敗時 retryCount 加算） |
-| S6-010 | dev-2 | 5d6ef29 | 0（メイン代行確認依頼） | 未確認 | 13（B 5+境界値 2+haversine 2+A 3+DI 1） |
+| S6-010 | dev-2 | 5d6ef29 + メイン代行修正 1dc0386 | 0（メイン代行確認済） | 確認済 / 全 pass | 13（B 5+境界値 2+haversine 2+A 3+DI 1） |
+| S6-011 | dev-1 | TBD | TBD | 未確認 | 想定 4+（マーカータップ DI / URL スキーム生成 / placeName あり/なし表示） |
+| S6-012 | dev-2 | TBD | TBD | 未確認 | 想定 1〜2（100m 境界値）+ 既存テスト追従 |
 
 ---
 
@@ -99,12 +112,18 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 2（S6-008 / S6-010） |
+| Todo | 3（S6-008 / S6-011 / S6-012） |
 | In Progress | 0 |
-| Done | 8 |
-| **Sprint 6 完了** | **9/10** |
+| Done | 9 |
+| **Sprint 6 完了** | **9/12** |
 
-> 2026-05-09 更新: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
+> 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
+>
+> 2026-05-09 更新（夕方）: S6-010 完了（コミット `5d6ef29` + メイン代行修正 `1dc0386`）。jun さんによる実機再検証（中間判定）で UX バグ 2 件追加検出:
+> - **4 店舗で各 20 分滞在 → ピン 1 件のみ**（StayDetector 半径 30m が大型店内回遊で分断 → **S6-012**）
+> - **ピンに店舗情報が出ない / タップしても何も起こらない**（`MapView.Coordinator` に `didTap marker` 未実装 → **S6-011**）
+>
+> jun さん判断: S6-011 起票 OK / 半径は 100m に拡大 / 設定可変化は不要。8/10 → **8/12** に拡張。S6-008 は **S6-011 / S6-012 完了後** に再実行する。
 
 ---
 
@@ -120,14 +139,16 @@
 
 ## 完了基準（再掲）
 
-- [ ] 全 10 チケット Done（S6-001〜S6-007 / S6-009 完了済 / S6-008 / S6-010 残）
+- [ ] 全 12 チケット Done（S6-001〜S6-007 / S6-009 / S6-010 完了済 / S6-008 / S6-011 / S6-012 残）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
 - [ ] フル再ビルド warning 0 / error 0
-- [ ] ユニットテスト pass 100%（約 210 件想定 / S6-010 で +8 件以上）
+- [ ] ユニットテスト pass 100%（約 220 件以上想定 / S6-011 で +4 件 / S6-012 で +1〜2 件）
 - [ ] Sprint 1〜5 のテスト 173 件の回帰なし
 - [ ] API キー漏洩スキャン 0 件
 - [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
-- [ ] **S6-010 完了**: 滞留検知の堅牢化（B 案 + A 案）が pass
-- [ ] **S6-008 再実行**: 実機検証 7 観点すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」）
+- [x] **S6-010 完了**: 滞留検知の堅牢化（B 案 + A 案）が pass
+- [ ] **S6-011 完了**: ピンタップ詳細表示 + 外部マップ起動導線（実機検証 1 回目フィードバック対応）
+- [ ] **S6-012 完了**: StayDetector 半径 30m → 100m 拡大（実機検証 1 回目フィードバック対応 / jun さん「大型店優先」判断）
+- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 詳細シート確認）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認

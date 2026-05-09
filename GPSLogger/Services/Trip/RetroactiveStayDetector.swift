@@ -46,6 +46,10 @@ struct RetroactiveStayDetector {
 
     let config: StayDetectionConfig
 
+    /// S6-012: `StayDetectionConfig` のデフォルト `radiusMeters` が 100m になったため、
+    /// 引数なしで初期化した場合は自動的に 100m で動作する。
+    /// 冪等性ガード（`isDuplicate` 内の `config.radiusMeters` 利用）も同 config を共有するため
+    /// 別値を持たず一貫して 100m で判定される。
     init(config: StayDetectionConfig = StayDetectionConfig()) {
         self.config = config
     }
@@ -152,7 +156,8 @@ struct RetroactiveStayDetector {
     /// テストでの CLLocation インスタンス生成コストを排除し、
     /// 並行性・Sendable の問題も回避する。
     ///
-    /// 精度: ±0.5% 程度（30m スケールでは ±15cm 相当で十分）。
+    /// 精度: ±0.5% 程度（100m スケールでは ±50cm 相当で十分）。
+    /// S6-012 で半径が 30m → 100m に拡大されたが、Haversine の精度は変わらず十分。
     func haversineDistance(lat1: Double, lon1: Double,
                            lat2: Double, lon2: Double) -> Double {
         let R = 6_371_000.0  // 地球半径（メートル）
