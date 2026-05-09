@@ -49,27 +49,28 @@
 
 ---
 
-## Step 5: plist ファイルに値を設定する
+## Step 5: Info.plist に値を設定する
 
-1. リポジトリ内の example ファイルをコピーして実ファイルを作成する:
+`GPSLogger/Resources/Info.plist` を直接編集して、以下 2 箇所を書き換える:
 
-   ```bash
-   cp GPSLogger/Resources/GoogleDriveOAuth-Info.plist.example GPSLogger/Resources/GoogleDriveOAuth-Info.plist
+1. `GoogleDriveOAuthClientID`（空文字 → クライアント ID）
+
+   ```xml
+   <key>GoogleDriveOAuthClientID</key>
+   <string>123456789-xxx.apps.googleusercontent.com</string>
    ```
 
-2. 作成した `GoogleDriveOAuth-Info.plist` をテキストエディタで開き、以下を書き換える:
+2. `CFBundleURLTypes` 内の `CFBundleURLSchemes`（`PLACEHOLDER` → Reverse Client ID）
 
-   | キー | 設定値 |
-   |------|--------|
-   | `GoogleDriveOAuthClientID` | Step 4 で取得したクライアント ID（例: `123456789-xxx.apps.googleusercontent.com`） |
-   | `GoogleDriveOAuthReverseClientID` | クライアント ID をドット区切りで逆順にした文字列（例: `com.googleusercontent.apps.123456789-xxx`） |
-
-3. `GPSLogger/Resources/Info.plist` の `CFBundleURLSchemes` にも同じ Reverse Client ID を設定する:
+   Reverse Client ID は、クライアント ID をドット区切りで逆順にした文字列です。
+   例: `123456789-xxx.apps.googleusercontent.com` → `com.googleusercontent.apps.123456789-xxx`
 
    ```xml
    <key>CFBundleURLTypes</key>
    <array>
        <dict>
+           <key>CFBundleURLName</key>
+           <string>GoogleDriveOAuth</string>
            <key>CFBundleURLSchemes</key>
            <array>
                <string>com.googleusercontent.apps.123456789-xxx</string>
@@ -80,20 +81,21 @@
 
 ---
 
-## Step 6: Xcode で参照を確認する
+## Step 6: Xcode でビルド確認
 
-1. Xcode を開いて `GPSLogger.xcodeproj`（または `.xcworkspace`）を起動
-2. ビルドターゲット「GPSLogger」→「Build Phases」→「Copy Bundle Resources」に `GoogleDriveOAuth-Info.plist` が含まれていることを確認
-   - 含まれていなければ「+」ボタンで追加する
-3. `xcodebuild clean build`（またはメニュー「Product」→「Clean Build Folder」→「Build」）を実行してエラーがないことを確認
+1. Xcode を開いて `GPSLogger.xcodeproj` を起動
+2. メニュー「Product」→「Clean Build Folder」→「Build」を実行してエラーがないことを確認
 
 ---
 
 ## 注意事項
 
-- `GoogleDriveOAuth-Info.plist`（実値入り）は `.gitignore` に登録済みのため、**コミットされない**
-- `GoogleDriveOAuth-Info.plist.example`（プレースホルダー入り）はリポジトリに含まれており、手順の参照元として使う
-- クライアント ID 自体は機密情報ではないが、誤ってコミットしないようにするための運用ルールとして gitignore パターンを維持する
+- OAuth クライアント ID 自体は **公開して問題ない値**（PKCE フロー前提でクライアントシークレットを持たない設計）
+  - Google 公式も iOS アプリの場合は plist にそのまま書く運用を案内しています
+  - そのため `Info.plist` に直書き＆コミットして問題ありません
+- `GoogleDriveOAuth-Info.plist`（gitignore 対象）は **現行実装では使用していません**
+  - コードは `Bundle.main.object(forInfoDictionaryKey: "GoogleDriveOAuthClientID")` でメインの Info.plist を直接読んでいます
+  - `.example` ファイルは将来的に別 plist 運用へ移行する場合に備えて残してあります
 
 ---
 

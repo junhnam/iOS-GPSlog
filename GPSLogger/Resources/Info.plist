@@ -25,14 +25,14 @@
 			<string>GoogleDriveOAuth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.PLACEHOLDER</string>
+				<string>com.googleusercontent.apps.650151573001-vou0233gpmu71si47gecosirovtm2ivt</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>GoogleDriveOAuthClientID</key>
-	<string></string>
+	<string>650151573001-vou0233gpmu71si47gecosirovtm2ivt.apps.googleusercontent.com</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>滞留地点を自動的にカレンダーに記録するために使用します。</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
