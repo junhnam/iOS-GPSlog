@@ -16,10 +16,11 @@
 
 ## In Progress
 
-- [ ] **S6-010** (TBD): 滞留検知の堅牢化（B: RoutePoint 後追い検知 + A: StayDetector 状態永続化） → **dev-2** / Must / L（実機検証で発覚 / Sprint Goal 直結 / S6-008 再実行の前提）
+（なし）
 
 ## Done
 
+- [x] **S6-010** (TBD): 滞留検知の堅牢化（B: RoutePoint 後追い検知 + A: StayDetector 状態永続化） → **dev-2** / Must / L（コミット `5d6ef29` / RetroactiveStayDetector 新規 + StayDetector UserDefaults 永続化 + TripRepository 拡張 + LocationService DI + RootView 発火 / テスト 13 件 / メイン代行確認依頼）
 - [x] **S6-001** (#44): DI 経路カバレッジテストの定型化（`dev-completion-checklist.md` 改訂 + `RootViewIntegrationTests.swift` 末尾雛形コメント追加） → **po-sm（メイン代行）** / Must / S（コミット `954f23d` / 既存 173 テスト pass / 回帰なし）
 - [x] **S6-002** (#45): `AppDependencyContainer` 導入（`RootView.init` の DI 集約 / `@MainActor final class`） → **dev-1** / Must / M（コミット `8853972` / 176/176 pass / DI 検証ケース 3 件追加 / Swift 6 strict concurrency 整合）
 - [x] **S6-009** (#52): QA-S5-004 retryCount 加算 + QA-S5-003 Info.plist 運用整理（Google Drive 限定） → **dev-2** / Should / S（コミット `39dba0e` / 179/179 pass / CSV 失敗時 retryCount 加算ロジック + テスト 3 件 / `.gitignore` + `.example` + `oauth-setup.md` / メイン代行修正: テスト DI 漏れ 1 件）
@@ -90,7 +91,7 @@
 | S6-007 | designer + メイン代行 | 7b77d28 | 0（メイン代行確認済） | 確認済 / 204/204 pass | 0（UI/デザイン変更のみ） |
 | S6-008 | po-sm | - | - | jun さん実機（1 回目: 2026-05-09 ピン化バグ検出 → S6-010 起票 / 2 回目: S6-010 完了後に再実行） | - |
 | S6-009 | dev-2 | 39dba0e | 0（メイン代行確認済） | 確認済 / 179/179 pass | 3（CSV 失敗時 retryCount 加算） |
-| S6-010 | dev-2 | TBD | TBD | 未着手 / 2026-05-09 起票 | 8 件以上想定（B 5 件 + A 3 件 + DI 1 件） |
+| S6-010 | dev-2 | 5d6ef29 | 0（メイン代行確認依頼） | 未確認 | 13（B 5+境界値 2+haversine 2+A 3+DI 1） |
 
 ---
 
@@ -101,7 +102,7 @@
 | Todo | 2（S6-008 / S6-010） |
 | In Progress | 0 |
 | Done | 8 |
-| **Sprint 6 完了** | **8/10** |
+| **Sprint 6 完了** | **9/10** |
 
 > 2026-05-09 更新: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 
