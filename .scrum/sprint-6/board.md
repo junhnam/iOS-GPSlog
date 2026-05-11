@@ -17,10 +17,11 @@
 
 ## In Progress
 
-- [ ] **S6-015** dev-2 が `LocationService` の SLC / 自宅判定経路を実装中（チケット文書化 + 技術ノートは po-sm が本コミットで完了。コミットハッシュ確定後に Done 行へ移動）
+（なし）
 
 ## Done
 
+- [x] **S6-015** (0e7c082): タスクキル後の自宅 → 再出発で記録が再開されないバグの修正 → **dev-2** / Must / S（コミット `0e7c082` / バグ1: `handleHomeStateTransition` の `previous == .atHome` 条件を廃止し `current != .atHome` ＋ `wasTracking=true` ガードに変更（.unknown → .away 遷移でも GPS 再開を保証）/ バグ2: `didUpdateLocations` 冒頭に `needsResume = !isUpdating && wasTracking` フラグを追加し `handleNewLocations` 後に `resumeTrackingAfterRelaunch` を呼ぶ保険経路を追加 / 新規ユニットテスト 4 件（LocationServiceTaskKillResumeTests.swift 新規）/ メイン代行ビルド確認依頼）
 - [x] **S6-014** (TBD): 自宅登録画面で保存値が破棄される問題の修正 → **po-sm（メイン代行 / 緊急対応）** / Must / S（コミット `5bc9145` / 実機検証 3 回目で発覚した致命バグ 2 件（自宅ピン位置修正→保存後に元に戻る / 自宅削除→再登録すると東京駅で固定）を修正 / 根本原因: `HomeRegistrationView` の `@State` を `init` 内で `State(initialValue: settings.homeLocation)` で外部値から初期化していたため、save() による親 SettingsView 再描画で initialValue が再適用される SwiftUI 既知アンチパターン / 修正: `@State` をリテラル既定値で宣言（`selectedCoordinate=defaultCenter` / `radius=defaultHomeRadiusMeters` / `selectedAddress=nil`）+ `init` からの State 初期化を全廃 + `.onAppear` 内で `didLoadFromSettings` フラグで初回ガード付き復元 / 実コード変更 22+/-8 行 / 検証: xcodebuild clean test 242/242 pass / warning 0 / 実機検証は jun さん依頼中）
 - [x] **S6-013** (TBD): 履歴画面のピンタップ詳細表示 + placeName 住所混入修正 → **dev-1** / Must / S（コミット `25bd2c4` / A: `HistoryDetailMapContainer.Coordinator` を `NSObject` + `@preconcurrency GMSMapViewDelegate` + `@MainActor` に拡張 / `makeUIView` で `mapView.delegate = context.coordinator` 設定 / `marker.userData` を `RestoredPin` に変更 / `mapView(_:didTap marker:)` + `handleMarkerTap(pin:)` 実装 / `HistoryDetailView` に `selectedPin` State + `.sheet(item:)` 追加 / B: `LocationService.swift` の `?? candidate.address` fallback 削除（メイン代行実装済を取り込み）/ `PlaceLookupServiceTests` のアサーション更新 / ユニットテスト 4 件追加（T-1 × 2 + T-2 × 3）/ メイン代行ビルド確認依頼）
 - [x] **S6-011** (TBD): ピンタップ詳細表示 + 外部マップ起動導線 → **dev-1** / Must / M（コミット `df3d076` / `MapView.Coordinator` に `mapView(_:didTap marker:)` + `handleMarkerTap(marker:)` 実装 / `marker.userData = pin` 設定 / `PinDetailModel.swift` 新規（URL 生成 / 文字列整形）/ `PinDetailView.swift` 新規（SwiftUI シート）/ `Info.plist` に `LSApplicationQueriesSchemes: comgooglemaps` 追加 / `RestoredPin` に `Identifiable` + `address` 追加 / ユニットテスト 10 件 / メイン代行ビルド確認依頼）
@@ -204,10 +205,10 @@
 
 ## 完了基準（再掲）
 
-- [ ] 全 14 チケット Done（S6-001〜S6-007 / S6-009 / S6-010 / S6-011 / S6-012 / S6-014 完了済 / S6-008 / S6-013 残）
+- [ ] 全 15 チケット Done（S6-001〜S6-007 / S6-009 / S6-010 / S6-011 / S6-012 / S6-014 完了済 / S6-008 / S6-013 / S6-015 残）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
 - [ ] フル再ビルド warning 0 / error 0
-- [ ] ユニットテスト pass 100%（242 件 / S6-014 完了時点で確認済 / S6-013 まで含めて 242/242 pass）
+- [ ] ユニットテスト pass 100%（242 件 / S6-014 完了時点で確認済 / S6-015 完了時に新規 2 件以上を加えて 244 件以上の見込み）
 - [ ] Sprint 1〜5 のテスト 173 件の回帰なし
 - [ ] API キー漏洩スキャン 0 件
 - [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
@@ -216,6 +217,7 @@
 - [x] **S6-012 完了**: StayDetector 半径 30m → 100m 拡大（実機検証 1 回目フィードバック対応 / jun さん「大型店優先」判断）
 - [x] **S6-013 完了**: 履歴画面のピンタップ詳細表示 + placeName 住所混入修正（実機検証 2 回目フィードバック対応）
 - [x] **S6-014 完了**: 自宅登録画面で保存値が破棄される問題の修正（実機検証 3 回目フィードバック対応 / メイン代行緊急対応 / `5bc9145`）
-- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存）
+- [ ] **S6-015 完了**: タスクキル後の自宅 → 再出発で記録が再開されないバグの修正（実機検証 4 回目フィードバック対応 / 2026-05-11 / dev-2 並行実装中 / リリースブロッカー）
+- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認
