@@ -510,15 +510,26 @@ final class LocationService: NSObject, ObservableObject {
 
     /// 自宅状態遷移時に SLC / 通常 GPS を切替（S3-006）。
     /// - .atHome に入ったとき: 通常 GPS を停止し、SLC を開始
-    /// - .away に出たとき: SLC を停止し、通常 GPS を再開
+    /// - .away に出たとき（または .unknown → .away 遷移）: SLC を停止し、通常 GPS を再開
+    ///
+    /// S6-015: 従来は `previous == .atHome` のときのみ GPS を再開していたが、
+    /// タスクキル後の SLC 起床では `lastHomeState` がメモリからリセットされて `.unknown` に戻る。
+    /// このとき `.unknown → .away` 遷移が発生するが `previous == .atHome` は false になり、
+    /// 通常 GPS が再開されないバグがあった。
+    /// 修正: `current != .atHome` のすべてのケースで GPS 再開を保証する。
+    /// ただし `wasTracking == true`（ユーザーが記録 ON のまま kill した）場合のみ再開する。
+    /// 意図的に停止した場合（wasTracking=false）は再開しない。
     private func handleHomeStateTransition(from previous: HomeState, to current: HomeState) {
         if current == .atHome {
             startSignificantChangesIfHome()
-        } else if previous == .atHome {
-            // atHome から離脱した瞬間、SLC を停止して通常 GPS を再開する
+        } else {
+            // S6-015: previous == .atHome に限定せず、自宅外と判明したら通常 GPS を保証する。
+            // タスクキル後の起床では lastHomeState=.unknown のため、.unknown → .away 遷移でも
+            // 通常 GPS を再開しないと記録が止まる。
+            // wasTracking=true（ユーザーが記録 ON のまま）の場合のみ再開する。
+            guard appSettings?.wasTracking ?? false else { return }
             stopSignificantChanges()
             // 既に updating 中ならそのまま、停止中なら再開する。
-            // 現実装では isUpdating フラグで二重起動を防いでいるためそのまま start を呼べる。
             if !isUpdating {
                 manager.startUpdatingLocation()
                 isUpdating = true
@@ -776,7 +787,18 @@ extension LocationService: CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager,
                                      didUpdateLocations locations: [CLLocation]) {
         Task { @MainActor in
+            // S6-015: SLC 起床経路の検出。
+            // wasTracking=true なのに通常 GPS が停止している = タスクキル後の SLC 起床経路。
+            // この場合、handleNewLocations で位置を処理した後に resumeTrackingAfterRelaunch を
+            // 呼んで通常 GPS を確実に再開する（自宅外と判定された場合のみ実際に再開）。
+            // isUpdating=true（既に通常 GPS 中）の場合は needsResume=false となり冪等に安全。
+            let needsResume = !self.isUpdating && (self.appSettings?.wasTracking ?? false)
+
             self.handleNewLocations(locations)
+
+            if needsResume {
+                self.resumeTrackingAfterRelaunch()
+            }
         }
     }
 

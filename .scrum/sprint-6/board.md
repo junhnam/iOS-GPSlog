@@ -12,11 +12,12 @@
 
 ## Todo
 
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰した上で、既存 7 観点 + 自宅設定の保存反映 を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 を順次実施）
+- [ ] **S6-015** (TBD): タスクキル後の自宅 → 再出発で記録が再開されないバグの修正 → **dev-2** / Must / S（**リリースブロッカー** / 2026-05-11 jun さん実機検証で発覚 / 朝の出発は記録されたが帰宅後タスクキル → 再出発 40km が完全に拾われなかった / 根本原因: `LocationService.handleHomeStateTransition`（line 514-527）の `previous == .atHome` 条件がタスクキル後の `lastHomeState == .unknown` 経路を拾えない + `resumeTrackingAfterRelaunch()` が `RootView.onChange(scenePhase)` でしか呼ばれず SLC 起床時に保険ロジックが効かない、の 2 点複合 / dev-2 が並行実装中（チケット文書化は po-sm が本コミットで完了）/ 受け入れ条件: 既存 242 件 pass + 新規ユニットテスト 2 件（`.unknown → .away` 遷移で `startUpdatingLocation` 呼び出し / `didUpdateLocations` 経路で `resumeTrackingAfterRelaunch` 呼び出し）/ 実機検証は S6-008 で同時実施）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰した上で、既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 を順次実施）
 
 ## In Progress
 
-（なし）
+- [ ] **S6-015** dev-2 が `LocationService` の SLC / 自宅判定経路を実装中（チケット文書化 + 技術ノートは po-sm が本コミットで完了。コミットハッシュ確定後に Done 行へ移動）
 
 ## Done
 
@@ -105,6 +106,20 @@
    - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
    - 一部 NG → Sprint 6 完了後の追加コミットで対応 or Sprint 7 切出（jun さんと合意）
 
+### Phase 9（実機フィードバック対応 第 4 ラウンド / 2026-05-11 追加）
+
+1. **S6-015** dev-2 が `LocationService` のバックグラウンド復帰経路を修正（**In Progress** / 並行実装中）
+   - A: `handleHomeStateTransition`（line 514-527）の条件を緩和し、`.unknown → .away` 遷移でも `startUpdatingLocation` を呼ぶ（タスクキル後に `lastHomeState` がメモリから消える経路を救済）
+   - B: `didUpdateLocations` 冒頭で SLC 起床経路を検出して `resumeTrackingAfterRelaunch()` を呼ぶ（scenePhase 非依存の保険ロジック）
+   - C: 新規ユニットテスト 2 件以上（`.unknown → .away` 遷移 / `didUpdateLocations` 経路）
+2. po-sm が S6-015 を起票 + 技術ノート `.scrum/notes/slc-wake-tracking-resume.md` 追加 + board.md / 完了基準を 14 → 15 チケットに更新（**Done**: 本コミット）
+3. メイン代行が dev-2 のコミット後に `xcodebuild clean test` で warning 0 / 全 pass 確認
+4. **S6-008（最終判定 / 観点拡張）** jun さんが iPhone 16 Pro で次回外出時に再検証
+   - 既存 7 観点 + 観点 8（自宅設定の保存反映）+ **観点 9: タスクキル後の自宅 → 再出発**（朝出発 → 帰宅 → タスクキル → 再出発 → 記録再開）
+   - 順次実施: 買い物検証 → 自宅設定確認 → 履歴ピンタップ確認 → タスクキル後再出発確認
+   - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
+   - 一部 NG → Sprint 6 完了後の追加コミットで対応 or Sprint 7 切出（jun さんと合意）
+
 ---
 
 ## ビルド状態スタンプ
@@ -127,6 +142,7 @@
 | S6-012 | dev-2 | 9d0676e | TBD（メイン代行確認依頼） | 未確認 | 4（100m 境界値: StayDetector 2 件 + RetroactiveStayDetector 2 件）+ DI テスト更新 1 件 |
 | S6-013 | dev-1 | 25bd2c4 | TBD（メイン代行確認依頼） | 未確認 | 4 件追加（T-1: handleMarkerTap → callback 呼び出し 2 件 / T-2: RestoredPin 変換 3 件）+ 既存 PlaceLookupServiceTests 1 件更新（メイン代行作業済） |
 | S6-014 | po-sm（メイン代行 / 緊急対応） | 5bc9145 | 0（メイン代行確認済） | 確認済 / 242/242 pass | 0（既存テスト回帰なしを確認 / SwiftUI `@State` の挙動修正のため新規ユニットテスト追加は対象外 / 実機検証で確認） |
+| S6-015 | dev-2 | TBD（並行実装中） | TBD | 未確認 | 2 件以上予定（`.unknown → .away` 遷移で `startUpdatingLocation` 呼び出し / `didUpdateLocations` 経路で `resumeTrackingAfterRelaunch` 呼び出し） |
 
 ---
 
@@ -134,10 +150,10 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 2（S6-008 / S6-013） |
-| In Progress | 0 |
+| Todo | 2（S6-008 / S6-015） |
+| In Progress | 1（S6-015 dev-2 並行実装中） |
 | Done | 12（S6-011 / S6-012 / S6-013 / S6-014 含む） |
-| **Sprint 6 完了** | **12/14** |
+| **Sprint 6 完了** | **12/15** |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -160,6 +176,18 @@
 > 根本原因: `HomeRegistrationView` の `@State` を `init` 内で `State(initialValue: settings.homeLocation)` で外部値から初期化していたため、`save()` による親 SettingsView 再描画で initialValue が再適用される SwiftUI 既知アンチパターン。修正は `@State` をリテラル既定値で宣言し、設定値の復元は `.onAppear` で `didLoadFromSettings` ガード付きで実行する形に変更（22+/-8 行）。242/242 pass / warning 0 確認済。
 >
 > Sprint 6 スコープを **12/14** に拡張。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映** を確認する流れ。再発防止のため SwiftUI `@State` init アンチパターンの技術メモを `.scrum/notes/swiftui-state-init-pitfall.md` に追加。
+>
+> 2026-05-11 更新: jun さんの 1 日通し実機検証で **タスクキル後の自宅 → 再出発で記録が再開されない致命バグ** を検出 → **S6-015** を Must / リリースブロッカーで起票:
+> - 朝の出発（自宅 → 外出先）は記録された
+> - 帰宅後にタスクキルした状態で再度外出 → **約 40km 移動が完全に拾われなかった**
+>
+> 根本原因（実装漏れ 2 箇所の複合）:
+> 1. `LocationService.handleHomeStateTransition`（line 514-527）の `previous == .atHome` 条件が、タスクキル後にメモリから消えた `lastHomeState == .unknown` 経路を救えていない（SLC で起床して自宅外と判定されても通常 GPS が再開されない）
+> 2. `resumeTrackingAfterRelaunch()` が `RootView.onChange(scenePhase)` でしか呼ばれず、バックグラウンド SLC 起床時は scenePhase が `.active` にならないため、保険ロジック側でも記録復元が走らない
+>
+> 修正方針: handleHomeStateTransition の条件緩和（`.unknown → .away` も通常 GPS 再開）+ `didUpdateLocations` 冒頭で SLC 起床経路を検出して `resumeTrackingAfterRelaunch()` 発火 + ユニットテスト 2 件以上追加。dev-2 が並行実装中。
+>
+> Sprint 6 スコープを **12/15** に拡張。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発** を確認する流れ。再発防止のため SLC 起床経路の技術メモを `.scrum/notes/slc-wake-tracking-resume.md` に追加。
 
 ---
 

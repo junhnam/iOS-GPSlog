@@ -64,6 +64,7 @@
 		AE27F46968F6EC770DE7756B /* GoogleMaps-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DA59AB0967DD6D2E49DDEA67 /* GoogleMaps-Info.plist */; };
 		AF70A7A59D5720314956BCDB /* TripRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CEB4C730011080C237426F /* TripRecord.swift */; };
 		B0317E9F9847157C30D28369 /* LocationServiceBackgroundResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 943030606759EE61661DD07F /* LocationServiceBackgroundResumeTests.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* LocationServiceTaskKillResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6071829A3B4C5D6 /* LocationServiceTaskKillResumeTests.swift */; };
 		B769653B0FAD1396C8DD6411 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0771CC5514403FBA9445A68C /* MapView.swift */; };
 		B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */; };
 		BB708118D2A2426E0F490270 /* SignificantLocationChangesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A6881F93CC5593380C7592D /* SignificantLocationChangesTests.swift */; };
@@ -143,6 +144,7 @@
 		9298399813BDACAE9F0A3967 /* DBClearView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBClearView.swift; sourceTree = "<group>"; };
 		92C5F95F252B8D8D514304D2 /* StayDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayDetectorTests.swift; sourceTree = "<group>"; };
 		943030606759EE61661DD07F /* LocationServiceBackgroundResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceBackgroundResumeTests.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6071829A3B4C5D6 /* LocationServiceTaskKillResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTaskKillResumeTests.swift; sourceTree = "<group>"; };
 		975470EA32C831B3AC3AC8F2 /* TripRestoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRestoreTests.swift; sourceTree = "<group>"; };
 		9CFBBBCC65BC1A7E54445466 /* StayDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayDetector.swift; sourceTree = "<group>"; };
 		9151F7B27483492CB985E712 /* RetroactiveStayDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetroactiveStayDetector.swift; sourceTree = "<group>"; };
@@ -311,6 +313,7 @@
 				8B3F1ED182E80F8F3EB52399 /* HomeDetectorTests.swift */,
 				7D2F4B30888C2F27659D0077 /* HomeRegistrationTests.swift */,
 				943030606759EE61661DD07F /* LocationServiceBackgroundResumeTests.swift */,
+				B2C3D4E5F6071829A3B4C5D6 /* LocationServiceTaskKillResumeTests.swift */,
 				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
 				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
 				E5F6A7B8C9D0E1F2A3B4C5D6 /* PinDetailModelTests.swift */,
@@ -618,6 +621,7 @@
 				3A23BCAABAE933AAD3A2BBA7 /* HomeDetectorTests.swift in Sources */,
 				0A542EF08033B8D6DE17801A /* HomeRegistrationTests.swift in Sources */,
 				B0317E9F9847157C30D28369 /* LocationServiceBackgroundResumeTests.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* LocationServiceTaskKillResumeTests.swift in Sources */,
 				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
 				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
 				D4E5F6A7B8C9D0E1F2A3B4C5 /* PinDetailModelTests.swift in Sources */,
