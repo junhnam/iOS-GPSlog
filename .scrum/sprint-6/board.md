@@ -12,11 +12,11 @@
 
 ## Todo
 
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰した上で、既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 を順次実施）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発** / **タブ切替後の記録継続**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰し、5 回目（2026-05-12）の検証で判明したタブ切替で記録停止バグを S6-016 で潰した上で、既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 + タブ切替後の記録継続確認 を順次実施）
 
 ## In Progress
 
-（なし）
+- [ ] **S6-016** (TBD): タブ切替で wasTracking が false になり記録が止まる致命バグの修正 → **dev-2** / Must / XS（**リリースブロッカー** / 2026-05-12 jun さん実機検証で発覚: 常時同期 ON で 10km 運転したが完全に未記録 / Console.app で iOS 側は GPSLogger に位置情報を正常送信していたことを確認 / 根本原因: `MapView.swift:108-110` の `.onDisappear` で `stopUpdatingLocation()` を呼び、その中で `wasTracking=false` にリセットされていた → タブ切替で `wasTracking=false` になり、タスクキル後の SLC 起床経路（S6-015 の `wasTracking=true` ガード）が発火せず記録再開しない / 修正方針: `.onDisappear` の `stopUpdatingLocation` を削除 / 常時同期の `.onAppear` 自動 start は維持 / トリガーモードは `RecordingToggleButton` 経由でのみ停止 / S6-005 のバッテリー適応ポリシーが影響を吸収 / S6-008 の前に着手 / 新規ユニットテスト 1 件以上追加予定）
 
 ## Done
 
@@ -113,10 +113,22 @@
    - B: `didUpdateLocations` 冒頭で `needsResume = !isUpdating && wasTracking` フラグを設定し、`handleNewLocations` 後に `resumeTrackingAfterRelaunch()` を呼ぶ保険経路を追加（scenePhase 非依存）
    - C: `LocationServiceTaskKillResumeTests.swift` 新規 / 計 4 件のユニットテスト追加
 2. po-sm が S6-015 を起票 + 技術ノート `.scrum/notes/slc-wake-tracking-resume.md` 追加 + board.md / 完了基準を 14 → 15 チケットに更新（**Done**: 本コミット）
-3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**依頼中**）
+3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**Done**: 246/246 pass）
+4. **S6-008（観点拡張）** は Phase 10 着手後に再度予定変更（S6-016 完了後に最終判定へ）
+
+### Phase 10（実機フィードバック対応 第 5 ラウンド / 2026-05-12 追加）
+
+1. **S6-016** dev-2 が `MapView.swift` の `.onDisappear` から `stopUpdatingLocation()` を削除（**In Progress / dev-2 並行実装中**）
+   - 根本原因: `.onDisappear` の `stopUpdatingLocation()` が `wasTracking=false` にリセット → タブ切替で `wasTracking` が壊れ、S6-015 で実装した SLC 起床経路（`wasTracking=true` ガード）が発火しない致命バグ
+   - 修正: `.onDisappear` の 1 ブロック削除（数行）
+   - 維持: 常時同期の `.onAppear` 自動 start / トリガーモードの `RecordingToggleButton` 経由停止 / 自宅滞在中の自動停止経路（`handleHomeStateTransition` の `.atHome` 経路は `stopUpdatingLocation` を呼ばないので影響なし）
+   - 新規ユニットテスト 1 件以上（タブ切替に相当するライフサイクル遷移で `wasTracking` が `false` にならないこと）
+   - レビュー観点: バッテリー影響（S6-005 で吸収）/ `wasTracking` 他経路への波及（resumeTrackingAfterRelaunch / startTrackingFromSLC / handleHomeStateTransition / didUpdateLocations の保険経路）/ トリガーモードの挙動破壊なし / 既存 LocationServiceTests / MapViewTests への影響
+2. po-sm が S6-016 を起票 + 技術ノート `.scrum/notes/swiftui-ondisappear-pitfall.md` 追加 + board.md / 完了基準を 15 → 16 チケットに更新（**Done**: 本コミット）
+3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**依頼中** / dev-2 コミット後）
 4. **S6-008（最終判定 / 観点拡張）** jun さんが iPhone 16 Pro で次回外出時に再検証
-   - 既存 7 観点 + 観点 8（自宅設定の保存反映）+ **観点 9: タスクキル後の自宅 → 再出発**（朝出発 → 帰宅 → タスクキル → 再出発 → 記録再開）
-   - 順次実施: 買い物検証 → 自宅設定確認 → 履歴ピンタップ確認 → タスクキル後再出発確認
+   - 既存 7 観点 + 観点 8（自宅設定の保存反映）+ 観点 9（タスクキル後の自宅 → 再出発）+ **観点 10: タブ切替後の記録継続**（地図 → 設定 → 履歴 → 地図 と切替後にタスクキル → 翌日運転で記録される）
+   - 順次実施: 買い物検証 → 自宅設定確認 → 履歴ピンタップ確認 → タスクキル後再出発確認 → タブ切替後の記録継続確認
    - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
    - 一部 NG → Sprint 6 完了後の追加コミットで対応 or Sprint 7 切出（jun さんと合意）
 
@@ -143,6 +155,7 @@
 | S6-013 | dev-1 | 25bd2c4 | TBD（メイン代行確認依頼） | 未確認 | 4 件追加（T-1: handleMarkerTap → callback 呼び出し 2 件 / T-2: RestoredPin 変換 3 件）+ 既存 PlaceLookupServiceTests 1 件更新（メイン代行作業済） |
 | S6-014 | po-sm（メイン代行 / 緊急対応） | 5bc9145 | 0（メイン代行確認済） | 確認済 / 242/242 pass | 0（既存テスト回帰なしを確認 / SwiftUI `@State` の挙動修正のため新規ユニットテスト追加は対象外 / 実機検証で確認） |
 | S6-015 | dev-2 | 0e7c082 | 0（メイン代行確認済 / clean test） | 確認済 / 246/246 pass | 4（`LocationServiceTaskKillResumeTests.swift` 新規 / `.unknown → .away` 遷移で `startUpdatingLocation` 呼び出し / `didUpdateLocations` 経路で `resumeTrackingAfterRelaunch` 呼び出し / `wasTracking=false` のときガードで発火しない / handleHomeStateTransition の `.atHome` 経路保護） |
+| S6-016 | dev-2 | TBD（実装中） | TBD（メイン代行確認待ち） | 未確認 | 1 以上（タブ切替に相当するライフサイクル遷移で `wasTracking` が `false` にならないこと / もしくは `stopUpdatingLocation` を意図しない経路から呼んでいないことの回帰テスト） |
 
 ---
 
@@ -151,9 +164,9 @@
 | 状態 | 件数 |
 |---|---|
 | Todo | 1（S6-008） |
-| In Progress | 0 |
+| In Progress | 1（S6-016 / dev-2 並行実装中） |
 | Done | 13（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 含む） |
-| **Sprint 6 完了** | **13/15**（残: S6-008 実機検証総合のみ） |
+| **Sprint 6 完了** | **13/16**（残: S6-016 実装中 + S6-008 実機検証総合） |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -188,6 +201,23 @@
 > 修正方針: handleHomeStateTransition の条件緩和（`.unknown → .away` も通常 GPS 再開）+ `didUpdateLocations` 冒頭で SLC 起床経路を検出して `resumeTrackingAfterRelaunch()` 発火 + ユニットテスト 2 件以上追加。dev-2 が並行実装し、コミット `0e7c082` で完了（バグ1: `previous == .atHome` 条件を廃止し `current != .atHome` ＋ `wasTracking=true` ガード / バグ2: `didUpdateLocations` 冒頭に `needsResume = !isUpdating && wasTracking` フラグ + `handleNewLocations` 後に `resumeTrackingAfterRelaunch` 呼び出し / 新規ユニットテスト 4 件 `LocationServiceTaskKillResumeTests.swift`）。
 >
 > Sprint 6 スコープを **13/15** に確定（残: S6-008 実機検証総合 + メイン代行による S6-015 ビルド確認）。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発** を確認する流れ。再発防止のため SLC 起床経路の技術メモを `.scrum/notes/slc-wake-tracking-resume.md` に追加。
+>
+> 2026-05-12 更新: jun さんの実機検証 5 回目で **タブ切替後にタスクキルすると記録が止まる致命バグ** を検出 → **S6-016** を Must / リリースブロッカーで起票:
+> - 常時同期 ON で 10km 運転、アプリはタスクキルされたまま運転中一度も起動していない
+> - 帰宅後アプリを開くと **移動経路もピンも一切記録されていなかった**
+> - Console.app 実機ログで **iOS 側は GPSLogger に位置情報を正常送信していたことを確認** → アプリ側の起動 / GPS 再開経路にバグが残っていることが確定
+>
+> 根本原因（S6-015 の前提を破壊していた経路）:
+> 1. `MapView.swift:108-110` の `.onDisappear` で `stopUpdatingLocation()` を呼んでいた
+> 2. `stopUpdatingLocation()` 内部で `wasTracking=false` にリセットされる（`LocationService.swift:228`）
+> 3. タブ切替（地図 → 設定 / 履歴）で `.onDisappear` 発火 → `wasTracking=false` で永続化
+> 4. その状態でタスクキル → 翌日 SLC 起床しても、S6-015 の `wasTracking=true` ガード（`handleHomeStateTransition` / `didUpdateLocations` 冒頭の保険経路）が **false で発火せず、記録再開しない**
+>
+> S6-015 の wasTracking ガード自体は設計として正しいが、その値を破壊する経路（`.onDisappear` 副作用）を残していたため、ガードの効力が事実上ゼロになっていた。
+>
+> 修正方針: `MapView.swift` の `.onDisappear` の `stopUpdatingLocation()` を削除（数行）+ 新規ユニットテスト 1 件以上追加。dev-2 が並行実装中。常時同期の `.onAppear` 自動 start は維持 / トリガーモードは `RecordingToggleButton` 経由でのみ停止する設計に統一 / バッテリー懸念は S6-005 の `BatteryAdaptiveLocationPolicy` で吸収。
+>
+> Sprint 6 スコープを **13/16** に拡張（残: S6-016 実装 + S6-008 実機検証総合）。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続** を確認する流れ。再発防止のため SwiftUI `.onDisappear` の落とし穴（タブ切替でも発火する仕様 / 長寿命サービスの制御に使うべきでない）の技術メモを `.scrum/notes/swiftui-ondisappear-pitfall.md` に追加。
 
 ---
 

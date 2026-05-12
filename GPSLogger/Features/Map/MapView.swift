@@ -105,9 +105,13 @@ struct MapView: View {
                 locationService.startUpdatingLocation()
             }
         }
-        .onDisappear {
-            locationService.stopUpdatingLocation()
-        }
+        // S6-016: .onDisappear での stopUpdatingLocation() を削除する。
+        // タブ切替時にも .onDisappear が発火するため、地図タブ → 設定タブへの
+        // 切替だけで stopUpdatingLocation → wasTracking=false になり、
+        // タスクキル後の S6-015 復帰ガードを通過できなくなる致命バグがあった。
+        // 常時同期モードはユーザーが明示的に停止するまで記録を続けるのが仕様であり
+        // (.onAppear 側の startUpdatingLocation と対になる停止は不要)、
+        // トリガーモードは RecordingToggleButton で明示停止できるため問題ない。
     }
 
     // MARK: - S3-005 Trigger handling
