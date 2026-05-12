@@ -119,14 +119,14 @@
 
 ### Phase 10（実機フィードバック対応 第 5 ラウンド / 2026-05-12 追加）
 
-1. **S6-016** dev-2 が `MapView.swift` の `.onDisappear` から `stopUpdatingLocation()` を削除（**In Progress / dev-2 並行実装中**）
+1. **S6-016** dev-2 が `MapView.swift` の `.onDisappear` から `stopUpdatingLocation()` を削除（**Done**: `2abc6b5`）
    - 根本原因: `.onDisappear` の `stopUpdatingLocation()` が `wasTracking=false` にリセット → タブ切替で `wasTracking` が壊れ、S6-015 で実装した SLC 起床経路（`wasTracking=true` ガード）が発火しない致命バグ
-   - 修正: `.onDisappear` の 1 ブロック削除（数行）
+   - 修正: `.onDisappear` の 1 ブロック削除（理由コメント付き）
    - 維持: 常時同期の `.onAppear` 自動 start / トリガーモードの `RecordingToggleButton` 経由停止 / 自宅滞在中の自動停止経路（`handleHomeStateTransition` の `.atHome` 経路は `stopUpdatingLocation` を呼ばないので影響なし）
-   - 新規ユニットテスト 1 件以上（タブ切替に相当するライフサイクル遷移で `wasTracking` が `false` にならないこと）
+   - 新規ユニットテスト 3 件（`MapViewTabSwitchTests.swift` 新規 / 常時同期でタブ切替後も `wasTracking=true` 維持 / トリガーモードで `stopUpdatingLocation` 呼び出すと `wasTracking=false` になる既存挙動維持 / 常時同期 `.onAppear` で `wasTracking=true` になる）
    - レビュー観点: バッテリー影響（S6-005 で吸収）/ `wasTracking` 他経路への波及（resumeTrackingAfterRelaunch / startTrackingFromSLC / handleHomeStateTransition / didUpdateLocations の保険経路）/ トリガーモードの挙動破壊なし / 既存 LocationServiceTests / MapViewTests への影響
 2. po-sm が S6-016 を起票 + 技術ノート `.scrum/notes/swiftui-ondisappear-pitfall.md` 追加 + board.md / 完了基準を 15 → 16 チケットに更新（**Done**: 本コミット）
-3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**依頼中** / dev-2 コミット後）
+3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**依頼中** / dev-2 コミット `2abc6b5` 後）
 4. **S6-008（最終判定 / 観点拡張）** jun さんが iPhone 16 Pro で次回外出時に再検証
    - 既存 7 観点 + 観点 8（自宅設定の保存反映）+ 観点 9（タスクキル後の自宅 → 再出発）+ **観点 10: タブ切替後の記録継続**（地図 → 設定 → 履歴 → 地図 と切替後にタスクキル → 翌日運転で記録される）
    - 順次実施: 買い物検証 → 自宅設定確認 → 履歴ピンタップ確認 → タスクキル後再出発確認 → タブ切替後の記録継続確認
@@ -156,7 +156,7 @@
 | S6-013 | dev-1 | 25bd2c4 | TBD（メイン代行確認依頼） | 未確認 | 4 件追加（T-1: handleMarkerTap → callback 呼び出し 2 件 / T-2: RestoredPin 変換 3 件）+ 既存 PlaceLookupServiceTests 1 件更新（メイン代行作業済） |
 | S6-014 | po-sm（メイン代行 / 緊急対応） | 5bc9145 | 0（メイン代行確認済） | 確認済 / 242/242 pass | 0（既存テスト回帰なしを確認 / SwiftUI `@State` の挙動修正のため新規ユニットテスト追加は対象外 / 実機検証で確認） |
 | S6-015 | dev-2 | 0e7c082 | 0（メイン代行確認済 / clean test） | 確認済 / 246/246 pass | 4（`LocationServiceTaskKillResumeTests.swift` 新規 / `.unknown → .away` 遷移で `startUpdatingLocation` 呼び出し / `didUpdateLocations` 経路で `resumeTrackingAfterRelaunch` 呼び出し / `wasTracking=false` のときガードで発火しない / handleHomeStateTransition の `.atHome` 経路保護） |
-| S6-016 | dev-2 | TBD（実装中） | TBD（メイン代行確認待ち） | 未確認 | 1 以上（タブ切替に相当するライフサイクル遷移で `wasTracking` が `false` にならないこと / もしくは `stopUpdatingLocation` を意図しない経路から呼んでいないことの回帰テスト） |
+| S6-016 | dev-2 | 2abc6b5 | TBD（メイン代行確認依頼） | 未確認 | 3（`MapViewTabSwitchTests.swift` 新規 / 常時同期でタブ切替後も `wasTracking=true` 維持 / トリガーモードで `stopUpdatingLocation` 呼び出すと `wasTracking=false` になる既存挙動維持 / 常時同期 `.onAppear` で `wasTracking=true` になる） |
 
 ---
 
@@ -165,9 +165,9 @@
 | 状態 | 件数 |
 |---|---|
 | Todo | 1（S6-008） |
-| In Progress | 1（S6-016 / dev-2 並行実装中） |
-| Done | 13（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 含む） |
-| **Sprint 6 完了** | **13/16**（残: S6-016 実装中 + S6-008 実機検証総合） |
+| In Progress | 0 |
+| Done | 14（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 含む） |
+| **Sprint 6 完了** | **14/16**（残: S6-008 実機検証総合 + メイン代行による S6-016 ビルド確認） |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -216,9 +216,9 @@
 >
 > S6-015 の wasTracking ガード自体は設計として正しいが、その値を破壊する経路（`.onDisappear` 副作用）を残していたため、ガードの効力が事実上ゼロになっていた。
 >
-> 修正方針: `MapView.swift` の `.onDisappear` の `stopUpdatingLocation()` を削除（数行）+ 新規ユニットテスト 1 件以上追加。dev-2 が並行実装中。常時同期の `.onAppear` 自動 start は維持 / トリガーモードは `RecordingToggleButton` 経由でのみ停止する設計に統一 / バッテリー懸念は S6-005 の `BatteryAdaptiveLocationPolicy` で吸収。
+> 修正方針: `MapView.swift` の `.onDisappear` の `stopUpdatingLocation()` を削除（数行）+ 新規ユニットテスト 3 件追加。dev-2 が並行実装し、コミット `2abc6b5` で完了。常時同期の `.onAppear` 自動 start は維持 / トリガーモードは `RecordingToggleButton` 経由でのみ停止する設計に統一 / バッテリー懸念は S6-005 の `BatteryAdaptiveLocationPolicy` で吸収。新規テストは `MapViewTabSwitchTests.swift` 新規（タブ切替後も `wasTracking=true` 維持 / トリガーモードでの既存挙動維持 / 常時同期 `.onAppear` で `wasTracking=true` になる）。
 >
-> Sprint 6 スコープを **13/16** に拡張（残: S6-016 実装 + S6-008 実機検証総合）。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続** を確認する流れ。再発防止のため SwiftUI `.onDisappear` の落とし穴（タブ切替でも発火する仕様 / 長寿命サービスの制御に使うべきでない）の技術メモを `.scrum/notes/swiftui-ondisappear-pitfall.md` に追加。
+> Sprint 6 スコープを **14/16** に確定（残: S6-008 実機検証総合 + メイン代行による S6-016 ビルド確認）。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続** を確認する流れ。再発防止のため SwiftUI `.onDisappear` の落とし穴（タブ切替でも発火する仕様 / 長寿命サービスの制御に使うべきでない）の技術メモを `.scrum/notes/swiftui-ondisappear-pitfall.md` に追加。
 
 ---
 
@@ -235,10 +235,10 @@
 
 ## 完了基準（再掲）
 
-- [ ] 全 16 チケット Done（S6-001〜S6-007 / S6-009〜S6-015 完了済 / **S6-016 実装中 + S6-008 残**）
+- [ ] 全 16 チケット Done（S6-001〜S6-007 / S6-009〜S6-016 完了済 / **S6-008 残**）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
-- [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 完了後に再確認**）
-- [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 1 件以上追加見込み**）
+- [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 はメイン代行による再確認待ち**）
+- [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 3 件追加 → 249 件見込み / メイン代行確認待ち**）
 - [ ] Sprint 1〜5 のテスト 173 件の回帰なし
 - [ ] API キー漏洩スキャン 0 件
 - [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
@@ -248,7 +248,7 @@
 - [x] **S6-013 完了**: 履歴画面のピンタップ詳細表示 + placeName 住所混入修正（実機検証 2 回目フィードバック対応）
 - [x] **S6-014 完了**: 自宅登録画面で保存値が破棄される問題の修正（実機検証 3 回目フィードバック対応 / メイン代行緊急対応 / `5bc9145`）
 - [x] **S6-015 完了**: タスクキル後の自宅 → 再出発で記録が再開されないバグの修正（実機検証 4 回目フィードバック対応 / 2026-05-11 / dev-2 / `0e7c082` / リリースブロッカー）
-- [ ] **S6-016 完了**: タブ切替で `wasTracking` が false になり記録が止まる致命バグの修正（実機検証 5 回目フィードバック対応 / 2026-05-12 / dev-2 並行実装中 / リリースブロッカー / S6-015 の前提を破壊していた経路の修正）
+- [x] **S6-016 完了**: タブ切替で `wasTracking` が false になり記録が止まる致命バグの修正（実機検証 5 回目フィードバック対応 / 2026-05-12 / dev-2 / `2abc6b5` / リリースブロッカー / S6-015 の前提を破壊していた経路の修正 / 新規テスト 3 件 `MapViewTabSwitchTests.swift`）
 - [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + **タブ切替後の記録継続** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認
