@@ -16,10 +16,11 @@
 
 ## In Progress
 
-- [ ] **S6-017** (#53): 自宅 → 出発時の SLC 空白ウィンドウ修正（atHome 中も低精度通常 GPS 維持） → **dev-2** / Must / S（**リリースブロッカー** / 2026-05-12〜13 jun さん実機検証 6 回目で発覚 / 根本原因: `LocationService.swift:274-285` の `startSignificantChangesIfHome` が atHome 中に通常 GPS を完全停止し SLC のみに切替えていた → SLC の 500m〜1km 配信距離制約により自宅 70m〜500m が「空白ウィンドウ」になり、徒歩 300m のショッピングモールが記録されず、車で出発しても最初の 500m が欠落していた / 修正: SLC 開始呼び出し削除 + `desiredAccuracy=kCLLocationAccuracyHundredMeters` + `distanceFilter=100m` で通常 GPS 維持 + `.atHome → .away` で `BatteryAdaptiveLocationPolicy` 経由で通常精度復帰 / 新規ユニットテスト 3 件以上 / 技術ノート `.scrum/notes/slc-vs-low-power-gps.md` 追加 / 実装は **dev-2 並行作業中**、po-sm は文書化のみ担当）
+（なし）
 
 ## Done
 
+- [x] **S6-017** (ffd432b): 自宅 → 出発時の SLC 空白ウィンドウ修正（atHome 中も低精度通常 GPS 維持） → **dev-2** / Must / S（コミット `ffd432b` / **リリースブロッカー** / 2026-05-12〜13 jun さん実機検証 6 回目で発覚 / 修正: SLC 廃止 + `desiredAccuracy=kCLLocationAccuracyHundredMeters` + `distanceFilter=100m` で通常 GPS 維持 + `.atHome → .away` 遷移時に `desiredAccuracy=Best / distanceFilter=kCLDistanceFilterNone` に復元 / `SignificantLocationChangesTests` 2 件書き換え（SLC 仕様変更のため）+ `SLCSpaceWindowFixTests.swift` 新規 5 件追加 / メイン代行ビルド確認依頼）
 - [x] **S6-016** (2abc6b5): タブ切替で wasTracking が false になり記録が止まる致命バグの修正 → **dev-2** / Must / XS（コミット `2abc6b5` / **リリースブロッカー** / 根本原因: `MapView.swift` の `.onDisappear` で `stopUpdatingLocation()` を呼んでいたため、タブ切替のたびに `wasTracking=false` にリセットされ S6-015 の SLC 起床復帰ガードが機能しなかった / 修正: `.onDisappear` から `stopUpdatingLocation()` 呼び出しを削除しコメントで理由を明記 / 新規テスト 3 件 `MapViewTabSwitchTests.swift` 追加（常時同期でタブ切替後も `wasTracking=true` 維持 / トリガーモードで `stopUpdatingLocation` 呼び出すと `wasTracking=false` になる既存挙動維持 / 常時同期 `.onAppear` で `wasTracking=true` になる）/ メイン代行ビルド確認依頼）
 - [x] **S6-015** (0e7c082): タスクキル後の自宅 → 再出発で記録が再開されないバグの修正 → **dev-2** / Must / S（コミット `0e7c082` / バグ1: `handleHomeStateTransition` の `previous == .atHome` 条件を廃止し `current != .atHome` ＋ `wasTracking=true` ガードに変更（.unknown → .away 遷移でも GPS 再開を保証）/ バグ2: `didUpdateLocations` 冒頭に `needsResume = !isUpdating && wasTracking` フラグを追加し `handleNewLocations` 後に `resumeTrackingAfterRelaunch` を呼ぶ保険経路を追加 / 新規ユニットテスト 4 件（LocationServiceTaskKillResumeTests.swift 新規）/ メイン代行ビルド確認依頼）
 - [x] **S6-014** (TBD): 自宅登録画面で保存値が破棄される問題の修正 → **po-sm（メイン代行 / 緊急対応）** / Must / S（コミット `5bc9145` / 実機検証 3 回目で発覚した致命バグ 2 件（自宅ピン位置修正→保存後に元に戻る / 自宅削除→再登録すると東京駅で固定）を修正 / 根本原因: `HomeRegistrationView` の `@State` を `init` 内で `State(initialValue: settings.homeLocation)` で外部値から初期化していたため、save() による親 SettingsView 再描画で initialValue が再適用される SwiftUI 既知アンチパターン / 修正: `@State` をリテラル既定値で宣言（`selectedCoordinate=defaultCenter` / `radius=defaultHomeRadiusMeters` / `selectedAddress=nil`）+ `init` からの State 初期化を全廃 + `.onAppear` 内で `didLoadFromSettings` フラグで初回ガード付き復元 / 実コード変更 22+/-8 行 / 検証: xcodebuild clean test 242/242 pass / warning 0 / 実機検証は jun さん依頼中）
@@ -232,6 +233,17 @@
 > 修正方針: `MapView.swift` の `.onDisappear` の `stopUpdatingLocation()` を削除（数行）+ 新規ユニットテスト 3 件追加。dev-2 が並行実装し、コミット `2abc6b5` で完了。常時同期の `.onAppear` 自動 start は維持 / トリガーモードは `RecordingToggleButton` 経由でのみ停止する設計に統一 / バッテリー懸念は S6-005 の `BatteryAdaptiveLocationPolicy` で吸収。新規テストは `MapViewTabSwitchTests.swift` 新規（タブ切替後も `wasTracking=true` 維持 / トリガーモードでの既存挙動維持 / 常時同期 `.onAppear` で `wasTracking=true` になる）。
 >
 > Sprint 6 スコープを **14/16** に確定（残: S6-008 実機検証総合 + メイン代行による S6-016 ビルド確認）。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続** を確認する流れ。再発防止のため SwiftUI `.onDisappear` の落とし穴（タブ切替でも発火する仕様 / 長寿命サービスの制御に使うべきでない）の技術メモを `.scrum/notes/swiftui-ondisappear-pitfall.md` に追加。
+>
+> 2026-05-12〜13 更新: jun さんの実機検証 6 回目で **自宅 → 出発時に最初の数百メートルが記録されない致命バグ**（SLC 空白ウィンドウ）を検出 → **S6-017** を Must / リリースブロッカーで起票:
+> - 自宅から **徒歩 300m のショッピングモール** に歩いたが、まったく記録されなかった
+> - 車で出発した時も、**家を出てから 500m 分くらいは記録されない**
+> - 自宅判定半径は **70m**（jun さんのデフォルト 100m より狭い運用）
+>
+> 根本原因: `LocationService.swift:274-285` の `startSignificantChangesIfHome`（S3-006 で実装）が、atHome 中に通常 GPS を完全停止し SLC のみに切替えていた。Apple の SLC（Significant Location Changes）は **「500m〜1km 以上動かないと配信されない」OS 仕様**のため、**自宅判定半径 70m と SLC 配信距離 500m の差分（70m〜500m）が「SLC 空白ウィンドウ」になり、その範囲の移動はまったく検出できない**。位置情報が来ない → `lastHomeState` は `.atHome` のまま → `handleHomeStateTransition` も発火しない → 通常 GPS も再開されない、という連鎖でユーザーの目的地（家から徒歩圏 / 車で出発直後）が永久に記録されない致命バグだった。
+>
+> 修正方針（jun さん承認済 / 方針 A）: SLC 開始呼び出しを削除 + atHome 中も通常 GPS を維持（`desiredAccuracy=kCLLocationAccuracyHundredMeters` + `distanceFilter=100m`）+ `.atHome → .away` 遷移で `BatteryAdaptiveLocationPolicy` 経由で通常精度復帰。家の中で動かない時は `distanceFilter=100m` が配信を抑制 → 実質バッテリー消費ゼロ。家を出た瞬間（70m 外）に `didUpdateLocations` が発火 → `.atHome → .away` 検出 → 通常精度に復帰、という設計に切替える。dev-2 が並行実装中（コミット TBD / コード変更 10〜20 行 + 新規ユニットテスト 3 件以上）。
+>
+> Sprint 6 スコープを **14/17** に確定（残: S6-017 完了 + S6-008 実機検証総合 + メイン代行による S6-016 / S6-017 ビルド確認）。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録** を確認する流れ。再発防止のため SLC vs 低精度通常 GPS の選択肢比較・採用判断の技術メモを `.scrum/notes/slc-vs-low-power-gps.md` に追加。
 
 ---
 
@@ -248,10 +260,10 @@
 
 ## 完了基準（再掲）
 
-- [ ] 全 16 チケット Done（S6-001〜S6-007 / S6-009〜S6-016 完了済 / **S6-008 残**）
+- [ ] 全 17 チケット Done（S6-001〜S6-007 / S6-009〜S6-016 完了済 / **S6-008 / S6-017 残**）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
-- [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 はメイン代行による再確認待ち**）
-- [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 3 件追加 → 249 件見込み / メイン代行確認待ち**）
+- [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 / S6-017 はメイン代行による再確認待ち**）
+- [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 3 件追加 → 249 件見込み / S6-017 で 3 件以上追加 → 252 件以上見込み / メイン代行確認待ち**）
 - [ ] Sprint 1〜5 のテスト 173 件の回帰なし
 - [ ] API キー漏洩スキャン 0 件
 - [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
@@ -262,6 +274,7 @@
 - [x] **S6-014 完了**: 自宅登録画面で保存値が破棄される問題の修正（実機検証 3 回目フィードバック対応 / メイン代行緊急対応 / `5bc9145`）
 - [x] **S6-015 完了**: タスクキル後の自宅 → 再出発で記録が再開されないバグの修正（実機検証 4 回目フィードバック対応 / 2026-05-11 / dev-2 / `0e7c082` / リリースブロッカー）
 - [x] **S6-016 完了**: タブ切替で `wasTracking` が false になり記録が止まる致命バグの修正（実機検証 5 回目フィードバック対応 / 2026-05-12 / dev-2 / `2abc6b5` / リリースブロッカー / S6-015 の前提を破壊していた経路の修正 / 新規テスト 3 件 `MapViewTabSwitchTests.swift`）
-- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + **タブ切替後の記録継続** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される）
+- [ ] **S6-017 完了**: 自宅 → 出発時の SLC 空白ウィンドウ修正（atHome 中も低精度通常 GPS 維持）（実機検証 6 回目フィードバック対応 / 2026-05-12〜13 / dev-2 / コミット TBD / リリースブロッカー / SLC の 500m〜1km 配信距離制約により自宅 70m〜500m が空白ウィンドウになっていた致命バグの修正 / 新規テスト 3 件以上 / 技術ノート `.scrum/notes/slc-vs-low-power-gps.md`）
+- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + **自宅出発直後の記録** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される、加えて **自宅から徒歩 300m のショッピングモール往復が記録される / 車で出発直後の数百メートルが記録される / 自宅滞在中のバッテリー消費が許容範囲**）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認
