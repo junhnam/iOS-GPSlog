@@ -268,20 +268,41 @@ final class LocationService: NSObject, ObservableObject {
 
     // MARK: - Significant Location Changes（S3-006）
 
-    /// SLC（Significant Location Changes）モニタリングを開始する。
-    /// 自宅滞在中はこちらに切り替え、通常の startUpdatingLocation を停止する（電池節約）。
+    /// 自宅滞在中の省電力 GPS モードに移行する（S6-017 修正）。
+    ///
+    /// ### S6-017 修正の背景
+    /// 従来の実装では自宅滞在開始時に通常 GPS を完全停止し、SLC（Significant Location Changes）
+    /// のみに切り替えていた。しかし Apple の SLC 仕様では「500m〜1km 動かないと配信されない」ため、
+    /// 自宅 70m を出ても 500m 動くまで位置情報が来ず、atHome のまま記録されないバグが発生した。
+    ///
+    /// ### 修正後の挙動
+    /// SLC は使わず、通常 GPS を維持したまま低精度・大 distanceFilter に切り替えることで省電力化する。
+    ///   - `desiredAccuracy` = `kCLLocationAccuracyHundredMeters`（100m 精度で十分）
+    ///   - `distanceFilter` = 100m（100m 動かないと位置情報を配信しない）
+    /// これにより自宅 70m〜100m 外に出た瞬間に `didUpdateLocations` が発火し、
+    /// HomeDetector が away を検出 → 通常精度に復元 → 記録が即座に開始される。
+    ///
+    /// ### 既存 SLC との整合
+    /// isMonitoringSignificantChanges が true の場合（保険）は停止する。
     /// 自宅未登録（appSettings.homeLocation == nil）の場合は何もしない。
     func startSignificantChangesIfHome() {
         guard let settings = appSettings, settings.homeLocation != nil else { return }
-        guard !isMonitoringSignificantChanges else { return }
-        // 通常 GPS は停止
-        if isUpdating {
-            manager.stopUpdatingLocation()
-            isUpdating = false
+        // S6-017: SLC は使わない（500m+ で配信なので「家を出た瞬間」を取りこぼす）。
+        // 代わりに低精度・大 distanceFilter で通常 GPS を維持する。
+        // 家の中で動かない時のバッテリー消費は distanceFilter=100 で抑制する。
+        // 家を出た瞬間（70m〜100m 外）に didUpdateLocations が発火 → away 判定 → 精度復元。
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.distanceFilter = 100
+        if !isUpdating {
+            manager.startUpdatingLocation()
+            isUpdating = true
         }
-        manager.startMonitoringSignificantLocationChanges()
-        isMonitoringSignificantChanges = true
-        Self.logger.info("SLC 開始（自宅滞在中の省電力モード）")
+        // 既存 SLC が動いていれば保険として停止（二重起動防止）。
+        if isMonitoringSignificantChanges {
+            manager.stopMonitoringSignificantLocationChanges()
+            isMonitoringSignificantChanges = false
+        }
+        Self.logger.info("自宅滞在中: 低精度通常 GPS モード（desiredAccuracy=100m, distanceFilter=100m）")
     }
 
     /// SLC モニタリングを停止する。
@@ -528,7 +549,13 @@ final class LocationService: NSObject, ObservableObject {
             // 通常 GPS を再開しないと記録が止まる。
             // wasTracking=true（ユーザーが記録 ON のまま）の場合のみ再開する。
             guard appSettings?.wasTracking ?? false else { return }
-            stopSignificantChanges()
+            stopSignificantChanges()  // SLC の保険停止（修正後は通常 non-op）
+            // S6-017: atHome 中は低精度通常 GPS（desiredAccuracy=100m, distanceFilter=100m）に
+            // 切り替えていたため、away 遷移時に通常精度に復元する。
+            // BatteryAdaptiveLocationPolicy が次回 updateBatteryPolicy 呼び出しで
+            // distanceFilter を上書きするが、初期値として精度を Best に戻しておく。
+            manager.desiredAccuracy = kCLLocationAccuracyBest
+            manager.distanceFilter = kCLDistanceFilterNone
             // 既に updating 中ならそのまま、停止中なら再開する。
             if !isUpdating {
                 manager.startUpdatingLocation()

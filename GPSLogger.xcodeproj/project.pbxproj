@@ -32,6 +32,7 @@
 		49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */; };
 		4E83C83B29CF121E2B1181B1 /* PendingUpload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5697116473933AB9EF54B85B /* PendingUpload.swift */; };
 		577D6B9171C8E2221D78413B /* DocumentPickerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E44A28BD4137F6F5F2633C /* DocumentPickerViewTests.swift */; };
+		581292ED5F81A8396B0C4797 /* MapViewTabSwitchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8ED6108370D0F421BF59A01 /* MapViewTabSwitchTests.swift */; };
 		58617E7F6825AECDDCA2F4A4 /* AppDependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CF570EBE1E9ADC5B9403644 /* AppDependencyContainer.swift */; };
 		58D9707440808935F7D70087 /* HomeRegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD44FC296B085998F507FFCF /* HomeRegistrationView.swift */; };
 		61BD1C28023B04335BC0E5DC /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E89388920445382DC577EA62 /* ExportView.swift */; };
@@ -84,11 +85,11 @@
 		ED033B0D7D5002820F01D032 /* PlaceLookupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757590CA185C352FBE4BF43F /* PlaceLookupServiceTests.swift */; };
 		EE2A19120BD717FF5C324D56 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 1E9DA276A4AFB7648716131D /* GoogleMaps */; };
 		EEA6BFA3D056CE916C732A3F /* LocationServiceTaskKillResumeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9ADB5A6CEEEB6065B3EC65D /* LocationServiceTaskKillResumeTests.swift */; };
-		56EBDFBB9CBE46C699DD89DC /* MapViewTabSwitchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A752544719D4ACDA25577D7 /* MapViewTabSwitchTests.swift */; };
 		EFEB1E11D591FF76F47CA633 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26C1672AD957E9B012EADDFE /* SettingsView.swift */; };
 		F54222DBF285B9B10F8DA7A3 /* GoogleDriveSyncServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0511C88FB507086BEA379EC6 /* GoogleDriveSyncServiceTests.swift */; };
 		FBA105A82A0CBDC0CEDBFFF9 /* RestoreErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85A4A7B99D7B66DFC094569 /* RestoreErrorTests.swift */; };
 		FD4DFBC2710E7869578E11E2 /* RecordingToggleButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3DA4A6E22DE83A85A292C8 /* RecordingToggleButtonTests.swift */; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* SLCSpaceWindowFixTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* SLCSpaceWindowFixTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -154,12 +155,12 @@
 		A20450C6BAD2D86CCDBD9F05 /* CloudUploadCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadCoordinator.swift; sourceTree = "<group>"; };
 		A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDistanceCalculatorTests.swift; sourceTree = "<group>"; };
 		A9ADB5A6CEEEB6065B3EC65D /* LocationServiceTaskKillResumeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceTaskKillResumeTests.swift; sourceTree = "<group>"; };
-		2A752544719D4ACDA25577D7 /* MapViewTabSwitchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewTabSwitchTests.swift; sourceTree = "<group>"; };
 		AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMapsConfiguration.swift; sourceTree = "<group>"; };
 		AC52EBDDC16E791A59801574 /* CloudUploadRetryQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadRetryQueue.swift; sourceTree = "<group>"; };
 		B37FB6243B593D1536828AB0 /* PlaceLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceLookupService.swift; sourceTree = "<group>"; };
 		B469DE98253C140644E24C89 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
 		B6F9C5BAF5ABA55BD7565C6B /* CloudUploadRetryQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadRetryQueueTests.swift; sourceTree = "<group>"; };
+		B8ED6108370D0F421BF59A01 /* MapViewTabSwitchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewTabSwitchTests.swift; sourceTree = "<group>"; };
 		BBA1500FED5E52CD71916C89 /* CloudUploadCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudUploadCoordinatorTests.swift; sourceTree = "<group>"; };
 		BBA5EEFE914FD29FCF953627 /* PinDetailModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailModel.swift; sourceTree = "<group>"; };
 		BBC544193EF55BDEDE9C0D57 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
@@ -185,6 +186,7 @@
 		FDD0C1AA312B81A6A6F32FB1 /* BatteryAdaptiveLocationPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryAdaptiveLocationPolicyTests.swift; sourceTree = "<group>"; };
 		FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripRepositoryTests.swift; sourceTree = "<group>"; };
 		FE71CA5F6AF0859C8D12A41D /* CloudStoragePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudStoragePickerView.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* SLCSpaceWindowFixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SLCSpaceWindowFixTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -317,7 +319,7 @@
 				943030606759EE61661DD07F /* LocationServiceBackgroundResumeTests.swift */,
 				A9ADB5A6CEEEB6065B3EC65D /* LocationServiceTaskKillResumeTests.swift */,
 				A02103CF9D745DFC5CDA6FF4 /* LocationServiceTests.swift */,
-				2A752544719D4ACDA25577D7 /* MapViewTabSwitchTests.swift */,
+				B8ED6108370D0F421BF59A01 /* MapViewTabSwitchTests.swift */,
 				EE73BF20583E5707BD2ADE5D /* PersistenceControllerTests.swift */,
 				73F6D520DADB4D1296259250 /* PinDetailModelTests.swift */,
 				DBFA4B356B1486854378D8D6 /* PinRecordTests.swift */,
@@ -328,6 +330,7 @@
 				FD2A60E5386778E885D58549 /* RetroactiveStayDetectorTests.swift */,
 				471A3702C5EEEC77277A596E /* RootViewIntegrationTests.swift */,
 				0A6881F93CC5593380C7592D /* SignificantLocationChangesTests.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* SLCSpaceWindowFixTests.swift */,
 				92C5F95F252B8D8D514304D2 /* StayDetectorTests.swift */,
 				A263C19BA0FB785A739BE97D /* TripDistanceCalculatorTests.swift */,
 				FDD88D7D67EA5911278089DD /* TripRepositoryTests.swift */,
@@ -627,7 +630,7 @@
 				B0317E9F9847157C30D28369 /* LocationServiceBackgroundResumeTests.swift in Sources */,
 				EEA6BFA3D056CE916C732A3F /* LocationServiceTaskKillResumeTests.swift in Sources */,
 				7E86FEF538D2041BBEC73EB2 /* LocationServiceTests.swift in Sources */,
-				56EBDFBB9CBE46C699DD89DC /* MapViewTabSwitchTests.swift in Sources */,
+				581292ED5F81A8396B0C4797 /* MapViewTabSwitchTests.swift in Sources */,
 				49931F06FBA12AEE1EE70CCA /* PersistenceControllerTests.swift in Sources */,
 				A2ACC1BF91B4C39EEB135193 /* PinDetailModelTests.swift in Sources */,
 				DD761802C2D5F898D463A9F6 /* PinRecordTests.swift in Sources */,
@@ -638,6 +641,7 @@
 				28CBDDC77BFA04D318381C81 /* RetroactiveStayDetectorTests.swift in Sources */,
 				ECBE75A04C2ED9EF2C3B3303 /* RootViewIntegrationTests.swift in Sources */,
 				BB708118D2A2426E0F490270 /* SignificantLocationChangesTests.swift in Sources */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* SLCSpaceWindowFixTests.swift in Sources */,
 				2A327260972B87620CB2944C /* StayDetectorTests.swift in Sources */,
 				B983DFFD631D97620C4A086F /* TripDistanceCalculatorTests.swift in Sources */,
 				96A84FD4A50A6D95BC766F51 /* TripRepositoryTests.swift in Sources */,
