@@ -217,6 +217,19 @@ final class LocationService: NSObject, ObservableObject {
         isUpdating = true
         // S6-006: 記録開始時に wasTracking を true に書き込む（kill 後の復帰判定用）。
         appSettings?.wasTracking = true
+        // S6-017 メイン代行修正: SLC を「タスクキル後の OS 起床トリガー」としてのみ併走起動する。
+        //   `startMonitoringSignificantLocationChanges()` を 1 度でも明示的に呼ばないと、
+        //   タスクキル後の起床トリガーが立たない（Apple の仕様）。
+        //   S6-017 で `startSignificantChangesIfHome()` から SLC 起動を削除した結果、
+        //   プロダクトコード全体で SLC start を呼ぶ箇所がゼロになり、S6-015 で潰した
+        //   「タスクキル後の自宅 → 再出発で記録ゼロ」が再発する状況だった。
+        //   通常 GPS と並行で SLC を有効化しておけば、プロセス生存中は通常 GPS が動き、
+        //   kill 後は SLC で OS が起床してくれる二重防御になる。
+        if !isMonitoringSignificantChanges {
+            manager.startMonitoringSignificantLocationChanges()
+            isMonitoringSignificantChanges = true
+            Self.logger.info("SLC 併走起動（kill 後の OS 起床トリガー保険）")
+        }
     }
 
     func stopUpdatingLocation() {
@@ -297,12 +310,12 @@ final class LocationService: NSObject, ObservableObject {
             manager.startUpdatingLocation()
             isUpdating = true
         }
-        // 既存 SLC が動いていれば保険として停止（二重起動防止）。
-        if isMonitoringSignificantChanges {
-            manager.stopMonitoringSignificantLocationChanges()
-            isMonitoringSignificantChanges = false
-        }
-        Self.logger.info("自宅滞在中: 低精度通常 GPS モード（desiredAccuracy=100m, distanceFilter=100m）")
+        // S6-017 メイン代行修正: SLC は startUpdatingLocation で併走起動済み。
+        //   atHome 中も SLC を ON のまま維持することで、タスクキル後の OS 起床トリガーが
+        //   失われないようにする。dev-2 の初版実装では「保険として停止」していたが、
+        //   それでは S6-015 で潰した「タスクキル → 40km 移動で記録ゼロ」が再発するため、
+        //   atHome 中も SLC を維持する方針に変更。
+        Self.logger.info("自宅滞在中: 低精度通常 GPS モード（desiredAccuracy=100m, distanceFilter=100m, SLC 併走 ON）")
     }
 
     /// SLC モニタリングを停止する。
@@ -549,7 +562,10 @@ final class LocationService: NSObject, ObservableObject {
             // 通常 GPS を再開しないと記録が止まる。
             // wasTracking=true（ユーザーが記録 ON のまま）の場合のみ再開する。
             guard appSettings?.wasTracking ?? false else { return }
-            stopSignificantChanges()  // SLC の保険停止（修正後は通常 non-op）
+            // S6-017 メイン代行修正: SLC は維持する（kill 後の OS 起床トリガー保険）。
+            //   従来は `stopSignificantChanges()` で SLC を止めていたが、それでは
+            //   タスクキル直前まで away だった場合に SLC が立っておらず S6-015 のシナリオが壊れる。
+            //   away 遷移時も SLC を ON のまま維持し、精度だけ Best に復元する。
             // S6-017: atHome 中は低精度通常 GPS（desiredAccuracy=100m, distanceFilter=100m）に
             // 切り替えていたため、away 遷移時に通常精度に復元する。
             // BatteryAdaptiveLocationPolicy が次回 updateBatteryPolicy 呼び出しで

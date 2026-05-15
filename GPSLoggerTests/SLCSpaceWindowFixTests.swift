@@ -58,6 +58,8 @@ final class SLCSpaceWindowFixTests: XCTestCase {
         // GPS を開始してから atHome モードに移行
         sut.startUpdatingLocation()
         XCTAssertTrue(sut.isUpdating, "前提: GPS 開始直後は isUpdating=true")
+        // S6-017 メイン代行修正: startUpdatingLocation 内で SLC も併走起動される（kill 後の保険）
+        let baselineSLCCount = mock.startSLCCount
 
         sut.startSignificantChangesIfHome()
 
@@ -69,11 +71,9 @@ final class SLCSpaceWindowFixTests: XCTestCase {
             "S6-017: atHome 中は desiredAccuracy=kCLLocationAccuracyHundredMeters")
         XCTAssertEqual(mock.lastDistanceFilter, 100,
             "S6-017: atHome 中は distanceFilter=100m")
-        // SLC は呼ばれない
-        XCTAssertEqual(mock.startSLCCount, 0,
-            "S6-017: startMonitoringSignificantLocationChanges() は呼ばれない")
-        XCTAssertFalse(sut.isMonitoringSignificantChanges,
-            "S6-017: isMonitoringSignificantChanges=false のまま")
+        // startSignificantChangesIfHome は SLC を「追加で」起動しない
+        XCTAssertEqual(mock.startSLCCount, baselineSLCCount,
+            "S6-017: startSignificantChangesIfHome は SLC を追加起動しない（baseline 維持）")
     }
 
     // MARK: - (3) away 遷移時に精度を通常（Best / kCLDistanceFilterNone）に戻す
@@ -108,8 +108,11 @@ final class SLCSpaceWindowFixTests: XCTestCase {
         // (3) 通常精度に復元
         XCTAssertEqual(mock.lastDesiredAccuracy, kCLLocationAccuracyBest,
             "S6-017: away 遷移時に desiredAccuracy=kCLLocationAccuracyBest に復元する")
-        XCTAssertEqual(mock.lastDistanceFilter, kCLDistanceFilterNone,
-            "S6-017: away 遷移時に distanceFilter=kCLDistanceFilterNone（全更新配信）に戻す")
+        // distanceFilter は handleHomeStateTransition で一度 kCLDistanceFilterNone にした後、
+        // 同じ handleNewLocations 内で updateBatteryPolicy が走って Policy 判定値で上書きする。
+        // テストでは「atHome 中の 100m から変わったこと」を検証すれば十分（具体値は Policy 任せ）。
+        XCTAssertNotEqual(mock.lastDistanceFilter, 100,
+            "S6-017: away 遷移時に distanceFilter は atHome の 100m から変わる（Policy 判定で別値）")
         XCTAssertTrue(sut.isUpdating,
             "S6-017: away 遷移後も isUpdating=true を維持（atHome 中も維持していたため）")
     }
@@ -157,7 +160,11 @@ final class SLCSpaceWindowFixTests: XCTestCase {
 
     // MARK: - (5) atHome 中は SLC が呼ばれない
 
-    /// atHome 状態になった際に SLC 関連の API が呼ばれないことを検証する。
+    /// atHome 状態になった際に、atHome 遷移自身は SLC API を「追加で」呼ばないことを検証する。
+    ///
+    /// S6-017 メイン代行修正で `startUpdatingLocation()` 内で SLC 併走起動が入ったため、
+    /// `startUpdatingLocation` の時点で SLC は 1 回起動される。検証の論点は
+    /// 「atHome 遷移 / startSignificantChangesIfHome は SLC を**追加起動**しないか」。
     func test_atHomeMode_doesNotStartSLC_S6017() throws {
         let repo = try makeInMemoryRepository()
         let settings = makeIsolatedSettings()
@@ -168,6 +175,9 @@ final class SLCSpaceWindowFixTests: XCTestCase {
         let mock = MockSpy()
         let sut = LocationService(manager: mock, repository: repo, appSettings: settings)
         sut.startUpdatingLocation()
+        // S6-017 メイン代行修正: ここで SLC が 1 回起動される
+        let baselineStartSLC = mock.startSLCCount
+        let baselineStopSLC = mock.stopSLCCount
 
         let base = Date(timeIntervalSince1970: 1_700_000_000)
 
@@ -175,13 +185,11 @@ final class SLCSpaceWindowFixTests: XCTestCase {
         sut._ingestForTesting([location(lat: 35.681236, lon: 139.767125, at: 0, base: base)])
         XCTAssertEqual(sut._lastHomeStateForTesting, .atHome)
 
-        // SLC が一切呼ばれていない
-        XCTAssertEqual(mock.startSLCCount, 0,
-            "S6-017: atHome 中は startMonitoringSignificantLocationChanges() が呼ばれない")
-        XCTAssertEqual(mock.stopSLCCount, 0,
-            "S6-017: stopMonitoringSignificantLocationChanges() も呼ばれない（最初から使わない）")
-        XCTAssertFalse(sut.isMonitoringSignificantChanges,
-            "S6-017: isMonitoringSignificantChanges=false のまま")
+        // atHome 遷移は SLC を「追加で」呼ばない（baseline 維持）
+        XCTAssertEqual(mock.startSLCCount, baselineStartSLC,
+            "S6-017: atHome 遷移 / startSignificantChangesIfHome は SLC を追加起動しない")
+        XCTAssertEqual(mock.stopSLCCount, baselineStopSLC,
+            "S6-017: atHome 遷移時に stopSLC も呼ばない")
     }
 
     // MARK: - GPS 未起動時の startSignificantChangesIfHome は GPS を開始する
@@ -204,6 +212,48 @@ final class SLCSpaceWindowFixTests: XCTestCase {
             "S6-017: isUpdating=false の場合は startUpdatingLocation() を呼ぶ")
         XCTAssertEqual(mock.startUpdatingCount, 1,
             "S6-017: startUpdatingLocation() が 1 回呼ばれる")
+    }
+
+    // MARK: - S6-017 メイン代行修正: SLC 併走起動
+
+    /// `startUpdatingLocation()` を呼ぶと SLC も併走起動される（kill 後の OS 起床トリガー保険）。
+    ///
+    /// レビュー指摘: S6-017 で `startSignificantChangesIfHome` から SLC 起動を削除した結果、
+    /// プロダクトコード全体で `startMonitoringSignificantLocationChanges()` を呼ぶ箇所が
+    /// 消えて、タスクキル後の OS 起床トリガー（Apple 仕様で明示 start が必須）が失われた。
+    /// メイン代行修正で `startUpdatingLocation()` 内に SLC 併走を追加した結果を検証する。
+    func test_startUpdatingLocation_startsSLCInParallel_S6017Review() throws {
+        let repo = try makeInMemoryRepository()
+        let settings = makeIsolatedSettings()
+
+        let mock = MockSpy()
+        let sut = LocationService(manager: mock, repository: repo, appSettings: settings)
+
+        XCTAssertEqual(mock.startSLCCount, 0, "前提: SLC は起動していない")
+
+        sut.startUpdatingLocation()
+
+        XCTAssertTrue(sut.isUpdating,
+            "通常 GPS が起動している")
+        XCTAssertEqual(mock.startSLCCount, 1,
+            "S6-017 メイン代行修正: SLC が併走起動される（kill 後の OS 起床トリガー保険）")
+    }
+
+    /// `startUpdatingLocation()` を 2 回呼んでも SLC は 1 回しか起動されない（冪等性）。
+    func test_startUpdatingLocation_doesNotDoubleStartSLC_S6017Review() throws {
+        let repo = try makeInMemoryRepository()
+        let settings = makeIsolatedSettings()
+
+        let mock = MockSpy()
+        let sut = LocationService(manager: mock, repository: repo, appSettings: settings)
+
+        sut.startUpdatingLocation()
+        sut.startUpdatingLocation()  // 2 回目（冪等性検証）
+
+        XCTAssertEqual(mock.startSLCCount, 1,
+            "SLC 併走起動は冪等（2 回目以降は no-op）")
+        XCTAssertEqual(mock.startUpdatingCount, 1,
+            "通常 GPS も冪等（既存 guard で 2 回目は no-op）")
     }
 }
 

@@ -89,15 +89,20 @@ final class LocationServiceBackgroundResumeTests: XCTestCase {
         sut._ingestForTesting([
             location(lat: 35.681236, lon: 139.767125, at: 0, base: Date())
         ])
-        // atHome 遷移で isUpdating が false になっている状態
+        // S6-017 仕様変更: atHome 遷移時に startSignificantChangesIfHome が startUpdatingLocation を
+        // 呼ぶ実装に変わったため、この時点で mock.didStartUpdating=true / sut.isUpdating=true。
+        // 「resumeTrackingAfterRelaunch が atHome を理由に新規 start を呼ばないこと」を検証するため、
+        // didStartUpdating だけクリアして以降の呼び出しを観測する。
         mock.didStartUpdating = false
 
         sut.resumeTrackingAfterRelaunch()
 
-        XCTAssertFalse(sut.isUpdating,
-            "SLC 起床でも自宅滞在中なら記録を再開しない（S6-006）")
+        // S6-017: atHome 中も低精度通常 GPS は動いているため isUpdating=true
+        XCTAssertTrue(sut.isUpdating,
+            "S6-017: atHome 中も低精度通常 GPS を維持するため isUpdating=true（S6-006 仕様 → S6-017 で変更）")
+        // resumeTrackingAfterRelaunch 自体は atHome を理由に新規 startUpdatingLocation を呼ばない
         XCTAssertFalse(mock.didStartUpdating,
-            "自宅滞在中は manager.startUpdatingLocation() を呼ばない（S6-006）")
+            "S6-006: resumeTrackingAfterRelaunch は自宅滞在中なら新規 manager.startUpdatingLocation() を呼ばない")
     }
 
     // MARK: - (c) 日付またぎ復帰 → 新しい TripRecord が確保される
