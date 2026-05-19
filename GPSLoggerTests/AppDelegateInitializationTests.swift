@@ -29,30 +29,32 @@ final class AppDelegateInitializationTests: XCTestCase {
             "dependencies.locationService が non-nil になる（S6-018）")
     }
 
-    // MARK: - (2) launchOptions に .location がある場合は startTrackingFromSLC が呼ばれる（S6-018）
+    // MARK: - (2) launchOptions に .location がある場合は isLaunchedFromSLC=true になる（S6-018 / S6-022 更新）
 
     /// バックグラウンド SLC 起床経路（launchOptions[.location] != nil）のとき、
-    /// LocationService.startTrackingFromSLC() が呼ばれることを検証する。
+    /// AppDelegate.isLaunchedFromSLC が true になることを検証する。
     ///
-    /// 本テストでは AppDelegate が内部で生成する AppDependencyContainer の
-    /// locationService に直接アクセスできないため、
-    /// didFinishLaunchingWithOptions 完了後に
-    /// locationService.isMonitoringSignificantChanges が true になっていることで間接確認する。
-    /// （startTrackingFromSLC は isMonitoringSignificantChanges を true に同期する）
+    /// ### S6-022 更新
+    /// 旧テスト (S6-018) では AppDelegate が直接 `startTrackingFromSLC()` を呼び、
+    /// `isMonitoringSignificantChanges=true` になることを確認していた。
+    ///
+    /// S6-022 で SLC 起床の `startTrackingFromSLC()` 呼び出しが SceneDelegate に移管されたため、
+    /// AppDelegate は `isLaunchedFromSLC=true` を設定するのみとなった。
+    /// SceneDelegate 経由の呼び出し検証は `SceneDelegateConnectionTests` で行う（T-A1 / T-A2）。
     func test_didFinishLaunchingWithOptions_withLocationLaunchOption_callsStartTrackingFromSLC_S6018() {
         let sut = AppDelegate()
 
         // launchOptions に SLC 起床キーを含めて呼ぶ
-        // iOS 26 で `.location` が deprecated のため raw value を使用（AppDelegate と同じ方針）。
         let slcKey = UIApplication.LaunchOptionsKey(rawValue: "UIApplicationLaunchOptionsLocationKey")
         let launchOptions: [UIApplication.LaunchOptionsKey: Any] = [slcKey: true]
         _ = sut.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
 
         XCTAssertNotNil(sut.dependencies,
             "launchOptions[.location] あり: dependencies が non-nil（S6-018）")
-        XCTAssertTrue(
-            sut.dependencies.locationService.isMonitoringSignificantChanges,
-            "launchOptions[.location] あり: startTrackingFromSLC が呼ばれ isMonitoringSignificantChanges=true になる（S6-018）"
+        // S6-022: startTrackingFromSLC() の呼び出しは SceneDelegate に移管。
+        // AppDelegate 側では isLaunchedFromSLC=true になることを確認する。
+        XCTAssertTrue(sut.isLaunchedFromSLC,
+            "launchOptions[.location] あり: isLaunchedFromSLC=true になる（S6-022 SceneDelegate 移管後）"
         )
     }
 

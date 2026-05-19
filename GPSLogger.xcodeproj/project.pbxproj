@@ -8,7 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		A1B2C3D4E5F60001A1B2C3D4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002A1B2C3D4 /* AppDelegate.swift */; };
+		S6022AA0001A1B2C3D4E5F6 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = S6022AA0002A1B2C3D4E5F6 /* SceneDelegate.swift */; };
 		A1B2C3D4E5F60003A1B2C3D4 /* AppDelegateInitializationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60004A1B2C3D4 /* AppDelegateInitializationTests.swift */; };
+		S6022BB0001A1B2C3D4E5F6 /* SceneDelegateConnectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = S6022BB0002A1B2C3D4E5F6 /* SceneDelegateConnectionTests.swift */; };
+		S6022CC0001A1B2C3D4E5F6 /* HomeRegistrationViewSheetRedisplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = S6022CC0002A1B2C3D4E5F6 /* HomeRegistrationViewSheetRedisplayTests.swift */; };
 		A1B2C3D4E5F60005A1B2C3D4 /* LocationServiceLifecycleIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60006A1B2C3D4 /* LocationServiceLifecycleIntegrationTests.swift */; };
 		02F3021A9E754B31B1045491 /* TripDistanceCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8D1EC5DBB4D9C24119D8198 /* TripDistanceCalculator.swift */; };
 		08714C8E933A91DCE103039F /* DatabaseAutoCleanupServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C64D11D565BAB23BAB2B0369 /* DatabaseAutoCleanupServiceTests.swift */; };
@@ -107,7 +110,10 @@
 
 /* Begin PBXFileReference section */
 		A1B2C3D4E5F60002A1B2C3D4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		S6022AA0002A1B2C3D4E5F6 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60004A1B2C3D4 /* AppDelegateInitializationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegateInitializationTests.swift; sourceTree = "<group>"; };
+		S6022BB0002A1B2C3D4E5F6 /* SceneDelegateConnectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegateConnectionTests.swift; sourceTree = "<group>"; };
+		S6022CC0002A1B2C3D4E5F6 /* HomeRegistrationViewSheetRedisplayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeRegistrationViewSheetRedisplayTests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60006A1B2C3D4 /* LocationServiceLifecycleIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationServiceLifecycleIntegrationTests.swift; sourceTree = "<group>"; };
 		0040F3B33ADE3E37C63230A0 /* PinDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinDetailView.swift; sourceTree = "<group>"; };
 		0487F44FBCFABC22D6010860 /* SLCSpaceWindowFixTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SLCSpaceWindowFixTests.swift; sourceTree = "<group>"; };
@@ -305,6 +311,8 @@
 			children = (
 				A1B2C3D4E5F60004A1B2C3D4 /* AppDelegateInitializationTests.swift */,
 				78BCCAAEEE3DA047BCFF0FBA /* AppSettingsTests.swift */,
+				S6022BB0002A1B2C3D4E5F6 /* SceneDelegateConnectionTests.swift */,
+				S6022CC0002A1B2C3D4E5F6 /* HomeRegistrationViewSheetRedisplayTests.swift */,
 				FDD0C1AA312B81A6A6F32FB1 /* BatteryAdaptiveLocationPolicyTests.swift */,
 				40A74F94B451AE4BD207C26F /* CalendarEventCreationTests.swift */,
 				89FED55A72166C6B0DF1E8C0 /* CalendarSyncServiceTests.swift */,
@@ -365,6 +373,7 @@
 				AADCC82AF4B4B0595463F512 /* GoogleMapsConfiguration.swift */,
 				C9BE4D07634ED63174E4C624 /* GPSLoggerApp.swift */,
 				EB3F65917DC8E542E0510F6E /* RootView.swift */,
+				S6022AA0002A1B2C3D4E5F6 /* SceneDelegate.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -570,6 +579,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D4E5F60001A1B2C3D4 /* AppDelegate.swift in Sources */,
+				S6022AA0001A1B2C3D4E5F6 /* SceneDelegate.swift in Sources */,
 				58617E7F6825AECDDCA2F4A4 /* AppDependencyContainer.swift in Sources */,
 				32F3026C3BE5428958F6CADF /* AppSettings.swift in Sources */,
 				13EBC12588D03A603ECA279C /* BatteryAdaptiveLocationPolicy.swift in Sources */,
@@ -619,6 +629,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D4E5F60003A1B2C3D4 /* AppDelegateInitializationTests.swift in Sources */,
+				S6022BB0001A1B2C3D4E5F6 /* SceneDelegateConnectionTests.swift in Sources */,
+				S6022CC0001A1B2C3D4E5F6 /* HomeRegistrationViewSheetRedisplayTests.swift in Sources */,
 				836A082EC5A456F11E4A9C1F /* AppSettingsTests.swift in Sources */,
 				C1910C9B4D97A3066BCC34D3 /* BatteryAdaptiveLocationPolicyTests.swift in Sources */,
 				1B94FA1D9214F95B33731823 /* CSVExportDocumentTests.swift in Sources */,
