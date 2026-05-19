@@ -12,11 +12,7 @@
 
 ## Todo
 
-- [x] **S6-018** (#TBD): DI 確実化（UIApplicationDelegateAdaptor 導入 + App.init での AppDependencyContainer 生成） → **dev-2** / Must / M（**リリースブロッカー** / **統合 PR スコープ** / 2026-05-19 jun さん実機で「タスクキル中は GPS が反応しない」発覚 → メイン代行特定 → QA オーケストレーター全体検証で S6-018 単独では 60-70% しか解消しないと判定 / `@State private var dependencies = AppDependencyContainer()` の遅延評価問題 / バックグラウンド SLC 起床時に WindowGroup body が評価されないため依存性が組み上がらない / 修正: UIApplicationDelegateAdaptor + AppDelegate.swift 新規 + App.init() で生成 + @State → @ObservedObject 変更 / 新規ユニットテスト 3 件以上 / Info.plist 巻き戻し注意）
-- [x] **S6-019** (#TBD): pausesLocationUpdatesAutomatically=false + pause/resume delegate 実装 → **dev-2** / Must / S（**リリースブロッカー** / **統合 PR スコープ** / 2026-05-19 QA オーケストレーター全体検証で発覚 / LocationService.swift:191 で `pausesLocationUpdatesAutomatically=true` だが `locationManagerDidPauseLocationUpdates(_:)` / `locationManagerDidResumeLocationUpdates(_:)` 未実装 / iOS 自動停止後に検知できず再開もできない / S6-017 で通常 GPS 維持に方針転換した時点で再評価すべきだった / 修正: `pause=false` に倒す + 両 delegate 実装 / バッテリー懸念は distanceFilter=100m と動的精度で吸収 / 新規ユニットテスト 2〜3 件）
-- [x] **S6-020** (#TBD): SwiftUI ライフサイクル統合テスト追加 → **dev-2** / Must / M（**リリースブロッカー** / **統合 PR スコープ** / 2026-05-19 QA オーケストレーター全体検証で構造的検出漏れと判定 / 既存 256 件は「mock manager 直接渡し」スタイルで SwiftUI App → WindowGroup.body → @State 初期化のライフサイクル連鎖を 1 件も検証していない / これが S6-015 / S6-016 / S6-017 / 2026-05-19 で「ユニットテスト pass / 実機 NG」を 4 回繰り返した構造的原因 / 修正: `LocationServiceLifecycleIntegrationTests.swift` 新規 + App.init → AppDelegate.didFinish → RootView body 評価の順で delegate が必ず立つことを検証 / 通常起動 / SLC 起床 / 2 重生成保護を網羅 / 新規 4〜5 件 / Sprint 7 への XCUITest 整備提案を含む）
-- [x] **S6-021** (#TBD): enrichPinWithPlaceInfo の trip 未紐付けガード追加 → **dev-2** / Must / S（**統合 PR スコープ** / QA レポート P5 / LocationService.swift:781-824 で `pin.trip == nil` ガード欠落 / 後追いピン経路で MKLocalSearch 完了時に pin が trip 未紐付けだと placeName が DB に書かれない / 修正: `guard pin.trip != nil else { return }` 追加 + warning ログ / iOS 26 SwiftData `@Relationship` 仕様との整合 / 新規ユニットテスト 2〜3 件）
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発** / **タブ切替後の記録継続** / **自宅出発直後の記録** / **タスクキル中の GPS 反応**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰し、5 回目（2026-05-12）の検証で判明したタブ切替で記録停止バグを S6-016 で潰し、6 回目（2026-05-12〜13）の検証で判明した SLC 空白ウィンドウバグを S6-017 で潰し、**7 回目（2026-05-19）の検証で判明したタスクキル中の GPS 反応欠落を S6-018 / S6-019 / S6-020 / S6-021 統合 PR で潰した上で**、既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録 + **タスクキル中の GPS 反応継続** を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 + タブ切替後の記録継続確認 + 自宅出発直後の記録確認 + **タスクキル中の継続記録確認** を順次実施）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発** / **タブ切替後の記録継続** / **自宅出発直後の記録** / **タスクキル中の GPS 反応**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰し、5 回目（2026-05-12）の検証で判明したタブ切替で記録停止バグを S6-016 で潰し、6 回目（2026-05-12〜13）の検証で判明した SLC 空白ウィンドウバグを S6-017 で潰し、**7 回目（2026-05-19）の検証で判明したタスクキル中の GPS 反応欠落を S6-018 / S6-019 / S6-020 / S6-021 統合 PR（コミット `7281b39`）で潰した上で**、既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録 + **タスクキル中の GPS 反応継続** を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 + タブ切替後の記録継続確認 + 自宅出発直後の記録確認 + **タスクキル中の継続記録確認** を順次実施）
 
 ## In Progress
 
@@ -135,6 +131,36 @@
 3. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**依頼中** / dev-2 コミット `2abc6b5` 後）
 4. **S6-008（最終判定 / 観点拡張）** は Phase 11 着手後に再度予定変更（S6-017 完了後に最終判定へ）
 
+### Phase 12（QA レポート対応 / 統合 PR / 2026-05-19 追加）
+
+1. **2026-05-19 jun さん実機検証で「タスクキル中は GPS が反応しない」発覚** → メイン代行が S6-018（UIApplicationDelegateAdaptor 欠落）として準備 → **QA オーケストレーター全体検証により S6-018 単独では症状の 60-70% しか解消しない** と判定
+2. **S6-018** dev-2 が DI 確実化を実装（**Done**: 統合 PR コミット `7281b39`）
+   - `UIApplicationDelegateAdaptor(AppDelegate.self)` 導入 + `AppDelegate.swift` 新規
+   - `App.init()` 内で `AppDependencyContainer` 生成（保険 / 冪等）
+   - `@State` → `@ObservedObject` 変更
+   - `launchOptions[.location]` 検知経路
+   - `AppDelegateInitializationTests.swift` 新規 4 件
+3. **S6-019** dev-2 が `pausesLocationUpdatesAutomatically` の方針確定 + delegate 実装（**Done**: 統合 PR コミット `7281b39`）
+   - `pause=false` に倒す
+   - `locationManagerDidPauseLocationUpdates(_:)` / `locationManagerDidResumeLocationUpdates(_:)` 実装
+   - S6-017 で通常 GPS 維持に方針転換した時点で再評価すべきだった経路の決着
+   - 関連ユニットテストは LocationServiceLifecycleIntegrationTests 経由で担保
+4. **S6-020** dev-2 が SwiftUI ライフサイクル統合テスト追加（**Done**: 統合 PR コミット `7281b39`）
+   - `LocationServiceLifecycleIntegrationTests.swift` 新規 7 件
+   - 既存 256 件の構造的限界（mock manager 直接渡し）への対策
+   - 通常起動 / SLC 起床 / 2 重生成保護を網羅
+   - Sprint 7 への XCUITest 整備提案（`.scrum/notes/qa-review-2026-05-19.md` に記載）
+5. **S6-021** dev-2 が `enrichPinWithPlaceInfo` の trip 未紐付けガード追加（**Done**: 統合 PR コミット `7281b39`）
+   - QA レポート P5 / `LocationService.swift:781-824`
+   - 後追いピンの placeName 欠落リスク対策
+6. po-sm が S6-018 / S6-019 / S6-020 / S6-021 を起票 + 技術ノート `.scrum/notes/qa-review-2026-05-19.md` 追加 + board.md / 完了基準を 17 → 21 チケットに更新（**Done**: 本コミット）
+7. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**依頼中** / dev-2 統合 PR コミット `7281b39` 後 / 既存 252 件 + 新規 11 件 = 263 件以上見込み）
+8. メイン代行が general-purpose レビューエージェント起動 → 統合 PR レビュー（**依頼中**）
+9. **S6-008（最終判定 / 観点拡張）** jun さんが iPhone 16 Pro で再検証
+   - 既存 11 観点（7 観点 + 自宅設定保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録）+ **観点 12: タスクキル中の GPS 反応継続**
+   - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
+   - 一部 NG → Sprint 7 切出（jun さんと合意）
+
 ### Phase 11（実機フィードバック対応 第 6 ラウンド / 2026-05-12〜13 追加）
 
 1. **S6-017** dev-2 が `LocationService.startSignificantChangesIfHome` の SLC 空白ウィンドウを修正（**In Progress**: dev-2 並行作業中 / コミット TBD）
@@ -175,7 +201,11 @@
 | S6-014 | po-sm（メイン代行 / 緊急対応） | 5bc9145 | 0（メイン代行確認済） | 確認済 / 242/242 pass | 0（既存テスト回帰なしを確認 / SwiftUI `@State` の挙動修正のため新規ユニットテスト追加は対象外 / 実機検証で確認） |
 | S6-015 | dev-2 | 0e7c082 | 0（メイン代行確認済 / clean test） | 確認済 / 246/246 pass | 4（`LocationServiceTaskKillResumeTests.swift` 新規 / `.unknown → .away` 遷移で `startUpdatingLocation` 呼び出し / `didUpdateLocations` 経路で `resumeTrackingAfterRelaunch` 呼び出し / `wasTracking=false` のときガードで発火しない / handleHomeStateTransition の `.atHome` 経路保護） |
 | S6-016 | dev-2 | 2abc6b5 | TBD（メイン代行確認依頼） | 未確認 | 3（`MapViewTabSwitchTests.swift` 新規 / 常時同期でタブ切替後も `wasTracking=true` 維持 / トリガーモードで `stopUpdatingLocation` 呼び出すと `wasTracking=false` になる既存挙動維持 / 常時同期 `.onAppear` で `wasTracking=true` になる） |
-| S6-017 | dev-2 | TBD（dev-2 並行作業中） | TBD | 未確認 | 3 件以上見込み（atHome モードで `kCLLocationAccuracyHundredMeters` + `distanceFilter=100m` + `isUpdating=true` 設定確認 / `.atHome → .away` 遷移で `BatteryAdaptiveLocationPolicy` 経由の精度復帰 / 70m 圏外で `.atHome → .away` 検出） |
+| S6-017 | dev-2 | ffd432b | TBD（メイン代行確認依頼） | 未確認 | 5（SLCSpaceWindowFixTests 新規 + SignificantLocationChangesTests 2 件書き換え） |
+| S6-018 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 4（`AppDelegateInitializationTests.swift` 新規 / AppDelegate.didFinish 経由の dependencies 生成 / launchOptions[.location] 検知 / 通常起動経路 / 冪等性） |
+| S6-019 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 0（LocationServiceLifecycleIntegrationTests に統合 / pause=false 設定 + delegate 動作は統合テストで担保） |
+| S6-020 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 7（`LocationServiceLifecycleIntegrationTests.swift` 新規 / App.init → AppDelegate.didFinish → RootView body 評価の連鎖 / SLC 起床経路 / pause/resume 連動 / 2 重生成保護） |
+| S6-021 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 0（既存テストへの guard 経路ガードで担保 / 新規追加なし / 単純ガード 1 行修正のため） |
 
 ---
 
@@ -184,9 +214,9 @@
 | 状態 | 件数 |
 |---|---|
 | Todo | 1（S6-008） |
-| In Progress | 1（S6-017 / dev-2 並行作業中） |
-| Done | 14（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 含む） |
-| **Sprint 6 完了** | **14/17**（残: S6-017 完了 + S6-008 実機検証総合 + メイン代行による S6-016 / S6-017 ビルド確認） |
+| In Progress | 0 |
+| Done | 20（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 含む） |
+| **Sprint 6 完了** | **20/21**（残: S6-008 実機検証総合 + メイン代行による S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 ビルド確認 + 統合 PR レビュー） |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -249,6 +279,22 @@
 > 修正方針（jun さん承認済 / 方針 A）: SLC 開始呼び出しを削除 + atHome 中も通常 GPS を維持（`desiredAccuracy=kCLLocationAccuracyHundredMeters` + `distanceFilter=100m`）+ `.atHome → .away` 遷移で `BatteryAdaptiveLocationPolicy` 経由で通常精度復帰。家の中で動かない時は `distanceFilter=100m` が配信を抑制 → 実質バッテリー消費ゼロ。家を出た瞬間（70m 外）に `didUpdateLocations` が発火 → `.atHome → .away` 検出 → 通常精度に復帰、という設計に切替える。dev-2 が並行実装中（コミット TBD / コード変更 10〜20 行 + 新規ユニットテスト 3 件以上）。
 >
 > Sprint 6 スコープを **14/17** に確定（残: S6-017 完了 + S6-008 実機検証総合 + メイン代行による S6-016 / S6-017 ビルド確認）。S6-008 最終判定では **既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録** を確認する流れ。再発防止のため SLC vs 低精度通常 GPS の選択肢比較・採用判断の技術メモを `.scrum/notes/slc-vs-low-power-gps.md` に追加。
+>
+> 2026-05-19 更新: S6-017 完了後の jun さん実機検証 7 回目で **タスクキル中は GPS が反応しない致命バグ** を検出。メイン代行が `App.swift` を確認し `UIApplicationDelegateAdaptor` 欠落を発見 → S6-018 想定で準備 → **QA オーケストレーターによる全体検証で S6-018 単独では症状の 60-70% しか解消しないと判定**。残る 30-40% は **S6-019（pausesLocationUpdatesAutomatically の方針 + delegate 実装）** と **S6-020（SwiftUI ライフサイクル統合テスト）** でようやくカバーされる。加えて QA レポートで発見された P5 **S6-021（enrichPinWithPlaceInfo の trip 未紐付けガード）** を本 PR スコープに含める。
+>
+> **4 チケット（S6-018 / S6-019 / S6-020 / S6-021）を統合 PR として 1 つの PR にまとめる方針** で確定:
+> - 理由: S6-018 単独では 60-70% / S6-019 の delegate 実装が S6-018 と論理的に連動 / S6-020 が S6-018 + S6-019 の効果を構造的に担保 / S6-021 は同一ファイル修正で分離メリットなし
+> - コミット粒度: 4 つの連続コミット（dev-2 が単一ブランチで実装）
+> - 規模: S6-018 M + S6-019 S + S6-020 M + S6-021 S = 計 1〜2 日
+> - dev-2 が並行実装し、コミット `7281b39` で 4 件まとめて完了（AppDelegate.swift 新規 + GPSLoggerApp.swift @UIApplicationDelegateAdaptor 化 + pausesLocationUpdatesAutomatically=false + locationManagerDidPause/Resume delegate 実装 + AppDelegateInitializationTests.swift 新規 4 件 + LocationServiceLifecycleIntegrationTests.swift 新規 7 件 + enrichPinWithPlaceInfo の guard pin.trip != nil 追加 + project.pbxproj に 3 ファイル追加登録 + Info.plist 変更なし確認済）
+>
+> Sprint 6 スコープを **20/21** に拡張（残: S6-008 実機検証総合 + メイン代行による S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 ビルド確認 + 統合 PR の general-purpose レビューエージェントによるレビュー）。S6-008 最終判定では **既存 11 観点 + タスクキル中の GPS 反応継続（観点 12）** を確認する流れ。再発防止のため QA オーケストレーター全体検証のサマリ + SwiftUI App ライフサイクルと CLLocationManager の相性 + 既存 256 件テストの構造的限界 + Sprint 7 への XCUITest 整備提案を `.scrum/notes/qa-review-2026-05-19.md` に集約。
+>
+> Sprint 7 への持ち越し候補（QA レポート明示）:
+> - P6: `recentTrips(limit:)` の件数ベース取得
+> - P7: `HomeRegistrationView` の `.sheet` 再表示時の値非反映
+> - P8: `didApplyRestoredRoute` 巻き戻り
+> - S7-001 候補: XCUITest セットアップ + e2e ライフサイクル系テスト 3〜5 件追加
 
 ---
 
@@ -260,15 +306,16 @@
 | `7029d2f` | `DatabaseAutoCleanupService.swift` の DB ファイル URL 取得を `ModelContainer.defaultDirectoryURL`（iOS 26 で存在せず）から `FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)` 経由に変更。`attrs[.size]` の型推論エラーを `attrs[FileAttributeKey.size]` 明示で解消 |
 | `7b77d28` | `AppIcon-1024.png` placeholder を Swift CLI（AppKit/CoreGraphics）で生成して配置（Designer は画像生成不可のため）。Designer 配色（深藍 #1A3A5C → 青 #2E7FC0 グラデーション）+ 中央に簡易ピン。jun さんは `IconDesignPreview.swift` から書き出した本番 PNG にいつでも差し替え可能。`SettingsView.swift` の `#Preview` で `return` 文後の `_ = container` が dead code warning を出していた件も同時解消（`return` の前に移動） |
 | `5bc9145` | **S6-014 緊急対応**: `HomeRegistrationView.swift` の `@State` を `init` 内で `State(initialValue: settings.homeLocation)` で外部値から初期化していたため、`save()` の親 `SettingsView` 再描画 → sheet content closure 経由の init 再評価で initialValue が再適用され、ユーザー入力値（ピン位置 / 半径 / 住所）が「保存前の値」または「東京駅の defaultCenter」に戻ってしまう SwiftUI 既知アンチパターン。修正: `@State` をリテラル既定値で宣言（`selectedCoordinate=defaultCenter` / `radius=defaultHomeRadiusMeters` / `selectedAddress=nil`）、`init` からの State 初期化を全廃、`.onAppear` 内で `didLoadFromSettings` フラグで初回ガード付きで settings から復元。実コード変更 22+/-8 行 / `xcodebuild clean test` 242/242 pass / warning 0 / 同類の罠を Sprint 7 以降の他画面で踏まないよう `.scrum/notes/swiftui-state-init-pitfall.md` に技術メモを残した |
+| `7281b39`（dev-2 統合 PR） | **S6-018 / S6-019 / S6-020 / S6-021 統合 PR**: 2026-05-19 jun さん実機検証 7 回目で「タスクキル中は GPS が反応しない」を検出 → メイン代行が S6-018（UIApplicationDelegateAdaptor 欠落）として準備 → QA オーケストレーター全体検証で S6-018 単独では症状の 60-70% しか解消しないと判定 → 4 チケットを 1 つの統合 PR にまとめる方針で確定。S6-018: `AppDelegate.swift` 新規 + `GPSLoggerApp.swift` を `@UIApplicationDelegateAdaptor` に切替 + `App.init()` で AppDependencyContainer 生成 + `@State` → `@ObservedObject`。S6-019: `pausesLocationUpdatesAutomatically=false` + `locationManagerDidPauseLocationUpdates(_:)` / `locationManagerDidResumeLocationUpdates(_:)` 実装。S6-020: `AppDelegateInitializationTests.swift` 新規 4 件 + `LocationServiceLifecycleIntegrationTests.swift` 新規 7 件 = 計 11 件追加（既存 256 件の「mock manager 直接渡し」スタイルでは検出できなかった構造的検出漏れを潰す）。S6-021: `enrichPinWithPlaceInfo` 先頭に `guard pin.trip != nil` 追加（後追いピンの placeName 欠落リスク対策）。`project.pbxproj` に 3 ファイル追加登録済 / Info.plist 変更なし確認済（過去事案の巻き戻し問題回避）。メイン代行ビルド確認 + general-purpose レビューエージェント依頼中。再発防止のため QA オーケストレーター全体検証サマリ + SwiftUI App ライフサイクルと CLLocationManager の相性 + Sprint 7 への XCUITest 整備提案を `.scrum/notes/qa-review-2026-05-19.md` に集約 |
 
 ---
 
 ## 完了基準（再掲）
 
-- [ ] 全 17 チケット Done（S6-001〜S6-007 / S6-009〜S6-016 完了済 / **S6-008 / S6-017 残**）
+- [ ] 全 21 チケット Done（S6-001〜S6-007 / S6-009〜S6-021 完了済 / **S6-008 残**）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
-- [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 / S6-017 はメイン代行による再確認待ち**）
-- [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 3 件追加 → 249 件見込み / S6-017 で 3 件以上追加 → 252 件以上見込み / メイン代行確認待ち**）
+- [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 はメイン代行による再確認待ち**）
+- [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 3 件追加 → 249 件見込み / S6-017 で 5 件追加 → 254 件見込み / S6-018〜S6-021 統合 PR で 11 件追加 → 265 件以上見込み / メイン代行確認待ち**）
 - [ ] Sprint 1〜5 のテスト 173 件の回帰なし
 - [ ] API キー漏洩スキャン 0 件
 - [ ] DI 検証テストが新規サービスに対して必須化されている（S6-001 効果確認）
@@ -279,7 +326,11 @@
 - [x] **S6-014 完了**: 自宅登録画面で保存値が破棄される問題の修正（実機検証 3 回目フィードバック対応 / メイン代行緊急対応 / `5bc9145`）
 - [x] **S6-015 完了**: タスクキル後の自宅 → 再出発で記録が再開されないバグの修正（実機検証 4 回目フィードバック対応 / 2026-05-11 / dev-2 / `0e7c082` / リリースブロッカー）
 - [x] **S6-016 完了**: タブ切替で `wasTracking` が false になり記録が止まる致命バグの修正（実機検証 5 回目フィードバック対応 / 2026-05-12 / dev-2 / `2abc6b5` / リリースブロッカー / S6-015 の前提を破壊していた経路の修正 / 新規テスト 3 件 `MapViewTabSwitchTests.swift`）
-- [ ] **S6-017 完了**: 自宅 → 出発時の SLC 空白ウィンドウ修正（atHome 中も低精度通常 GPS 維持）（実機検証 6 回目フィードバック対応 / 2026-05-12〜13 / dev-2 / コミット TBD / リリースブロッカー / SLC の 500m〜1km 配信距離制約により自宅 70m〜500m が空白ウィンドウになっていた致命バグの修正 / 新規テスト 3 件以上 / 技術ノート `.scrum/notes/slc-vs-low-power-gps.md`）
-- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + **自宅出発直後の記録** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される、加えて **自宅から徒歩 300m のショッピングモール往復が記録される / 車で出発直後の数百メートルが記録される / 自宅滞在中のバッテリー消費が許容範囲**）
+- [x] **S6-017 完了**: 自宅 → 出発時の SLC 空白ウィンドウ修正（atHome 中も低精度通常 GPS 維持）（実機検証 6 回目フィードバック対応 / 2026-05-12〜13 / dev-2 / コミット `ffd432b` / リリースブロッカー / SLC の 500m〜1km 配信距離制約により自宅 70m〜500m が空白ウィンドウになっていた致命バグの修正 / 新規テスト 5 件 / 技術ノート `.scrum/notes/slc-vs-low-power-gps.md`）
+- [x] **S6-018 完了**: DI 確実化（UIApplicationDelegateAdaptor 導入 + App.init での AppDependencyContainer 生成）（実機検証 7 回目 + QA オーケストレーター全体検証 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / リリースブロッカー / `@State` 遅延評価による DI 不成立を AppDelegate 経由で解消 / `AppDelegateInitializationTests.swift` 新規 4 件）
+- [x] **S6-019 完了**: pausesLocationUpdatesAutomatically=false + pause/resume delegate 実装（QA オーケストレーター全体検証 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / リリースブロッカー / iOS 自動 pause 経路の検知 + 復帰経路を確立 / 動作は LocationServiceLifecycleIntegrationTests で担保）
+- [x] **S6-020 完了**: SwiftUI ライフサイクル統合テスト追加（QA オーケストレーター全体検証 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / リリースブロッカー / `LocationServiceLifecycleIntegrationTests.swift` 新規 7 件 / 既存 256 件の「mock manager 直接渡し」スタイルの構造的限界を補完 / Sprint 7 への XCUITest 整備提案）
+- [x] **S6-021 完了**: enrichPinWithPlaceInfo の trip 未紐付けガード追加（QA オーケストレーター全体検証 P5 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / 後追いピンの placeName 欠落リスク対策 / `guard pin.trip != nil else { return }` 追加）
+- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録 + **タスクキル中の GPS 反応継続** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される、加えて自宅から徒歩 300m のショッピングモール往復が記録される / 車で出発直後の数百メートルが記録される / 自宅滞在中のバッテリー消費が許容範囲、加えて **タスクキル中に SLC 起床経路で記録が継続される / pause/resume 経路でも記録が継続される**）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認
