@@ -192,6 +192,17 @@ struct HomeRegistrationView: View {
             }
             triggerReverseGeocode(coordinate: selectedCoordinate)
         }
+        .onDisappear {
+            // S6-022 (タスク B / P7 修正): シートが閉じた時に didLoadFromSettings をリセットする。
+            // .sheet(isPresented:) では同じ View インスタンスが再利用される場合があり、
+            // リセットしないと 2 回目以降の .onAppear で settings.homeLocation の最新値が
+            // 反映されない問題が残る（QA P7）。
+            //
+            // 注意: .sheet の .onDisappear はシート閉じ時のみ発火し、タブ切替では発火しない。
+            // そのため MapView の .onDisappear 問題（S6-016 / stopUpdatingLocation の誤発火）
+            // とは異なる経路であり、安全にリセットできる。
+            didLoadFromSettings = false
+        }
     }
 
     // MARK: - Geocoding

@@ -12,11 +12,13 @@
 
 ## Todo
 
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発** / **タブ切替後の記録継続** / **自宅出発直後の記録** / **タスクキル中の GPS 反応**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 完了後に再実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰し、5 回目（2026-05-12）の検証で判明したタブ切替で記録停止バグを S6-016 で潰し、6 回目（2026-05-12〜13）の検証で判明した SLC 空白ウィンドウバグを S6-017 で潰し、**7 回目（2026-05-19）の検証で判明したタスクキル中の GPS 反応欠落を S6-018 / S6-019 / S6-020 / S6-021 統合 PR（コミット `7281b39`）で潰した上で**、既存 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録 + **タスクキル中の GPS 反応継続** を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 + タブ切替後の記録継続確認 + 自宅出発直後の記録確認 + **タスクキル中の継続記録確認** を順次実施）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発** / **タブ切替後の記録継続** / **自宅出発直後の記録** / **タスクキル中の GPS 反応** / **S6-022 完了後: 自宅登録シート再表示**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 / S6-022 完了後に最終実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰し、5 回目（2026-05-12）の検証で判明したタブ切替で記録停止バグを S6-016 で潰し、6 回目（2026-05-12〜13）の検証で判明した SLC 空白ウィンドウバグを S6-017 で潰し、7 回目（2026-05-19）の検証で判明したタスクキル中の GPS 反応欠落を S6-018 / S6-019 / S6-020 / S6-021 統合 PR（コミット `7281b39`）で潰し、**さらに jun さん「これ以降修正する必要がない状態」意向を受け iOS 26 deprecated（時限爆弾）+ P7 軽微バグを S6-022 統合 PR で潰した上で**、既存 11 観点 + 自宅登録シート再表示（観点 13）を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 + タブ切替後の記録継続確認 + 自宅出発直後の記録確認 + タスクキル中の継続記録確認 + **自宅登録シート再表示確認** を順次実施）
+
+- [x] **S6-022** → In Progress（dev-2 着手中）
 
 ## In Progress
 
-（なし）
+- [ ] **S6-022** (TBD): iOS 26 deprecated 対応（SceneDelegate 移行）+ P7 軽微バグ（自宅登録シート再表示）統合修正 → **dev-2** / 着手中
 
 ## Done
 
@@ -161,6 +163,20 @@
    - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
    - 一部 NG → Sprint 7 切出（jun さんと合意）
 
+### Phase 13（リリース前最終整備 / 2026-05-19 追加）
+
+1. **2026-05-19 jun さん意向「これ以降修正する必要がない状態にしたい」** → QA オーケストレーター「個人利用版リリース可能」判定済（`.scrum/notes/qa-review-2026-05-19.md`）に加え、推奨プラン（iOS 26 deprecated 対応 + P7 軽微バグ）を Sprint 6 内で潰す方針で jun さん承認
+2. **S6-022** dev-2 が以下を **単一 PR** で実装（**Todo**: 着手前 / 想定半日〜1日）
+   - タスク A（M / 半日想定）: `UIApplication.LaunchOptionsKey.location` iOS 26 deprecated 対応 → `UISceneDelegate.scene(_:willConnectTo:options:)` 経由の SLC 起床検出に正式移行 / `AppDelegate` は DI / `configurationForConnecting` 用に残す
+   - タスク B（S / 半日以内）: `HomeRegistrationView` のシート再表示時に `didLoadFromSettings` ガードが残って最新値が反映されない P7 → `.sheet(item:)` 統一 or `.onDisappear` でリセット
+   - 新規ユニットテスト 4〜5 件 / 既存 11 件ライフサイクル統合テスト pass / warning 0 / Info.plist OAuth Client ID 巻き戻りなし
+3. po-sm が S6-022 を起票 + board.md / 完了基準を 21 → 22 チケットに更新（**Done**: 本コミット）
+4. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**未着手** / dev-2 コミット後 / 既存 263+ 件 + 新規 4〜5 件 = 267 件以上見込み）
+5. **S6-008（最終判定 / 観点拡張）** jun さんが iPhone 16 Pro で再検証
+   - 既存 11 観点 + **観点 13: 自宅登録シート再表示**（自宅登録シートを開く → 保存 → 閉じる → 再度開く で最新値が反映される）
+   - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能（これ以降修正不要状態）
+   - 一部 NG → Sprint 7 切出（jun さんと合意）
+
 ### Phase 11（実機フィードバック対応 第 6 ラウンド / 2026-05-12〜13 追加）
 
 1. **S6-017** dev-2 が `LocationService.startSignificantChangesIfHome` の SLC 空白ウィンドウを修正（**In Progress**: dev-2 並行作業中 / コミット TBD）
@@ -206,6 +222,7 @@
 | S6-019 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 0（LocationServiceLifecycleIntegrationTests に統合 / pause=false 設定 + delegate 動作は統合テストで担保） |
 | S6-020 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 7（`LocationServiceLifecycleIntegrationTests.swift` 新規 / App.init → AppDelegate.didFinish → RootView body 評価の連鎖 / SLC 起床経路 / pause/resume 連動 / 2 重生成保護） |
 | S6-021 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 0（既存テストへの guard 経路ガードで担保 / 新規追加なし / 単純ガード 1 行修正のため） |
+| S6-022 | dev-2（着手前） | TBD | TBD（メイン代行確認依頼） | 未確認 | 4〜5 見込み（SceneDelegate 用 2〜3 件 + HomeRegistrationView シート再表示 2 件） |
 
 ---
 
@@ -213,10 +230,10 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 1（S6-008） |
+| Todo | 2（S6-008 / **S6-022**） |
 | In Progress | 0 |
 | Done | 20（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 含む） |
-| **Sprint 6 完了** | **20/21**（残: S6-008 実機検証総合 + メイン代行による S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 ビルド確認 + 統合 PR レビュー） |
+| **Sprint 6 完了** | **20/22**（残: S6-008 実機検証総合 + **S6-022 リリース前最終整備（iOS 26 deprecated + P7）** + メイン代行による S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 ビルド確認 + 統合 PR レビュー） |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -292,9 +309,15 @@
 >
 > Sprint 7 への持ち越し候補（QA レポート明示）:
 > - P6: `recentTrips(limit:)` の件数ベース取得
-> - P7: `HomeRegistrationView` の `.sheet` 再表示時の値非反映
+> - P7: `HomeRegistrationView` の `.sheet` 再表示時の値非反映 → **本日 S6-022 として Sprint 6 内取り込みに方針変更（jun さん承認）**
 > - P8: `didApplyRestoredRoute` 巻き戻り
 > - S7-001 候補: XCUITest セットアップ + e2e ライフサイクル系テスト 3〜5 件追加
+>
+> 2026-05-19 更新（夕方）: jun さん「これ以降修正する必要がない状態」意向を受け、Sprint 6 リリース前最終整備として **S6-022** を High / M で起票:
+> - **タスク A（時限爆弾対応）**: `UIApplication.LaunchOptionsKey.location` が iOS 26.0 で deprecated。現状 `AppDelegate.swift` で raw value 直接使用（`UIApplication.LaunchOptionsKey(rawValue: "UIApplicationLaunchOptionsLocationKey")`）で警告回避中。将来 iOS が API を削除するとタスクキル後の SLC 起床が動かなくなる時限爆弾。`UISceneDelegate.scene(_:willConnectTo:options:)` 経由の SLC 起床検出に正式移行し、AppDelegate は DI / `configurationForConnecting` 用に残す。新規 `SceneDelegate.swift` 検討 + `Info.plist` の `UIApplicationSceneManifest` 設定確認。既存 11 件のライフサイクル統合テスト（AppDelegateInitializationTests / LocationServiceLifecycleIntegrationTests）が pass し続けることを必須条件とする。
+> - **タスク B（P7 軽微バグ）**: `HomeRegistrationView` のシート 2 回目以降に `didLoadFromSettings` ガードが残って最新値が反映されない問題。`.sheet(item:)` 統一 or `.onDisappear` で `didLoadFromSettings` をリセット（dev-2 判断）。新規テスト 2 件以上（初回表示 + 再表示で更新値反映）。
+>
+> dev-2 が単一 PR で 2 タスクを連続コミットで実装し、メイン代行ビルド確認 → general-purpose レビュー → S6-008 最終判定（観点 13: 自宅登録シート再表示 追加）→ Sprint 6 完了の流れ。Sprint 6 スコープを **20/22** に確定。再発防止のため SwiftUI `@State` init アンチパターン / `.onDisappear` タブ切替発火 / Info.plist 巻き戻し（過去 2 回事故）/ S6-018 DI 確実化を壊さない の 4 つの落とし穴をチケット内に既知の落とし穴セクションとして明示。
 
 ---
 
@@ -312,7 +335,7 @@
 
 ## 完了基準（再掲）
 
-- [ ] 全 21 チケット Done（S6-001〜S6-007 / S6-009〜S6-021 完了済 / **S6-008 残**）
+- [ ] 全 22 チケット Done（S6-001〜S6-007 / S6-009〜S6-021 完了済 / **S6-008 残 + S6-022 残**）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
 - [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 はメイン代行による再確認待ち**）
 - [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 3 件追加 → 249 件見込み / S6-017 で 5 件追加 → 254 件見込み / S6-018〜S6-021 統合 PR で 11 件追加 → 265 件以上見込み / メイン代行確認待ち**）
@@ -331,6 +354,7 @@
 - [x] **S6-019 完了**: pausesLocationUpdatesAutomatically=false + pause/resume delegate 実装（QA オーケストレーター全体検証 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / リリースブロッカー / iOS 自動 pause 経路の検知 + 復帰経路を確立 / 動作は LocationServiceLifecycleIntegrationTests で担保）
 - [x] **S6-020 完了**: SwiftUI ライフサイクル統合テスト追加（QA オーケストレーター全体検証 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / リリースブロッカー / `LocationServiceLifecycleIntegrationTests.swift` 新規 7 件 / 既存 256 件の「mock manager 直接渡し」スタイルの構造的限界を補完 / Sprint 7 への XCUITest 整備提案）
 - [x] **S6-021 完了**: enrichPinWithPlaceInfo の trip 未紐付けガード追加（QA オーケストレーター全体検証 P5 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / 後追いピンの placeName 欠落リスク対策 / `guard pin.trip != nil else { return }` 追加）
+- [ ] **S6-022 完了**: iOS 26 deprecated 対応（SceneDelegate 移行）+ P7 軽微バグ（自宅登録シート再表示）統合修正（Sprint 6 リリース前最終整備 / 2026-05-19 起票 / dev-2 着手前 / High / M / 単一 PR / タスク A: `UIApplication.LaunchOptionsKey.location` iOS 26 deprecated → SceneDelegate 経由検出に正式移行 / タスク B: `HomeRegistrationView` シート再表示時の `didLoadFromSettings` ガード残存問題 / 新規テスト 4〜5 件 / 既存 11 件ライフサイクル統合テスト pass / warning 0 / Info.plist OAuth Client ID 巻き戻りなし）
 - [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録 + **タスクキル中の GPS 反応継続** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される、加えて自宅から徒歩 300m のショッピングモール往復が記録される / 車で出発直後の数百メートルが記録される / 自宅滞在中のバッテリー消費が許容範囲、加えて **タスクキル中に SLC 起床経路で記録が継続される / pause/resume 経路でも記録が継続される**）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認
