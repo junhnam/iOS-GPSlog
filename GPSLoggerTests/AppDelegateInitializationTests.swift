@@ -42,8 +42,10 @@ final class AppDelegateInitializationTests: XCTestCase {
     func test_didFinishLaunchingWithOptions_withLocationLaunchOption_callsStartTrackingFromSLC_S6018() {
         let sut = AppDelegate()
 
-        // launchOptions に UIApplication.LaunchOptionsKey.location を含めて呼ぶ
-        let launchOptions: [UIApplication.LaunchOptionsKey: Any] = [.location: true]
+        // launchOptions に SLC 起床キーを含めて呼ぶ
+        // iOS 26 で `.location` が deprecated のため raw value を使用（AppDelegate と同じ方針）。
+        let slcKey = UIApplication.LaunchOptionsKey(rawValue: "UIApplicationLaunchOptionsLocationKey")
+        let launchOptions: [UIApplication.LaunchOptionsKey: Any] = [slcKey: true]
         _ = sut.application(UIApplication.shared, didFinishLaunchingWithOptions: launchOptions)
 
         XCTAssertNotNil(sut.dependencies,

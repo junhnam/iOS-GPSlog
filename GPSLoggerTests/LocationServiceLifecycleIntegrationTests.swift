@@ -63,7 +63,8 @@ final class LocationServiceLifecycleIntegrationTests: XCTestCase {
     /// OS 自動停止は不要と判断し、false に変更した（S6-019）。
     func test_pausesLocationUpdatesAutomatically_isFalse_S6019() throws {
         let mock = MockLocationProviderForLifecycle()
-        let sut = LocationService(manager: mock)
+        // sut は init の副作用（configureManager）を起こすために生成する。アサーションは mock 側で行う。
+        _ = LocationService(manager: mock)
 
         XCTAssertFalse(mock.pausesLocationUpdatesAutomatically,
             "configureManager が pausesLocationUpdatesAutomatically=false を設定する（S6-019）")
@@ -198,14 +199,9 @@ final class LocationServiceLifecycleIntegrationTests: XCTestCase {
             appSettings: settings
         )
 
-        // trip が nil の PinRecord を生成（appendPin を呼んでいないため trip は nil）
-        let pin = PinRecord(
-            latitude: 35.681236,
-            longitude: 139.767125,
-            stayedFrom: Date(),
-            stayedDurationSeconds: 600
-        )
-        // pin.trip は nil（appendPin を呼んでいないため SwiftData との関係が未設定）
+        // メイン代行修正: trip=nil の PinRecord の生成は実際には enrichPinWithPlaceInfo を private で
+        // 呼べないため使用していなかった。未使用警告を避けるため削除。
+        // テストの実体は「stayEnded イベントなし → enrichPinWithPlaceInfo に到達しない → lookup=0」を検証する。
 
         // enrichPinWithPlaceInfo は private のため _ingestForTesting 経由ではなく
         // LocationService の内部メソッドを直接テストできない。
@@ -276,8 +272,17 @@ final class LocationServiceLifecycleIntegrationTests: XCTestCase {
             altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
             timestamp: base.addingTimeInterval(1)
         )
+        // メイン代行修正: stayEnded は「半径外への離脱」で発火するため、3 点目を半径外に置く。
+        // 同座標 2 点だけだと StayDetector は .skipped を返し、enrichPinWithPlaceInfo が
+        // 呼ばれない。ピン化を確実に起こすため、半径 100m 外（緯度 0.002 度 ≒ 220m）に離脱させる。
+        let loc3 = CLLocation(
+            coordinate: CLLocationCoordinate2D(latitude: 35.683236, longitude: 139.767125),
+            altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,
+            timestamp: base.addingTimeInterval(2)
+        )
         sut._ingestForTesting([loc1])
         sut._ingestForTesting([loc2])
+        sut._ingestForTesting([loc3])
 
         // Task @MainActor 越しの lookup 呼び出し完了を待つ
         for _ in 0..<40 {

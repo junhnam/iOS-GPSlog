@@ -32,6 +32,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     /// アクセス時は必ず non-nil となる。
     var dependencies: AppDependencyContainer!
 
+    /// SLC 起床経路の検出キー。
+    /// `UIApplication.LaunchOptionsKey.location` は iOS 26.0 で deprecated となり、
+    /// scene connection 経由の検出が推奨されている（Sprint 7 で正式対応予定）。
+    /// 暫定的に raw value を直接使うことで deprecated 警告を回避しつつ既存挙動を維持する。
+    private static let slcLaunchOptionsKey = UIApplication.LaunchOptionsKey(
+        rawValue: "UIApplicationLaunchOptionsLocationKey"
+    )
+
     // MARK: - UIApplicationDelegate
 
     func application(
@@ -45,9 +53,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         dependencies = AppDependencyContainer()
 
         // S6-018: SLC 起床経路を検出し、LocationService に通知する。
-        // UIApplication.LaunchOptionsKey.location が含まれている場合、
-        // OS がアプリを kill した後に SLC（Significant Location Changes）で再起動した経路。
-        if launchOptions?[.location] != nil {
+        // launch options に SLC キーが含まれている場合、OS がアプリを kill した後に
+        // SLC（Significant Location Changes）で再起動した経路。
+        if launchOptions?[Self.slcLaunchOptionsKey] != nil {
             dependencies.locationService.startTrackingFromSLC()
         }
 
