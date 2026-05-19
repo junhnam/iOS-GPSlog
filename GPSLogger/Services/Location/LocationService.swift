@@ -188,7 +188,16 @@ final class LocationService: NSObject, ObservableObject {
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.distanceFilter = 10
         manager.activityType = .automotiveNavigation
-        manager.pausesLocationUpdatesAutomatically = true
+        // S6-019: false に変更する。
+        // S6-017 で「atHome 中も通常 GPS を維持」に方針転換した結果、
+        // iOS の自動停止（pausesLocationUpdatesAutomatically=true）が発動すると
+        // 自宅帰宅直後や停車後に GPS が意図せず止まり、出発時の SLC 空白ウィンドウと
+        // 同様の問題（GPS 再開遅延）が再発するリスクがある。
+        // BatteryAdaptiveLocationPolicy（S6-005）が distanceFilter を動的に調整するため、
+        // OS 自動停止に頼らなくても電池消費を抑制できる。
+        // false でも、将来 true に戻す判断に備えて
+        // locationManagerDidPauseLocationUpdates/Did​Resume を実装しておく。
+        manager.pausesLocationUpdatesAutomatically = false
         // バックグラウンド更新は Info.plist の UIBackgroundModes と整合済み（S1-003）
         manager.allowsBackgroundLocationUpdates = true
         // 起動直後にバックグラウンドで止まらないよう、初期は false。
@@ -779,6 +788,14 @@ final class LocationService: NSObject, ObservableObject {
     /// `createEvent(for:)` を呼び出してカレンダーイベントを作成する。失敗しても
     /// UI は止めず PinRecord 自体は維持される。
     private func enrichPinWithPlaceInfo(_ pin: PinRecord, repository: TripRepository) {
+        // S6-021: trip 未紐付けピンに対してお店情報・カレンダー書き戻しを行うと
+        // DB への保存が無効になる（PinRecord が TripRecord に紐付いていないため
+        // SwiftData が変更を永続化できない）。
+        // 安全のため、trip が確定していないピンは即リターンする。
+        guard pin.trip != nil else {
+            Self.logger.warning("enrichPinWithPlaceInfo: pin.trip == nil のためスキップ（S6-021）")
+            return
+        }
         let provider = placeProvider
         let calendarSync = self.calendarSync
         let coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
@@ -857,5 +874,34 @@ extension LocationService: CLLocationManagerDelegate {
         // 権限拒否などはここで通知される。Sprint 1 ではログのみ。
         // UI への通知は Sprint 2 以降で `@Published var lastError` を追加して対応予定。
         print("[LocationService] didFailWithError: \(error.localizedDescription)")
+    }
+
+    // MARK: - S6-019: pausesLocationUpdatesAutomatically の保険実装
+
+    /// iOS が GPS 更新を自動停止したとき（pausesLocationUpdatesAutomatically=true 時）に呼ばれる。
+    ///
+    /// S6-019 方針: pausesLocationUpdatesAutomatically=false に変更したため
+    /// 通常はこのデリゲートは呼ばれない。しかし将来 true に戻す可能性があるため
+    /// 実装しておき、自動停止を検知したら isUpdating を false に同期し
+    /// resumeTrackingAfterRelaunch で復帰を試みる。
+    nonisolated func locationManagerDidPauseLocationUpdates(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            Self.logger.warning("locationManagerDidPauseLocationUpdates: iOS が GPS を自動停止した（S6-019）")
+            self.isUpdating = false
+            // wasTracking=true のまま自動停止された場合、次の位置情報コールバックで
+            // resumeTrackingAfterRelaunch が発火して復帰する（didUpdateLocations の保険経路）。
+            // ここでは再開を試みず、didUpdateLocations 経路に委ねる。
+        }
+    }
+
+    /// iOS が GPS 更新を自動再開したとき（pausesLocationUpdatesAutomatically=true 時）に呼ばれる。
+    ///
+    /// S6-019 方針: pausesLocationUpdatesAutomatically=false のため通常は呼ばれないが、
+    /// 将来 true に戻した場合のために実装しておく。
+    nonisolated func locationManagerDidResumeLocationUpdates(_ manager: CLLocationManager) {
+        Task { @MainActor in
+            Self.logger.info("locationManagerDidResumeLocationUpdates: iOS が GPS を自動再開した（S6-019）")
+            self.isUpdating = true
+        }
     }
 }

@@ -16,7 +16,10 @@
 
 ## In Progress
 
-（なし）
+- [ ] **S6-018**: AppDelegate 導入 + App.init での生成（DI 確実化）→ **dev-2** / Must / S（リリースブロッカー / 実装中）
+- [ ] **S6-019**: `pausesLocationUpdatesAutomatically=false` 変更 + delegate 実装 → **dev-2** / Must / S（リリースブロッカー / 実装中）
+- [ ] **S6-020**: SwiftUI ライフサイクル統合テスト追加（AppDelegateInitializationTests + LocationServiceLifecycleIntegrationTests）→ **dev-2** / Must / M（実装中）
+- [ ] **S6-021**: `enrichPinWithPlaceInfo` の trip 未紐付けガード追加 → **dev-2** / High / S（実装中）
 
 ## Done
 
