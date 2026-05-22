@@ -16,10 +16,11 @@
 
 ## In Progress
 
-- [ ] **S6-023** (TBD): 滞留中にピンが刺さらない致命バグ修正（バッテリー最適化 × 滞留検知のロジック衝突 + 地図リアルタイム描画） → **dev-2** / **Critical / リリースブロッカー** / In Progress
+（なし）
 
 ## Done
 
+- [x] **S6-023** (40c15d0): 滞留中にピンが刺さらない致命バグ修正（バッテリー最適化 × 滞留検知のロジック衝突 + 地図リアルタイム描画） → **dev-2** / Done（D-B: StayDetector.isInsideAnchor 公開 + LocationService.updateBatteryPolicy で anchor 中 distanceFilter≤20 強制 / D-C: duration 計算を lastInsideAt 依存から離脱点.timestamp - stayStartedAt の時系列ベースに変更 / E: LocationService.newPinSubject + MapViewModel.subscribeToNewPins でリアルタイム描画 / 新規テスト 12 件（274 → 286 件）/ warning 0 / error 0 / Info.plist OAuth Client ID 維持）
 - [x] **S6-022** (0c54d0f / c884cba): iOS 26 deprecated 対応（SceneDelegate 移行）+ P7 軽微バグ（自宅登録シート再表示）統合修正 → **dev-2** / Done（タスク A: SceneDelegate.swift 新規 + AppDelegate 更新 + Info.plist UIApplicationSceneManifest 追加 / タスク B: HomeRegistrationView.onDisappear で didLoadFromSettings リセット / 新規テスト 7 件 / 全 274 件 pass / warning 0 / **2026-05-19 push 後の jun さん実機検証で「ピンが刺さらない」事象発覚 → S6-023 起票 → Sprint 6 再オープン**）
 - [x] **S6-018 / S6-019 / S6-020 / S6-021** (7281b39): AppDelegate DI 確実化 + pausesLocationUpdatesAutomatically=false + ライフサイクル統合テスト + enrichPinWithPlaceInfo trip ガード → **dev-2** / Must / M（コミット `7281b39` / **リリースブロッカー 3 件 + High 1 件 統合 PR** / S6-018: AppDelegate.swift 新規 + GPSLoggerApp.swift を @UIApplicationDelegateAdaptor に切替 / S6-019: pausesLocationUpdatesAutomatically=false + locationManagerDidPause/Resume delegate 実装 / S6-020: AppDelegateInitializationTests.swift 新規 4 件 + LocationServiceLifecycleIntegrationTests.swift 新規 7 件 = 計 11 件追加 / S6-021: enrichPinWithPlaceInfo 先頭に guard pin.trip != nil ガード追加 / project.pbxproj に 3 ファイル追加登録済 / Info.plist 変更なし確認済 / メイン代行ビルド確認依頼）
 - [x] **S6-017** (ffd432b): 自宅 → 出発時の SLC 空白ウィンドウ修正（atHome 中も低精度通常 GPS 維持） → **dev-2** / Must / S（コミット `ffd432b` / **リリースブロッカー** / 2026-05-12〜13 jun さん実機検証 6 回目で発覚 / 修正: SLC 廃止 + `desiredAccuracy=kCLLocationAccuracyHundredMeters` + `distanceFilter=100m` で通常 GPS 維持 + `.atHome → .away` 遷移時に `desiredAccuracy=Best / distanceFilter=kCLDistanceFilterNone` に復元 / `SignificantLocationChangesTests` 2 件書き換え（SLC 仕様変更のため）+ `SLCSpaceWindowFixTests.swift` 新規 5 件追加 / メイン代行ビルド確認依頼）
