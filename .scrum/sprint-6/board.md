@@ -4,24 +4,23 @@
 
 > **個人利用版として jun さんの iPhone 16 Pro に Xcode から実機インストールでき、CLAUDE.md 記載の全機能（DB クリア / DB 自動消去 / バッテリー最適化を含む）が実機で動作する状態に到達する**
 
-期間: 2026-05-07 開始（最終スプリント）
-フェーズ: **development**（jun さん 5 項目回答取得済 2026-05-06）
+期間: 2026-05-07 開始（最終スプリント / 2026-05-19 に **S6-022 完了直後の実機検証で「ピンが刺さらない」致命バグ検出 → Sprint 6 を再オープン**）
+フェーズ: **development**（jun さん 5 項目回答取得済 2026-05-06 / **2026-05-19 リリースブロッカー S6-023 追加で再オープン**）
 方針: A 案採用（1-sprint 完結 / 個人利用版リリース）
 
 ---
 
 ## Todo
 
-- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発** / **タブ切替後の記録継続** / **自宅出発直後の記録** / **タスクキル中の GPS 反応** / **S6-022 完了後: 自宅登録シート再表示**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 / S6-022 完了後に最終実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰し、5 回目（2026-05-12）の検証で判明したタブ切替で記録停止バグを S6-016 で潰し、6 回目（2026-05-12〜13）の検証で判明した SLC 空白ウィンドウバグを S6-017 で潰し、7 回目（2026-05-19）の検証で判明したタスクキル中の GPS 反応欠落を S6-018 / S6-019 / S6-020 / S6-021 統合 PR（コミット `7281b39`）で潰し、**さらに jun さん「これ以降修正する必要がない状態」意向を受け iOS 26 deprecated（時限爆弾）+ P7 軽微バグを S6-022 統合 PR で潰した上で**、既存 11 観点 + 自宅登録シート再表示（観点 13）を最終判定する。jun さんは買い物検証 + 自宅設定確認 + 履歴ピンタップ確認 + タスクキル後再出発確認 + タブ切替後の記録継続確認 + 自宅出発直後の記録確認 + タスクキル中の継続記録確認 + **自宅登録シート再表示確認** を順次実施）
-
-- [x] **S6-022** (0c54d0f / c884cba): iOS 26 deprecated 対応（SceneDelegate 移行）+ P7 軽微バグ（自宅登録シート再表示）統合修正 → **dev-2** / Done（タスク A: SceneDelegate.swift 新規 + AppDelegate 更新 + Info.plist UIApplicationSceneManifest 追加 / タスク B: HomeRegistrationView.onDisappear で didLoadFromSettings リセット / 新規テスト 7 件 / 全 274 件 pass / warning 0）
+- [ ] **S6-008** (#51): 実機検証総合チェック（MKLocalSearch / SLC / バッテリー実測 / バックグラウンド / アイコン / **自宅設定** / **タスクキル後の自宅 → 再出発** / **タブ切替後の記録継続** / **自宅出発直後の記録** / **タスクキル中の GPS 反応** / **自宅登録シート再表示** / **観点 14 追加: 滞留 10 分 + 半径 100m でピン生成 + 地図タブにリアルタイム反映**） → **po-sm** / Must / M（**S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 / S6-022 / S6-023 完了後に最終実行**。1 回目の検証で判明した UX バグ 2 件を S6-011 / S6-012 で潰し、2 回目の検証で判明した残バグ 2 件を S6-013 で潰し、3 回目の検証で判明した自宅設定の致命バグを S6-014 で潰し、4 回目（2026-05-11）の検証で判明したタスクキル後の自宅 → 再出発バグを S6-015 で潰し、5 回目（2026-05-12）の検証で判明したタブ切替で記録停止バグを S6-016 で潰し、6 回目（2026-05-12〜13）の検証で判明した SLC 空白ウィンドウバグを S6-017 で潰し、7 回目（2026-05-19）の検証で判明したタスクキル中の GPS 反応欠落を S6-018 / S6-019 / S6-020 / S6-021 統合 PR（コミット `7281b39`）で潰し、jun さん「これ以降修正する必要がない状態」意向を受け iOS 26 deprecated（時限爆弾）+ P7 軽微バグを S6-022 統合 PR で潰し、**さらに S6-022 push 後の 8 回目検証で発覚した「ピンが刺さらない」致命バグを S6-023 で潰した上で**、既存 13 観点 + 観点 14（ピン生成 + 地図リアルタイム反映）を最終判定する）
 
 ## In Progress
 
-（なし）
+- [ ] **S6-023** (TBD): 滞留中にピンが刺さらない致命バグ修正（バッテリー最適化 × 滞留検知のロジック衝突 + 地図リアルタイム描画） → **dev-2** / **Critical / リリースブロッカー** / In Progress
 
 ## Done
 
+- [x] **S6-022** (0c54d0f / c884cba): iOS 26 deprecated 対応（SceneDelegate 移行）+ P7 軽微バグ（自宅登録シート再表示）統合修正 → **dev-2** / Done（タスク A: SceneDelegate.swift 新規 + AppDelegate 更新 + Info.plist UIApplicationSceneManifest 追加 / タスク B: HomeRegistrationView.onDisappear で didLoadFromSettings リセット / 新規テスト 7 件 / 全 274 件 pass / warning 0 / **2026-05-19 push 後の jun さん実機検証で「ピンが刺さらない」事象発覚 → S6-023 起票 → Sprint 6 再オープン**）
 - [x] **S6-018 / S6-019 / S6-020 / S6-021** (7281b39): AppDelegate DI 確実化 + pausesLocationUpdatesAutomatically=false + ライフサイクル統合テスト + enrichPinWithPlaceInfo trip ガード → **dev-2** / Must / M（コミット `7281b39` / **リリースブロッカー 3 件 + High 1 件 統合 PR** / S6-018: AppDelegate.swift 新規 + GPSLoggerApp.swift を @UIApplicationDelegateAdaptor に切替 / S6-019: pausesLocationUpdatesAutomatically=false + locationManagerDidPause/Resume delegate 実装 / S6-020: AppDelegateInitializationTests.swift 新規 4 件 + LocationServiceLifecycleIntegrationTests.swift 新規 7 件 = 計 11 件追加 / S6-021: enrichPinWithPlaceInfo 先頭に guard pin.trip != nil ガード追加 / project.pbxproj に 3 ファイル追加登録済 / Info.plist 変更なし確認済 / メイン代行ビルド確認依頼）
 - [x] **S6-017** (ffd432b): 自宅 → 出発時の SLC 空白ウィンドウ修正（atHome 中も低精度通常 GPS 維持） → **dev-2** / Must / S（コミット `ffd432b` / **リリースブロッカー** / 2026-05-12〜13 jun さん実機検証 6 回目で発覚 / 修正: SLC 廃止 + `desiredAccuracy=kCLLocationAccuracyHundredMeters` + `distanceFilter=100m` で通常 GPS 維持 + `.atHome → .away` 遷移時に `desiredAccuracy=Best / distanceFilter=kCLDistanceFilterNone` に復元 / `SignificantLocationChangesTests` 2 件書き換え（SLC 仕様変更のため）+ `SLCSpaceWindowFixTests.swift` 新規 5 件追加 / メイン代行ビルド確認依頼）
 - [x] **S6-016** (2abc6b5): タブ切替で wasTracking が false になり記録が止まる致命バグの修正 → **dev-2** / Must / XS（コミット `2abc6b5` / **リリースブロッカー** / 根本原因: `MapView.swift` の `.onDisappear` で `stopUpdatingLocation()` を呼んでいたため、タブ切替のたびに `wasTracking=false` にリセットされ S6-015 の SLC 起床復帰ガードが機能しなかった / 修正: `.onDisappear` から `stopUpdatingLocation()` 呼び出しを削除しコメントで理由を明記 / 新規テスト 3 件 `MapViewTabSwitchTests.swift` 追加（常時同期でタブ切替後も `wasTracking=true` 維持 / トリガーモードで `stopUpdatingLocation` 呼び出すと `wasTracking=false` になる既存挙動維持 / 常時同期 `.onAppear` で `wasTracking=true` になる）/ メイン代行ビルド確認依頼）
@@ -163,10 +162,33 @@
    - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
    - 一部 NG → Sprint 7 切出（jun さんと合意）
 
+### Phase 14（Sprint 6 再オープン / 滞留ピン化致命バグ対応 / 2026-05-19 push 後追加）
+
+1. **2026-05-19 S6-022 push 後の jun さん実機検証で「ログは取れるがピンが刺さらない」事象発覚** → 前回 QA は GO 判定だったが、構造的な設計欠陥がテストカバレッジの穴に隠れていたことが判明 → jun さん明示指示「Sprint 7 持ち越しではなく Sprint 6 内でリリースブロッカーとして対応」 → **Sprint 6 完了状態を取り消して再オープン**
+2. po-sm が **S6-023** を Critical / リリースブロッカーで起票（**Todo**: 着手前）
+   - 根本原因 (a): `BatteryAdaptiveLocationPolicy.swift:55,101-110` が「直近 5 分の総移動 ≤ 100m」を停車判定 → `distanceFilter=100m` に切替 → 滞留中の GPS 配信停止 → `StayDetector.swift:220-242` が離脱検知時に `lastInsideAt` 依存で `duration ≒ 0` 判定 → ピン生成されず anchor リセット
+   - 派生バグ (e): `MapViewModel.restoreTodayTrip()` が `didRestore` フラグで 1 回しか実行されず、走行中の新規ピンが地図タブにリアルタイム反映されない
+   - テストカバレッジの穴: `StayDetectorTests` の 60 秒間隔 11 点 / `LocationServiceLifecycleIntegrationTests` の `minDuration: 0` / `BatteryAdaptiveLocationPolicy × StayDetector` 統合テスト不在 / `MockLocationProvider` の `distanceFilter` 強制適用なし
+3. dev-2 が以下を **単一 PR** で実装予定（M-L / 1〜1.5 日想定）
+   - **タスク D-B（S）**: `LocationService.updateBatteryPolicy` 内で `stayDetector.isInsideAnchor` を参照、anchor 中は `distanceFilter` を緩めない分岐追加
+   - **タスク D-C（M）**: `RetroactiveStayDetector` を時系列ベース duration 計算に強化（`anchor.stayStartedAt` と離脱点 `timestamp` の差で判定 / `lastInsideAt` 依存除去）
+   - **タスク E（S）**: `MapViewModel` が新規ピンイベントを購読し走行中もリアルタイム描画 / `didRestore` フラグは初回起動時の二重実行防止に限定
+   - **新規テスト 5〜8 件**: Policy×StayDetector 統合 / 本番デフォルト 600s/100m の E2E / 滞留中 GPS 欠落シナリオ（11 分間 GPS なし + 100m 離脱点 1 点でピン生成）/ MapView リアルタイム描画 / MockLocationProvider の `distanceFilter` 反映改善
+4. 既知の落とし穴（再発防止）
+   - Info.plist 巻き戻し（過去 2 回事故）: `git diff GPSLogger/Resources/Info.plist` で OAuth Client ID 維持を必ず確認
+   - SwiftData iOS 26 罠（`@Relationship` 配列に `= []` 既定値必須）
+   - `LocationService.updateBatteryPolicy` の高頻度呼び出しで過剰ロギングを生まない
+   - S6-005 / S6-006 / S6-015〜S6-017 / S6-018〜S6-022 の前提を壊さない
+5. メイン代行が `xcodebuild clean test` で warning 0 / 全 pass 確認（**未着手** / dev-2 コミット後 / 既存 274 件 + 新規 5〜8 件 = 279〜282 件見込み）
+6. **S6-008（最終判定 / 観点拡張）** jun さんが iPhone 16 Pro で再検証
+   - 既存 13 観点 + **観点 14: 滞留 10 分 + 半径 100m でピン生成 + 地図タブにリアルタイム反映**
+   - 全観点 OK → Sprint 6 完了 → 個人利用版リリース可能
+   - 一部 NG → Sprint 7 切出（jun さんと合意）
+
 ### Phase 13（リリース前最終整備 / 2026-05-19 追加）
 
 1. **2026-05-19 jun さん意向「これ以降修正する必要がない状態にしたい」** → QA オーケストレーター「個人利用版リリース可能」判定済（`.scrum/notes/qa-review-2026-05-19.md`）に加え、推奨プラン（iOS 26 deprecated 対応 + P7 軽微バグ）を Sprint 6 内で潰す方針で jun さん承認
-2. **S6-022** dev-2 が以下を **単一 PR** で実装（**Todo**: 着手前 / 想定半日〜1日）
+2. **S6-022** dev-2 が以下を **単一 PR** で実装（**Done**: コミット `0c54d0f` + `c884cba` / 274/274 pass / warning 0）
    - タスク A（M / 半日想定）: `UIApplication.LaunchOptionsKey.location` iOS 26 deprecated 対応 → `UISceneDelegate.scene(_:willConnectTo:options:)` 経由の SLC 起床検出に正式移行 / `AppDelegate` は DI / `configurationForConnecting` 用に残す
    - タスク B（S / 半日以内）: `HomeRegistrationView` のシート再表示時に `didLoadFromSettings` ガードが残って最新値が反映されない P7 → `.sheet(item:)` 統一 or `.onDisappear` でリセット
    - 新規ユニットテスト 4〜5 件 / 既存 11 件ライフサイクル統合テスト pass / warning 0 / Info.plist OAuth Client ID 巻き戻りなし
@@ -222,7 +244,8 @@
 | S6-019 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 0（LocationServiceLifecycleIntegrationTests に統合 / pause=false 設定 + delegate 動作は統合テストで担保） |
 | S6-020 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 7（`LocationServiceLifecycleIntegrationTests.swift` 新規 / App.init → AppDelegate.didFinish → RootView body 評価の連鎖 / SLC 起床経路 / pause/resume 連動 / 2 重生成保護） |
 | S6-021 | dev-2 | 7281b39（統合 PR） | TBD（メイン代行確認依頼） | 未確認 | 0（既存テストへの guard 経路ガードで担保 / 新規追加なし / 単純ガード 1 行修正のため） |
-| S6-022 | dev-2（着手前） | TBD | TBD（メイン代行確認依頼） | 未確認 | 4〜5 見込み（SceneDelegate 用 2〜3 件 + HomeRegistrationView シート再表示 2 件） |
+| S6-022 | dev-2 | 0c54d0f（タスク A） / c884cba（タスク B） | 0（メイン代行確認済 / clean test） | 確認済 / 274/274 pass | 7（SceneDelegate 用 + HomeRegistrationView シート再表示 + DI 維持系） |
+| S6-023 | dev-2（着手前） | TBD | TBD（メイン代行確認依頼） | 未確認 | 5〜8 見込み（Policy×StayDetector 統合 + 本番デフォルト E2E + 滞留中 GPS 欠落シナリオ + MapView リアルタイム描画 + MockLocationProvider 改善） |
 
 ---
 
@@ -230,10 +253,10 @@
 
 | 状態 | 件数 |
 |---|---|
-| Todo | 2（S6-008 / **S6-022**） |
+| Todo | 2（**S6-023（Critical / リリースブロッカー）** / S6-008） |
 | In Progress | 0 |
-| Done | 20（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 含む） |
-| **Sprint 6 完了** | **20/22**（残: S6-008 実機検証総合 + **S6-022 リリース前最終整備（iOS 26 deprecated + P7）** + メイン代行による S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 ビルド確認 + 統合 PR レビュー） |
+| Done | 21（S6-011 / S6-012 / S6-013 / S6-014 / S6-015 / S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 / **S6-022** 含む） |
+| **Sprint 6 完了** | **21/23**（**Sprint 6 を再オープン**: S6-022 完了直後の jun さん実機検証で「ピンが刺さらない」致命バグ発覚 / 残: **S6-023 滞留ピン化致命バグ修正（Critical）** + S6-008 実機検証総合（観点 14 追加）） |
 
 > 2026-05-09 更新（朝）: 実機検証 1 回目で滞留ピン化のバグを検出。S6-010 を Must で追加し、S6-008 は S6-010 完了後に再実行する流れに変更。
 >
@@ -318,6 +341,19 @@
 > - **タスク B（P7 軽微バグ）**: `HomeRegistrationView` のシート 2 回目以降に `didLoadFromSettings` ガードが残って最新値が反映されない問題。`.sheet(item:)` 統一 or `.onDisappear` で `didLoadFromSettings` をリセット（dev-2 判断）。新規テスト 2 件以上（初回表示 + 再表示で更新値反映）。
 >
 > dev-2 が単一 PR で 2 タスクを連続コミットで実装し、メイン代行ビルド確認 → general-purpose レビュー → S6-008 最終判定（観点 13: 自宅登録シート再表示 追加）→ Sprint 6 完了の流れ。Sprint 6 スコープを **20/22** に確定。再発防止のため SwiftUI `@State` init アンチパターン / `.onDisappear` タブ切替発火 / Info.plist 巻き戻し（過去 2 回事故）/ S6-018 DI 確実化を壊さない の 4 つの落とし穴をチケット内に既知の落とし穴セクションとして明示。
+>
+> 2026-05-19 更新（夜 / **Sprint 6 再オープン**）: S6-022 push 後の jun さん実機検証 8 回目で **「ログ（移動経路）は取れているがピンが刺さらない」致命バグ** を検出 → S6-022 完了直後に一度確定させた Sprint 6 完了状態を取り消して **Sprint 6 を再オープン**。jun さん明示指示「Sprint 7 持ち越しではなく Sprint 6 内でリリースブロッカーとして対応」。general-purpose レビューエージェントが実装ベースで根本原因を確定:
+> - **主原因 (a) バッテリー最適化 × 滞留検知のロジック衝突**: `BatteryAdaptiveLocationPolicy.swift:55,101-110` が「直近 5 分の総移動 ≤ 100m」を停車判定 → `distanceFilter=100m` に切替 → 滞留中の GPS 配信停止 → `StayDetector.swift:220-242` が離脱検知時に `lastInsideAt` 依存で `duration ≒ 0` 判定 → ピン生成されず anchor リセット
+> - **派生バグ (e) 地図タブのリアルタイム描画**: `MapViewModel.restoreTodayTrip()` が `didRestore` フラグで 1 回しか実行されず、走行中の新規ピンが地図タブにリアルタイム反映されない（アプリ再起動 or 履歴タブで初めて見える）
+> - **テストカバレッジの穴**: `StayDetectorTests` の 60 秒間隔 11 点 / `LocationServiceLifecycleIntegrationTests` の `minDuration: 0` / `BatteryAdaptiveLocationPolicy × StayDetector` 統合テスト不在 / `MockLocationProvider` の `distanceFilter` 強制適用なし → 前回 QA が GO 判定だった構造的原因
+>
+> **S6-023** を Critical / リリースブロッカーで起票。修正方針（jun さん承認済: D + E 併用）:
+> - **タスク D-B（S）**: `LocationService.updateBatteryPolicy` 内で `stayDetector.isInsideAnchor` を参照、anchor 中は `distanceFilter` を緩めない分岐追加
+> - **タスク D-C（M）**: `RetroactiveStayDetector` を時系列ベース duration 計算に強化（`anchor.stayStartedAt` と離脱点 `timestamp` の差で判定 / `lastInsideAt` 依存除去 / 離脱点 1 点でもピン生成可能）
+> - **タスク E（S）**: `MapViewModel` が新規ピンイベントを購読してリアルタイム描画 / `didRestore` フラグは初回起動時の二重実行防止に限定
+> - **新規テスト 5〜8 件**: Policy×StayDetector 統合 / 本番デフォルト 600s/100m の E2E / 滞留中 GPS 欠落シナリオ / MapView リアルタイム描画 / MockLocationProvider の distanceFilter 反映改善
+>
+> dev-2 が単一 PR で 3 タスクを連続コミットで実装し、メイン代行ビルド確認 → general-purpose レビュー → S6-008 最終判定（観点 14: 滞留 10 分 + 半径 100m でピン生成 + 地図タブにリアルタイム反映 追加）→ Sprint 6 完了の流れ。Sprint 6 スコープを **21/23** に確定。既知の落とし穴として Info.plist 巻き戻し（過去 2 回事故）/ SwiftData iOS 26 罠 / `updateBatteryPolicy` 高頻度呼び出しでの過剰ロギング回避 / S6-005 / S6-006 / S6-015〜S6-022 の前提を壊さない、をチケット内に明示。
 
 ---
 
@@ -335,7 +371,7 @@
 
 ## 完了基準（再掲）
 
-- [ ] 全 22 チケット Done（S6-001〜S6-007 / S6-009〜S6-021 完了済 / **S6-008 残 + S6-022 残**）
+- [ ] 全 23 チケット Done（S6-001〜S6-007 / S6-009〜S6-022 完了済 / **S6-008 残 + S6-023 残**）
 - [ ] スプリントゴール検証条件 7 項目すべて静的に確認可能
 - [x] フル再ビルド warning 0 / error 0（S6-015 含む確認済 / clean test / **S6-016 / S6-017 / S6-018 / S6-019 / S6-020 / S6-021 はメイン代行による再確認待ち**）
 - [x] ユニットテスト pass 100%（246/246 pass / S6-015 で新規 4 件追加 / **S6-016 で 3 件追加 → 249 件見込み / S6-017 で 5 件追加 → 254 件見込み / S6-018〜S6-021 統合 PR で 11 件追加 → 265 件以上見込み / メイン代行確認待ち**）
@@ -354,7 +390,8 @@
 - [x] **S6-019 完了**: pausesLocationUpdatesAutomatically=false + pause/resume delegate 実装（QA オーケストレーター全体検証 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / リリースブロッカー / iOS 自動 pause 経路の検知 + 復帰経路を確立 / 動作は LocationServiceLifecycleIntegrationTests で担保）
 - [x] **S6-020 完了**: SwiftUI ライフサイクル統合テスト追加（QA オーケストレーター全体検証 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / リリースブロッカー / `LocationServiceLifecycleIntegrationTests.swift` 新規 7 件 / 既存 256 件の「mock manager 直接渡し」スタイルの構造的限界を補完 / Sprint 7 への XCUITest 整備提案）
 - [x] **S6-021 完了**: enrichPinWithPlaceInfo の trip 未紐付けガード追加（QA オーケストレーター全体検証 P5 / 2026-05-19 / dev-2 / 統合 PR コミット `7281b39` / 後追いピンの placeName 欠落リスク対策 / `guard pin.trip != nil else { return }` 追加）
-- [ ] **S6-022 完了**: iOS 26 deprecated 対応（SceneDelegate 移行）+ P7 軽微バグ（自宅登録シート再表示）統合修正（Sprint 6 リリース前最終整備 / 2026-05-19 起票 / dev-2 着手前 / High / M / 単一 PR / タスク A: `UIApplication.LaunchOptionsKey.location` iOS 26 deprecated → SceneDelegate 経由検出に正式移行 / タスク B: `HomeRegistrationView` シート再表示時の `didLoadFromSettings` ガード残存問題 / 新規テスト 4〜5 件 / 既存 11 件ライフサイクル統合テスト pass / warning 0 / Info.plist OAuth Client ID 巻き戻りなし）
-- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録 + **タスクキル中の GPS 反応継続** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される、加えて自宅から徒歩 300m のショッピングモール往復が記録される / 車で出発直後の数百メートルが記録される / 自宅滞在中のバッテリー消費が許容範囲、加えて **タスクキル中に SLC 起床経路で記録が継続される / pause/resume 経路でも記録が継続される**）
+- [x] **S6-022 完了**: iOS 26 deprecated 対応（SceneDelegate 移行）+ P7 軽微バグ（自宅登録シート再表示）統合修正（Sprint 6 リリース前最終整備 / 2026-05-19 起票 / dev-2 / `0c54d0f` + `c884cba` / High / M / 単一 PR / タスク A: `UIApplication.LaunchOptionsKey.location` iOS 26 deprecated → SceneDelegate 経由検出に正式移行 / タスク B: `HomeRegistrationView` シート再表示時の `didLoadFromSettings` ガード残存問題 / 新規テスト 7 件 / 既存 11 件ライフサイクル統合テスト pass / 274/274 pass / warning 0 / Info.plist OAuth Client ID 巻き戻りなし）
+- [ ] **S6-023 完了**: 滞留中にピンが刺さらない致命バグ修正（バッテリー最適化 × 滞留検知のロジック衝突 + 地図リアルタイム描画）（**Sprint 6 再オープン** / 2026-05-19 起票 / dev-2 着手前 / **Critical / リリースブロッカー** / M-L / 単一 PR / タスク D-B: `LocationService.updateBatteryPolicy` で `stayDetector.isInsideAnchor` 参照、anchor 中は distanceFilter を緩めない分岐 / タスク D-C: `RetroactiveStayDetector` を時系列ベース duration 計算に強化 / タスク E: `MapViewModel` が新規ピンイベントを購読してリアルタイム描画 / 新規テスト 5〜8 件（Policy×StayDetector 統合 + 本番デフォルト 600s/100m の E2E + 滞留中 GPS 欠落シナリオ + MapView リアルタイム描画 + MockLocationProvider distanceFilter 反映）/ 既存 274 件 pass 維持 / warning 0 / Info.plist OAuth Client ID 巻き戻りなし）
+- [ ] **S6-008 再実行（最終）**: 実機検証 7 観点 + 自宅設定の保存反映 + タスクキル後再出発 + タブ切替後の記録継続 + 自宅出発直後の記録 + タスクキル中の GPS 反応継続 + 自宅登録シート再表示 + **観点 14 追加: 滞留 10 分 + 半径 100m でピン生成 + 地図タブにリアルタイム反映** すべて jun さん側で OK 判定（特に観点 2「MKLocalSearch / ピン化」: 4 店舗 → 4 ピン + 地図タブ・履歴タブ両方で詳細シート確認 + 住所混入なし、加えて自宅ピン位置修正→保存後の値が反映 / 自宅削除→再登録で正しい座標が保存、加えて朝出発 → 帰宅 → タスクキル → 再出発で記録が再開される、加えて地図 → 設定 → 履歴 → 地図 タブ切替後にタスクキル → 翌日運転で記録される、加えて自宅から徒歩 300m のショッピングモール往復が記録される / 車で出発直後の数百メートルが記録される / 自宅滞在中のバッテリー消費が許容範囲、加えてタスクキル中に SLC 起床経路で記録が継続される / pause/resume 経路でも記録が継続される、加えて自宅登録シート再表示で最新値反映、**加えて滞留 10 分以上 + 半径 100m の条件で実機でピンが必ず刺さる / 走行中に新規ピンが生成されたら地図タブにリアルタイム反映される / バッテリー消費悪化なし**）
 - [ ] レビュー / レトロ文書を作成
 - [ ] ユーザー承認 + git push 承認

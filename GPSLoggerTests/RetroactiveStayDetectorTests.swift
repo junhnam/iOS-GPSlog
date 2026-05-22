@@ -381,40 +381,37 @@ final class StayDetectorPersistenceTests: XCTestCase {
     /// A-1: StayDetector の状態を UserDefaults に書き込み → 新インスタンスで復元 → 同じアンカーで継続判定。
     ///
     /// シナリオ:
-    ///   1. Instance1 で anchor 設定（t=0 の点を ingest）
+    ///   1. Instance1 で anchor 設定（t=0 の点を ingest）+ t=300 まで半径内
     ///   2. Instance1 が kill される（メモリ上の状態が消える）
     ///   3. Instance2 を同じ UserDefaults スイートで初期化 → 状態が復元される
     ///   4. Instance2 に t=700s の点を ingest → 半径外なので滞留終了判定
-    ///   5. stayEnded が返り、duration >= 600s のピンが生成される
+    ///
+    /// S6-023 D-C: duration は「離脱点 timestamp - anchor 開始時刻」で計算する。
+    ///   duration = 700s - 0s = 700s >= 600s → stayEnded が返る（復元が成功した証拠）。
+    ///   ピンが生成されなければ（= .moving が返れば）復元に失敗している。
     func test_A1_stateRestoredFromDefaults_continueDetection_S6010() {
-        // Step 1: Instance1 で anchor を設定
+        // Step 1: Instance1 で anchor を設定（t=0）して t=300 まで半径内
         let instance1 = StayDetector(config: StayDetectionConfig(), defaults: testDefaults)
-        _ = instance1.ingest(location: loc(at: 0))    // anchor = t=0
+        _ = instance1.ingest(location: loc(at: 0))    // anchor = t=0, stayStartedAt = t=0
         _ = instance1.ingest(location: loc(at: 300))  // 半径内 → anchor 継続
 
         // Step 2: Instance2 を同じ UserDefaults スイートで初期化 → 状態復元
         let instance2 = StayDetector(config: StayDetectionConfig(), defaults: testDefaults)
 
-        // Step 3: Instance2 に半径外の点を ingest → 滞留終了判定
-        // anchor は t=0、lastInsideAt は t=300 なので duration = 300s。
-        // しかし 300s < 600s なので滞留終了にはならず、.moving が返る。
+        // Step 3: Instance2 に t=700s の半径外点を ingest
+        // S6-023 D-C: duration = loc(at:700).timestamp - stayStartedAt(0s) = 700s >= 600s
+        // → stayEnded が返り、ピンが生成される（復元成功の証拠）
         let event = instance2.ingest(location: loc(lat: 35.682236, at: 700))
 
-        // duration = lastInsideAt(300s) - stayStartedAt(0s) = 300s → minDuration 未満なので .moving
-        // ただし、復元された anchor が有効に機能して「半径外判定」が行われていることを確認する。
-        // 新インスタンスが状態を復元していなければ、loc(at: 700) が新 anchor になるだけで .moving
-        // 状態復元が成功しているなら、既存 anchor から距離を計算して半径外判定する。
-        // ここでは event が .stayEnded でないこと（300s < minDuration）を確認する。
-        if case .stayEnded = event {
-            XCTFail("300 秒の滞留は minDuration（600s）未満なので .stayEnded にならない")
+        if case .stayEnded(let pin) = event {
+            // 復元成功: anchor が有効で半径外判定 + duration >= 600s でピン生成
+            XCTAssertGreaterThanOrEqual(pin.stayedDurationSeconds, 600,
+                "復元された anchor から duration = 700s >= 600s でピンが生成される（S6-023 D-C）")
+        } else {
+            // .moving が返った場合: 復元失敗（anchor=nil で loc(at:700) が新 anchor になる）
+            // または D-C の新ロジックが機能していない
+            XCTFail("復元された anchor から半径外に出たら stayEnded が返るはず（S6-023 D-C）: \(event)")
         }
-        // 復元が機能しているかを間接的に確認:
-        // 復元なし → loc(at: 700) が新 anchor、次回からまた判定開始
-        // 復元あり → anchor(t=0) から半径外の loc(at: 700) で状態リセット・moving が返る
-        // どちらの場合も .moving が返るが、次の点で異なる動作をする。
-        // ここでは「復元後に半径外判定が正常に動作している」= event が .moving または .stayEnded
-        // のどちらかであることを確認する（crash / 不正状態でないこと）。
-        XCTAssertTrue(event == .moving || event == .moving, "復元後も正常に ingest が動作する")
     }
 
     /// A-1b: minDuration を超えた状態が復元 → 半径外で正しく stayEnded を返す。

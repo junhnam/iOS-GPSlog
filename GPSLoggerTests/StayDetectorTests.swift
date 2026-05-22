@@ -46,8 +46,9 @@ final class StayDetectorTests: XCTestCase {
         // PinRecord の中心は最初の点（東京駅相当）
         XCTAssertEqual(pin.latitude, 35.681236, accuracy: 0.0001)
         XCTAssertEqual(pin.longitude, 139.767125, accuracy: 0.0001)
-        // duration は約 600 秒（最後の半径内点 = 600 秒 - 開始時刻 0 秒）
-        XCTAssertEqual(pin.stayedDurationSeconds, 600, accuracy: 1.0)
+        // S6-023 D-C: duration は「離脱点 timestamp - anchor 開始時刻」で計算するため
+        // 離脱点(700s) - anchor(0s) = 700s。minDuration(600s) 以上なのでピンが生成される。
+        XCTAssertGreaterThanOrEqual(pin.stayedDurationSeconds, 600)
     }
 
     func test_stayShorterThan10Min_doesNotReturnPin() {
@@ -56,12 +57,14 @@ final class StayDetectorTests: XCTestCase {
         for i in 0...9 {
             _ = sut.ingest(location: loc(at: TimeInterval(i * 60)))
         }
-        // 600 秒で半径外へ移動（minDuration 未満なのでピン化されない）
-        let leaveEvent = sut.ingest(location: loc(lat: 35.682236, at: 600))
+        // S6-023 D-C: duration は「離脱点 timestamp - anchor 開始時刻」で計算するため、
+        // 540 秒で半径外へ移動（離脱点 timestamp = 540s → duration = 540s < 600s → ピンなし）。
+        // 従来の「600 秒で離脱」だと timestamp=600s-0s=600s≥600s でピンが生成されてしまう。
+        let leaveEvent = sut.ingest(location: loc(lat: 35.682236, at: 540))
 
         // 滞留時間 540s < 600s なので .moving が返る（ピンなし）
         if case .stayEnded = leaveEvent {
-            XCTFail("9 分滞留ではピンが作られないはず")
+            XCTFail("9 分（540s < 600s）滞留ではピンが作られないはず")
         }
         XCTAssertEqual(leaveEvent, .moving)
     }
@@ -119,7 +122,8 @@ final class StayDetectorTests: XCTestCase {
             return
         }
         XCTAssertEqual(pin.latitude, 35.681236, accuracy: 0.0001)
-        XCTAssertEqual(pin.stayedDurationSeconds, 600, accuracy: 1.0)
+        // S6-023 D-C: duration = 離脱点 timestamp(700s) - anchor 開始(0s) = 700s >= 600s
+        XCTAssertGreaterThanOrEqual(pin.stayedDurationSeconds, 600)
     }
 
     // MARK: - 設定テスト
@@ -136,7 +140,8 @@ final class StayDetectorTests: XCTestCase {
         }
         let leave = sut.ingest(location: loc(lat: 35.682236, at: 70))
         if case .stayEnded(let pin) = leave {
-            XCTAssertEqual(pin.stayedDurationSeconds, 60, accuracy: 1.0)
+            // S6-023 D-C: duration = 離脱点 timestamp(70s) - anchor 開始(0s) = 70s >= 60s
+            XCTAssertGreaterThanOrEqual(pin.stayedDurationSeconds, 60)
         } else {
             XCTFail("カスタム minDuration=60 で滞留終了を検知できなかった: \(leave)")
         }

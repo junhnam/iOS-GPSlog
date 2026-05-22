@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 import SwiftData
+import Combine
 
 /// 地図画面の ViewModel（S2-007）。
 ///
@@ -39,6 +40,9 @@ final class MapViewModel: ObservableObject {
     /// で構築されたものを、テストではインメモリリポジトリを注入する。
     private let repository: TripRepository
 
+    /// S6-023 E: LocationService の新規ピン通知を購読するための Cancellable。
+    private var pinSubscription: AnyCancellable?
+
     /// 本番用の便利イニシャライザ。
     /// SwiftData の共有 mainContext から TripRepository を生成する。
     convenience init() {
@@ -49,6 +53,37 @@ final class MapViewModel: ObservableObject {
     /// テスト用 / DI 用の指定イニシャライザ。
     init(repository: TripRepository) {
         self.repository = repository
+    }
+
+    /// S6-023 E: LocationService の新規ピンイベントを購読し、走行中にリアルタイム更新する。
+    ///
+    /// - Parameter locationService: 新規ピンを通知する LocationService
+    ///
+    /// 初回起動時の全データ復元は `restoreTodayTrip()` が担う。
+    /// 本メソッドは「起動後にリアルタイムで追加されるピン」のみを担当する。
+    /// `didRestore` フラグは初回起動時の二重実行防止にのみ使い、ランタイム更新には使わない。
+    func subscribeToNewPins(from locationService: LocationService) {
+        pinSubscription = locationService.newPinSubject
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] pin in
+                self?.appendPin(pin)
+            }
+    }
+
+    /// 走行中に生成されたピンを `pins` に追加する（重複防止付き）。
+    /// SwiftData への書き込みは LocationService 側が担うため、ここでは表示用 `RestoredPin` を作るだけ。
+    private func appendPin(_ pin: PinRecord) {
+        let restored = RestoredPin(
+            latitude: pin.latitude,
+            longitude: pin.longitude,
+            stayedFrom: pin.stayedFrom,
+            stayedDurationSeconds: pin.stayedDurationSeconds,
+            placeName: pin.placeName,
+            address: pin.address
+        )
+        // 重複チェック: stayedFrom が同じなら既に表示中（起動時復元 + リアルタイム追加の重複防止）
+        guard !pins.contains(where: { $0.stayedFrom == restored.stayedFrom }) else { return }
+        pins.append(restored)
     }
 
     /// 起動時に呼び出す復元エントリポイント。

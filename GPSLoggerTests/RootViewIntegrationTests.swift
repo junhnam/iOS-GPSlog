@@ -529,11 +529,17 @@ extension RootViewIntegrationTests {
         sut._ingestForTesting([loc0])
         sut._ingestForTesting([loc1])
 
-        XCTAssertEqual(mock.lastDistanceFilter, 100,
-            "停車状態（5 分以内 100m 以下）では distanceFilter = 100m になるべき（S6-005）")
+        // S6-023 D-B: 停車判定になっても、anchor 中（StayDetector が滞留候補を検知中）は
+        // distanceFilter を 100m に上げず 20m 以内に強制する。
+        // これにより GPS 配信が止まらず、離脱点が届く = ピンが生成される。
+        // テストの観点: 「anchor 中は distanceFilter が 20m 以内になる」ことを確認。
+        XCTAssertLessThanOrEqual(mock.lastDistanceFilter, 20,
+            "S6-023 D-B: anchor 中の停車判定では distanceFilter が 20m 以内に強制される（ピン生成の保護）")
 
         // Step 2: 走行状態へ遷移（5 分以内に 100m 超移動）
-        // lastBatteryPolicyDecision が .stopped になっているため、走行判定で切替が発火する
+        // 走行判定になったら anchor が解除されるとは限らないが、
+        // driving 決定では distanceFilter = 10m が設定される。
+        // lastBatteryPolicyDecision が .stopped → .driving に変わるため切替が発火する。
         let loc2 = CLLocation(
             coordinate: CLLocationCoordinate2D(latitude: 35.682236, longitude: 139.767125),
             altitude: 0, horizontalAccuracy: 5, verticalAccuracy: 5,

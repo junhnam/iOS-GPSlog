@@ -95,6 +95,11 @@ struct MapView: View {
             // 復元はカメラ初期化等よりも先に走らせる（onAppear で十分高速）。
             viewModel.restoreTodayTrip()
 
+            // S6-023 E: 走行中に新規ピンが生成されたときリアルタイムで地図に反映する。
+            // restoreTodayTrip は起動時の初期データ復元、subscribeToNewPins はランタイム更新を担当。
+            // didRestore フラグとは独立して購読を設定する（二重実行防止に didRestore は使わない）。
+            viewModel.subscribeToNewPins(from: locationService)
+
             // 初回起動時に権限ダイアログを表示する（権限要求は記録モードに関係なく必要）。
             locationService.requestWhenInUseAuthorization()
             locationService.requestAlwaysAuthorization()

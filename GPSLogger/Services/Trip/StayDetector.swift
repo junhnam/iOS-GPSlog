@@ -84,6 +84,17 @@ final class StayDetector {
     /// 直近の滞留候補内の点の timestamp。半径外への離脱検知時に「滞留終了時刻」として使う。
     private var lastInsideAt: Date?
 
+    // MARK: - S6-023 D-B: anchor 状態の外部公開
+
+    /// anchor が立っている（= 滞留候補が生まれている）かどうかを返す（S6-023 D-B）。
+    ///
+    /// `LocationService.updateBatteryPolicy` がこの値を参照し、
+    /// anchor 中は distanceFilter を緩めないようにする。
+    /// anchor が立っていない（anchorLocation == nil）か失効している場合は false を返す。
+    var isInsideAnchor: Bool {
+        anchorLocation != nil
+    }
+
     // MARK: - A 案: UserDefaults 永続化
 
     /// 永続化に使用する UserDefaults。テストでは独立スイートを差し込める。
@@ -218,11 +229,17 @@ final class StayDetector {
         }
 
         // 半径外: 離脱検知。
-        // ここで滞留時間 >= minDuration なら PinRecord を生成。
+        // S6-023 D-C: duration 計算を時系列ベースに変更。
+        // 従来は `lastInsideAt - stayStartedAt` で計算していたが、
+        // バッテリー最適化（distanceFilter=100m）が滞留中の GPS 配信を止めると
+        // lastInsideAt が更新されず duration ≒ 0 になるバグがあった。
+        // 修正: 「anchor の stayStartedAt と離脱点 location.timestamp の差」で duration を計算する。
+        // これにより、滞留中に GPS 点が届かなかった（間引かれた）場合でも、
+        // 離脱点 1 点のタイムスタンプと anchor 設定時刻の差で正確な滞留時間を算出できる。
         let pin: PinRecord? = {
-            guard let start = stayStartedAt,
-                  let lastInside = lastInsideAt else { return nil }
-            let duration = lastInside.timeIntervalSince(start)
+            guard let start = stayStartedAt else { return nil }
+            // 離脱点の timestamp と anchor 開始時刻の差を duration として使用（D-C 修正）
+            let duration = location.timestamp.timeIntervalSince(start)
             guard duration >= config.minDuration else { return nil }
             return PinRecord(latitude: anchor.coordinate.latitude,
                              longitude: anchor.coordinate.longitude,

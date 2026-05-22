@@ -62,6 +62,11 @@ final class LocationService: NSObject, ObservableObject {
     /// 位置情報更新が現在オンかどうか（外部から状態確認用）。
     @Published private(set) var isUpdating: Bool = false
 
+    /// S6-023 E: 新規ピン生成イベントの通知経路。
+    /// `MapViewModel` が購読し、走行中に新規ピンが生成された瞬間に地図を再描画する。
+    /// PassthroughSubject は値をバッファリングしないため、購読前の値は受け取れない（初回は restoreTodayTrip で補完）。
+    let newPinSubject = PassthroughSubject<PinRecord, Never>()
+
     private let manager: any LocationProviderProtocol
 
     /// SLC（Significant Location Changes）が現在オンかどうか（S3-006）。
@@ -93,6 +98,10 @@ final class LocationService: NSObject, ObservableObject {
         accuracy: BatteryAdaptiveLocationPolicy.drivingAccuracy,
         distanceFilter: BatteryAdaptiveLocationPolicy.drivingDistanceFilter
     )
+
+    /// S6-023 D-B: 直近の StayDetector anchor 状態（変化検出用）。
+    /// anchor 状態が変わった時に、Policy 決定が同じでも distanceFilter を再評価するために使う。
+    private var lastAnchorState: Bool = false
 
     /// 直近の動的 desiredAccuracy 値（テスト用に観測可能にする）。
     /// 本来は manager.desiredAccuracy を直接読めば良いが、CLLocationAccuracy は
@@ -490,6 +499,9 @@ final class LocationService: NSObject, ObservableObject {
                let trip = currentTrip {
                 do {
                     try repository.appendPin(pin, to: trip)
+                    // S6-023 E: 新規ピン生成をリアルタイムで通知する。
+                    // MapViewModel が購読して地図に即反映させる。
+                    newPinSubject.send(pin)
                     // S3-007: お店情報を非同期で取得し PinRecord に書き戻す。
                     // 取得失敗（ネットワーク・レート制限）でも UI と DB の整合は保たれる。
                     enrichPinWithPlaceInfo(pin, repository: repository)
@@ -658,6 +670,10 @@ final class LocationService: NSObject, ObservableObject {
     /// desiredAccuracy は Sprint 3 の `updateDynamicAccuracy` が引き続き担うため、
     /// ここでは distanceFilter のみを Policy 判定に基づいて更新する。
     /// 判定が変化した場合のみ manager に書き込み、ログを出す（重複適用を防ぐ）。
+    ///
+    /// S6-023 D-B: StayDetector が anchor 中（滞留候補を検知中）は、Policy の決定が
+    /// `.stopped` であっても `distanceFilter` を 100m に上げない。
+    /// GPS 配信を止めると離脱点が届かず `duration ≒ 0` となってピンが生成されないバグが発生するため。
     private func updateBatteryPolicy(adding location: CLLocation) {
         batteryPolicyLocationHistory.append(location)
         if batteryPolicyLocationHistory.count > Self.batteryPolicyHistoryLimit {
@@ -673,8 +689,14 @@ final class LocationService: NSObject, ObservableObject {
             now: location.timestamp
         )
 
-        // 前回と同じ決定なら manager への書き込みをスキップ
-        guard decision != lastBatteryPolicyDecision else { return }
+        // S6-023 D-B: anchor 状態を追跡し、変化時には decision が同じでも再評価する。
+        // 「.stopped が続く中で anchor が初めて立つ」ケースでも distanceFilter を上書きするため。
+        let currentlyInsideAnchor = stayDetector.isInsideAnchor
+        let anchorStateChanged = currentlyInsideAnchor != lastAnchorState
+        lastAnchorState = currentlyInsideAnchor
+
+        // 前回と同じ決定かつ anchor 状態も変化なしなら manager への書き込みをスキップ
+        guard decision != lastBatteryPolicyDecision || anchorStateChanged else { return }
         lastBatteryPolicyDecision = decision
 
         switch decision {
@@ -686,8 +708,28 @@ final class LocationService: NSObject, ObservableObject {
             manager.distanceFilter = filter
             Self.logger.info("BatteryPolicy: driving → distanceFilter=\(filter)")
         case .stopped(_, let filter):
-            manager.distanceFilter = filter
-            Self.logger.info("BatteryPolicy: stopped → distanceFilter=\(filter)")
+            // S6-023 D-B: StayDetector が anchor 中は distanceFilter を緩めない。
+            // anchor 中は 20m 以内のフィルタを維持し、離脱検知タイミングを逃さない。
+            // anchor が解除されたら通常の Policy 出力（100m）に戻す。
+            if currentlyInsideAnchor {
+                // anchor 中: distanceFilter を 20m 以内に強制（GPS 配信を間引かない）
+                let anchorFilter: CLLocationDistance = min(filter, 20)
+                manager.distanceFilter = anchorFilter
+                // 精度も滞留検知に十分なレベルを維持（kCLLocationAccuracyNearestTenMeters）
+                if manager.desiredAccuracy > kCLLocationAccuracyNearestTenMeters {
+                    manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+                }
+                if anchorStateChanged {
+                    Self.logger.info("BatteryPolicy: stopped だが anchor 中のため distanceFilter=\(anchorFilter) に強制（S6-023 D-B）")
+                }
+            } else {
+                manager.distanceFilter = filter
+                if anchorStateChanged {
+                    Self.logger.info("BatteryPolicy: stopped / anchor 解除 → distanceFilter=\(filter) に戻す（S6-023 D-B）")
+                } else {
+                    Self.logger.info("BatteryPolicy: stopped → distanceFilter=\(filter)")
+                }
+            }
         }
     }
 
@@ -699,6 +741,7 @@ final class LocationService: NSObject, ObservableObject {
             accuracy: BatteryAdaptiveLocationPolicy.drivingAccuracy,
             distanceFilter: BatteryAdaptiveLocationPolicy.drivingDistanceFilter
         )
+        lastAnchorState = false  // S6-023 D-B
     }
 
     /// テスト用: 直近のバッテリーポリシー決定を読む（S6-005）。
