@@ -5,8 +5,11 @@ github_repo: junhnam/iOS-GPSlog
 github_url: https://github.com/junhnam/iOS-GPSlog
 design_needed: true
 estimated_sprints: 6
-current_sprint: 6
-sprint_phase: development
+current_sprint: 7
+sprint_phase: planning
+sprint_6_closed_at: 2026-05-24
+sprint_6_status: done
+release_status: personal_use_released
 ---
 
 ## プロダクト概要
